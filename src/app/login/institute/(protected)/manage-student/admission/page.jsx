@@ -151,7 +151,7 @@ export default function AdmissionList() {
                 </td>
 
                 <td className="border p-2">
-                  {item.courseName?.length > 20 ? "Semester Course" : item.courseName}
+                  {courseMap[item.courseName] || item.courseName}
                 </td>
 
                 <td className="border p-2">

@@ -37,6 +37,7 @@
     "react-qr-code": "^2.0.18",
     "recharts": "^3.8.1",
     "three": "^0.184.0",
+    "tweakpane": "^4.0.5",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

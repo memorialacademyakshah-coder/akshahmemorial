@@ -71,7 +71,7 @@ const toggleSubject = (name) => {
         courseId,
         courseName,
         courseCode,
-        subjects: selectedSubjects.join(", "),
+        subjects: selectedSubjects.join("||"),
         duration: courseDuration || "",
         courseFees: Number(courseFees),
         minimumFees: Number(minimumFees),

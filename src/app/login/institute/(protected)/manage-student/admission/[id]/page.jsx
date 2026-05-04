@@ -232,99 +232,102 @@ const handleFeesReceived = (value) => {
 };
 
 
- const handleCourseChange = async (e) => {
+const handleCourseChange = async (e) => {
   try {
+    const courseId = e.target.value;
+    const course = courses.find(c => c.$id === courseId);
 
-    const courseId = e.target.value
-    const course = courses.find(c => c.$id === courseId)
+    if (!course) return;
 
-    if (!course) return
+    let subjectsText = "";
 
-    let subjectsText = ""
-    // ✅ FIRST HANDLE SEMESTER
-if (form.courseType === "semester") {
-  setForm({
-    ...form,
-        courseName: course.courseName || course.courseCode, // ✅ FIX
-            courseCode: course.courseCode,     // 🔥 IMPORTANT
-
-    subjects: "",
-    courseFees: Number(course.courseFees || 0), // ✅ AUTO
-    examFees: Number(course.examFees || 0)      // ✅ AUTO
-  });
-  return;
-}
-
- if (form.courseType === "single" || form.courseType === "beauty") {
-
-  const subjectCollection =
-    form.courseType === "beauty"
-      ? "beauty_courses_subjects"
-      : "course_subjects"
-
-  const res = await databases.listDocuments( 
-    DATABASE_ID,
-    subjectCollection,
-    [Query.equal("courseId", courseId)]
-  )
-  // ✅ SEMESTER COURSE SUPPORT
-if (form.courseType === "semester") {
-
-  setForm({
-    ...form,
-    courseName: course.courseCode, // important
-    subjects: ""
-  });
-
-}
-
-  subjectsText = res.documents
-    .map(s => s.subjectName)
-    .join(", ")
-
-    } else {
-      subjectsText = course.subjects || ""
+    // =========================
+    // ✅ SEMESTER (SPECIAL CASE)
+    // =========================
+    if (form.courseType === "semester") {
+      setForm(prev => ({
+        ...prev,
+        courseName: course.courseName || course.courseCode,
+        courseCode: course.courseCode,
+        subjects: "",
+        courseFees: Number(course.courseFees || 0),
+        examFees: Number(course.examFees || 0)
+      }));
+      return;
     }
 
-    
-    // 🔥 FETCH PLAN
-    const user = await account.get()
+    // =========================
+    // ✅ MULTIPLE COURSE (IMPORTANT FIX)
+    // =========================
+    if (form.courseType === "multiple") {
+      // 🔥 ONLY SELECTED SUBJECTS FROM DB
+subjectsText = course.subjects
+  ? course.subjects.split("||").join(", ")
+  : "";
+    }
+
+    // =========================
+    // ✅ SINGLE / BEAUTY COURSE
+    // =========================
+    else if (
+      form.courseType === "single" ||
+      form.courseType === "beauty"
+    ) {
+      const subjectCollection =
+        form.courseType === "beauty"
+          ? "beauty_courses_subjects"
+          : "course_subjects";
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        subjectCollection,
+        [Query.equal("courseId", courseId)]
+      );
+
+      subjectsText = res.documents
+        .map(s => s.subjectName)
+        .join(", ");
+    }
+
+    // =========================
+    // ✅ FETCH PLAN (EXAM FEE)
+    // =========================
+    const user = await account.get();
 
     const resPlan = await databases.listDocuments(
       DATABASE_ID,
       "franchise_approved",
       [Query.equal("email", user.email)]
-    )
+    );
 
-    const plan = resPlan.documents[0]?.plan
+    const plan = resPlan.documents[0]?.plan;
 
-  // ✅ FETCH FROM DB
+    const planRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_plans",
+      [Query.equal("name", plan)]
+    );
 
+    const dynamicFee = planRes.documents[0]?.amount || 0;
 
-// ✅ REPLACE HERE
-const planRes = await databases.listDocuments(
-  DATABASE_ID,
-  "franchise_plans",
-  [Query.equal("name", plan)]
-);
+    // =========================
+    // ✅ FINAL SET FORM
 
-const dynamicFee = planRes.documents[0]?.amount || 0;
-  
-
-    setForm({
-      ...form,
-      
-      courseName: course.courseName || course.courseCode,
-      subjects: subjectsText,
-      courseFees: course.courseFees || 0,
-      examFees: dynamicFee
-    })
+    // =========================
+   setForm(prev => ({
+  ...prev,
+  courseName: courseId, // ✅ keep ID for dropdown
+  courseDisplayName: course.courseName || course.courseCode, // ✅ for display
+  subjects: subjectsText,
+  courseFees: Number(course.courseFees || 0),
+  examFees: dynamicFee
+}));
 
   } catch (err) {
-    console.error("COURSE CHANGE ERROR:", err)
-    alert("Error loading course data")
+    console.error("COURSE CHANGE ERROR:", err);
+    alert("Error loading course data");
   }
-}
+};
 const handleChange = (e) => {
   setForm({ ...form, [e.target.name]: e.target.value });
 };
@@ -425,14 +428,16 @@ const generatePassword = () => {
 const password = generatePassword();
 
     // ✅ FINAL DATA
-    const finalData = {
-      ...form,
-      feesReceived: Number(form.feesReceived || 0),
-      balance: Number(form.balance || 0),
-      admissionDate: form.admissionDate
-        ? form.admissionDate
-        : new Date().toISOString().split("T")[0]
-    }
+   const finalData = {
+  ...form,
+  courseName: form.courseDisplayName, // ✅ SAVE NAME
+  courseId: form.courseName,          // ✅ SAVE ID
+  feesReceived: Number(form.feesReceived || 0),
+  balance: Number(form.balance || 0),
+  admissionDate: form.admissionDate
+    ? form.admissionDate
+    : new Date().toISOString().split("T")[0]
+};
 
     // ✅ GET WALLET
     const franchiseDoc = await databases.getDocument(

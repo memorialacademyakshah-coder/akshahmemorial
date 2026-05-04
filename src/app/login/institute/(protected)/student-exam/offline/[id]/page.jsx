@@ -99,28 +99,28 @@ if (res.courseType === "semester") {
 }
 
     // ✅ OLD LOGIC (UNCHANGED)
-    let subjectList = [];
+ let subjectList = [];
 
-    if (res.subjects) {
+if (res.subjects) {
 
-      if (res.courseType === "single" || res.courseType === "beauty") {
+  if (res.courseType === "single" || res.courseType === "beauty") {
 
-        subjectList = [
-          res.subjects
-            ?.split(",")
-            .map(s => s.trim())
-            .join(", ")
-        ];
+    subjectList = [
+      res.subjects
+        .split(",")
+        .map(s => s.trim())
+        .join(", ")
+    ];
 
-      } else {
+  } else {
 
-        subjectList = res.subjects
-          ?.split(",")
-          .map(s => s.trim());
+    subjectList = res.subjects
+      .split("||")
+      .map(s => s.trim())
+      .filter(Boolean);
 
-      }
-    }
-
+  }
+}
     setSubjects(subjectList);
 
     const initialMarks = subjectList.map(sub => ({
@@ -178,17 +178,27 @@ const loadSemesterSubjects = async (courseCode, semester) => {
     console.log("SEM ERROR:", err);
   }
 };
-  const updateMarks = (index, field, value) => {
-    const updated = [...marks];
+ const updateMarks = (index, field, value) => {
+  let val = Number(value) || 0;
 
-    updated[index][field] = Number(value);
+  // 🚫 LIMIT TO 50
+  if (val > 50) {
+    alert("Maximum marks allowed is 50");
+    val = 50;
+  }
 
-    updated[index].total =
-      Number(updated[index].theory || 0) +
-      Number(updated[index].practical || 0);
+  if (val < 0) val = 0;
 
-    setMarks(updated);
-  };
+  const updated = [...marks];
+
+  updated[index][field] = val;
+
+  updated[index].total =
+    Number(updated[index].theory || 0) +
+    Number(updated[index].practical || 0);
+
+  setMarks(updated);
+};
 
   const calculateTotal = () => {
     return marks.reduce((sum, m) => sum + m.total, 0);
@@ -439,23 +449,27 @@ if (student.courseType === "multiple") {
                   <td className="border p-3">100</td>
 
                   <td className="border p-3">
-                    <input
-                      type="number"
-                      className="border p-2 w-24 bg-black text-white"
-                      onChange={(e) =>
-                        updateMarks(index, "theory", e.target.value)
-                      }
-                    />
+                   <input
+  type="number"
+  max={50}
+  min={0}
+  className="border p-2 w-24 bg-black text-white"
+  onChange={(e) =>
+    updateMarks(index, "theory", e.target.value)
+  }
+/>
                   </td>
 
                   <td className="border p-3">
-                    <input
-                      type="number"
-                      className="border p-2 w-24 bg-black text-white"
-                      onChange={(e) =>
-                        updateMarks(index, "practical", e.target.value)
-                      }
-                    />
+                   <input
+  type="number"
+  max={50}
+  min={0}
+  className="border p-2 w-24 bg-black text-white"
+  onChange={(e) =>
+    updateMarks(index, "practical", e.target.value)
+  }
+/>
                   </td>
 
                   <td className="border p-3 font-bold">{total}</td>
