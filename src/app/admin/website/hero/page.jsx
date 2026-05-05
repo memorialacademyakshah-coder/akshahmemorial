@@ -1,175 +1,266 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { databases, ID } from "@/lib/appwrite";
+import { databases, storage, ID } from "@/lib/appwrite";
 
 const DB = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION = "website";
+const BUCKET = "images";
 
 export default function CMSPage() {
-  const [states, setStates] = useState([]);
-  const [stateName, setStateName] = useState("");
-  const [institutes, setInstitutes] = useState("");
-  const [editingId, setEditingId] = useState(null);
+  const [texts, setTexts] = useState([]);
+  const [images, setImages] = useState([]);
+
+  const [textInput, setTextInput] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  const [editingTextId, setEditingTextId] = useState(null);
+  const [editingImageId, setEditingImageId] = useState(null);
 
   /* ================= FETCH ================= */
-  const fetchStates = async () => {
-    try {
-      const res = await databases.listDocuments(DB, COLLECTION);
+  const fetchData = async () => {
+    const res = await databases.listDocuments(DB, COLLECTION);
 
-      const filtered = res.documents.filter(
-        (d) => d.type === "state"
-      );
-
-      setStates(filtered);
-    } catch (err) {
-      console.error(err);
-    }
+    setTexts(res.documents.filter((d) => d.type === "text"));
+    setImages(res.documents.filter((d) => d.type === "image"));
   };
 
   useEffect(() => {
-    fetchStates();
+    fetchData();
   }, []);
 
-  /* ================= FORMAT FUNCTION ================= */
-  const formatInstitutes = (text) => {
-    return text
-      .split("\n")            // split by new line
-      .map((i) => i.trim())  // trim spaces
-      .filter((i) => i !== "") // remove empty
-      .slice(0, 20);         // max 20
-  };
+  /* ================= IMAGE ================= */
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  /* ================= ADD ================= */
-  const addState = async () => {
-    if (!stateName) return;
-
-    try {
-      await databases.createDocument(DB, COLLECTION, ID.unique(), {
-        type: "state",
-        name: stateName,
-        institutes: formatInstitutes(institutes),
-      });
-
-      setStateName("");
-      setInstitutes("");
-      fetchStates();
-    } catch (err) {
-      console.error(err);
+    if (file.size > 3 * 1024 * 1024) {
+      alert("Max 3MB");
+      return;
     }
+
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
   };
 
-  /* ================= DELETE ================= */
-  const deleteState = async (id) => {
-    try {
-      await databases.deleteDocument(DB, COLLECTION, id);
-      fetchStates();
-    } catch (err) {
-      console.error(err);
+  const uploadImage = async () => {
+    if (!imageFile) return null;
+
+    const file = await storage.createFile(
+      BUCKET,
+      ID.unique(),
+      imageFile
+    );
+
+    return storage.getFileView(BUCKET, file.$id);
+  };
+
+  /* ================= TEXT ================= */
+  const addText = async () => {
+    if (!textInput) return;
+
+    await databases.createDocument(DB, COLLECTION, ID.unique(), {
+      type: "text",
+      text: textInput,
+    });
+
+    reset();
+    fetchData();
+  };
+
+  const deleteText = async (id) => {
+    await databases.deleteDocument(DB, COLLECTION, id);
+    fetchData();
+  };
+
+  const updateText = async () => {
+    await databases.updateDocument(DB, COLLECTION, editingTextId, {
+      text: textInput,
+    });
+
+    reset();
+    fetchData();
+  };
+
+  const startEditText = (t) => {
+    setEditingTextId(t.$id);
+    setTextInput(t.text);
+  };
+
+  /* ================= IMAGE ================= */
+  const addImage = async () => {
+    const url = await uploadImage();
+
+    await databases.createDocument(DB, COLLECTION, ID.unique(), {
+      type: "image",
+      image: url,
+    });
+
+    reset();
+    fetchData();
+  };
+
+  const deleteImage = async (id) => {
+    await databases.deleteDocument(DB, COLLECTION, id);
+    fetchData();
+  };
+
+  const updateImage = async () => {
+    let url = preview;
+
+    if (imageFile) {
+      url = await uploadImage();
     }
+
+    await databases.updateDocument(DB, COLLECTION, editingImageId, {
+      image: url,
+    });
+
+    reset();
+    fetchData();
   };
 
-  /* ================= EDIT ================= */
-  const startEdit = (state) => {
-    setEditingId(state.$id);
-    setStateName(state.name);
-    setInstitutes(state.institutes.join("\n")); // show vertical
+  const startEditImage = (img) => {
+    setEditingImageId(img.$id);
+    setPreview(img.image);
   };
 
-  const updateState = async () => {
-    try {
-      await databases.updateDocument(DB, COLLECTION, editingId, {
-        name: stateName,
-        institutes: formatInstitutes(institutes),
-      });
-
-      setEditingId(null);
-      setStateName("");
-      setInstitutes("");
-      fetchStates();
-    } catch (err) {
-      console.error(err);
-    }
+  /* ================= RESET ================= */
+  const reset = () => {
+    setTextInput("");
+    setImageFile(null);
+    setPreview(null);
+    setEditingTextId(null);
+    setEditingImageId(null);
   };
 
   return (
-    <div className="p-10 bg-black text-white min-h-screen">
-      <h1 className="text-3xl mb-6">State CMS</h1>
+    <div className="min-h-screen bg-gradient-to-br from-[#020617] to-[#0f172a] text-white p-10">
 
-      {/* ================= FORM ================= */}
-      <div className="mb-6">
-        <input
-          placeholder="State Name"
-          value={stateName}
-          onChange={(e) => setStateName(e.target.value)}
-          className="p-2 bg-gray-800 mr-2"
-        />
+      {/* HEADER */}
+      <h1 className="text-4xl font-bold mb-10 bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+        Hero CMS Dashboard
+      </h1>
 
-        <textarea
-          placeholder="Enter one institute per line (max 20)"
-          value={institutes}
-          onChange={(e) => setInstitutes(e.target.value)}
-          className="p-2 bg-gray-800 w-[400px] h-[150px] mt-2 block"
-        />
+      {/* ================= TEXT SECTION ================= */}
+      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-10 shadow-xl">
 
-        <p className="text-xs text-gray-500 mt-1">
-          Max 20 institutes
-        </p>
+        <h2 className="text-xl mb-4 font-semibold text-purple-300">
+          Typing Text
+        </h2>
 
-        {editingId ? (
+        <div className="flex gap-3 flex-wrap">
+          <input
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Enter hero text..."
+            className="p-3 bg-black/40 border border-white/10 rounded-lg w-[300px] focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
+
           <button
-            onClick={updateState}
-            className="bg-yellow-500 px-4 py-2 mt-2"
+            onClick={editingTextId ? updateText : addText}
+            className={`px-5 py-3 rounded-lg font-medium transition ${
+              editingTextId
+                ? "bg-yellow-500 hover:bg-yellow-600"
+                : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:scale-105"
+            }`}
           >
-            Update
+            {editingTextId ? "Update" : "Add"}
           </button>
-        ) : (
-          <button
-            onClick={addState}
-            className="bg-cyan-500 px-4 py-2 mt-2"
-          >
-            Add State
-          </button>
-        )}
-      </div>
+        </div>
 
-      {/* ================= LIST ================= */}
-      <div className="space-y-4">
-        {states.map((state) => (
-          <div
-            key={state.$id}
-            className="bg-gray-900 p-4 rounded-lg"
-          >
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">
-                {state.name}
-              </h2>
+        {/* TEXT LIST */}
+        <div className="mt-6 space-y-3">
+          {texts.map((t) => (
+            <div
+              key={t.$id}
+              className="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/10 hover:bg-white/10 transition"
+            >
+              <span>{t.text}</span>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3 text-sm">
                 <button
-                  onClick={() => startEdit(state)}
-                  className="bg-blue-500 px-3 py-1 text-sm"
+                  onClick={() => startEditText(t)}
+                  className="text-blue-400 hover:underline"
                 >
                   Edit
                 </button>
 
                 <button
-                  onClick={() => deleteState(state.$id)}
-                  className="bg-red-500 px-3 py-1 text-sm"
+                  onClick={() => deleteText(t.$id)}
+                  className="text-red-400 hover:underline"
                 >
                   Delete
                 </button>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
 
-            {/* 🔥 Vertical Institute List */}
-            <div className="mt-2 text-sm text-gray-400 space-y-1">
-              {state.institutes.map((inst, i) => (
-                <div key={i}>• {inst}</div>
-              ))}
+      {/* ================= IMAGE SECTION ================= */}
+      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl">
+
+        <h2 className="text-xl mb-4 font-semibold text-pink-300">
+          Image Upload
+        </h2>
+
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="mb-3"
+        />
+
+        {preview && (
+          <img
+            src={preview}
+            className="w-32 h-32 rounded-xl object-cover mb-3 border border-white/20"
+          />
+        )}
+
+        <button
+          onClick={editingImageId ? updateImage : addImage}
+          className={`px-5 py-3 rounded-lg font-medium transition ${
+            editingImageId
+              ? "bg-yellow-500 hover:bg-yellow-600"
+              : "bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-105"
+          }`}
+        >
+          {editingImageId ? "Update Image" : "Upload Image"}
+        </button>
+
+        {/* IMAGE GRID */}
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {images.map((img) => (
+            <div
+              key={img.$id}
+              className="group relative rounded-xl overflow-hidden border border-white/10"
+            >
+              <img
+                src={img.image}
+                className="w-full h-32 object-cover group-hover:scale-110 transition duration-500"
+              />
+
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition">
+                <button
+                  onClick={() => startEditImage(img)}
+                  className="bg-white text-black px-3 py-1 rounded text-xs"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => deleteImage(img.$id)}
+                  className="bg-red-500 px-3 py-1 rounded text-xs"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
