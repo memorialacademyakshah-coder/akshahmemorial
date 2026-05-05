@@ -5,7 +5,7 @@ import { databases, storage, ID } from "@/lib/appwrite";
 
 const DB = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION = "website";
-const BUCKET = "images";
+const BUCKET = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 
 export default function CMSPage() {
   const [texts, setTexts] = useState([]);
