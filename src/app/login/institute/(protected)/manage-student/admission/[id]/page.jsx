@@ -9,6 +9,8 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "student_admissions";
 const BUCKET_ID = "6986e8a4001925504f6b";
 
+const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300 MB
+
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
@@ -21,6 +23,9 @@ export default function AddStudent() {
 
   const [photo, setPhoto] = useState(null);
   const [signature, setSignature] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+const [signaturePreview, setSignaturePreview] = useState(null);
+const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
 const [semesterSubjects, setSemesterSubjects] = useState([]);
@@ -542,14 +547,37 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             Student Photo *
           </label>
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setPhoto(e.target.files[0])}
-            className="border p-2 w-full"
-            required
-          />
+     <input
+  type="file"
+  accept="image/*"
+  onChange={(e) => {
+    const file = e.target.files[0];
 
+    if (file && file.size > MAX_FILE_SIZE) {
+      alert("Photo must be less than 300 MB");
+      e.target.value = "";
+      return;
+    }
+
+    setPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file)); // ✅ preview
+  }}
+  className="border p-2 w-full"
+  required
+/>
+
+<p className="text-xs text-gray-500 mt-1">
+  Max size: 300 MB
+</p>
+
+{/* ✅ PREVIEW */}
+{photoPreview && (
+  <img
+    src={photoPreview}
+    alt="Preview"
+    className="mt-2 w-24 h-24 object-cover rounded"
+  />
+)}
         </div>
 
         <div>
@@ -557,15 +585,37 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
           <label className="block mb-1 font-semibold">
             Student Signature *
           </label>
+<input
+  type="file"
+  accept="image/*"
+  onChange={(e) => {
+    const file = e.target.files[0];
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setSignature(e.target.files[0])}
-            className="border p-2 w-full"
-            required
-          />
+    if (file && file.size > MAX_FILE_SIZE) {
+      alert("Signature must be less than 300 MB");
+      e.target.value = "";
+      return;
+    }
 
+    setSignature(file);
+    setSignaturePreview(URL.createObjectURL(file)); // ✅ preview
+  }}
+  className="border p-2 w-full"
+  required
+/>
+
+<p className="text-xs text-gray-500 mt-1">
+  Max size: 300 MB
+</p>
+
+{/* ✅ PREVIEW */}
+{signaturePreview && (
+  <img
+    src={signaturePreview}
+    alt="Preview"
+    className="mt-2 w-24 h-24 object-cover rounded"
+  />
+)}
         </div>
 
         <div>

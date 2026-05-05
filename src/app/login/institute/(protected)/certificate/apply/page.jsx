@@ -18,6 +18,7 @@ export default function CertificatePage() {
 
     const [results, setResults] = useState([]);
     const [selected, setSelected] = useState([]);
+    const [appliedIds, setAppliedIds] = useState([]);
 
     useEffect(() => {
         loadResults();
@@ -67,52 +68,55 @@ const applyCertificate = async () => {
       results.find(r => r.$id === id)
     );
 
- for (const item of selectedResults) {
+    for (const item of selectedResults) {
 
-  const fullResult = await databases.getDocument(
-    DATABASE_ID,
-    RESULT_COLLECTION,
-    item.$id
-  );
+      const fullResult = await databases.getDocument(
+        DATABASE_ID,
+        RESULT_COLLECTION,
+        item.$id
+      );
 
-  const sem = Number(fullResult.semesterNumber);
+      const sem = Number(fullResult.semesterNumber);
 
-  if (!sem) {
-    alert("Semester missing in result");
-    continue;
-  }
+      if (!sem) {
+        alert("Semester missing in result");
+        continue;
+      }
 
-  const existing = await databases.listDocuments(
-    DATABASE_ID,
-    CERT_COLLECTION,
-    [
-      Query.equal("studentId", fullResult.studentId),
-      Query.equal("semesterNumber", sem)
-    ]
-  );
+      const existing = await databases.listDocuments(
+        DATABASE_ID,
+        CERT_COLLECTION,
+        [
+          Query.equal("studentId", fullResult.studentId),
+          Query.equal("semesterNumber", sem)
+        ]
+      );
 
-  if (existing.documents.length > 0) continue;
+      if (existing.documents.length > 0) continue;
 
-  await databases.createDocument(
-    DATABASE_ID,
-    CERT_COLLECTION,
-    ID.unique(),
-    {
-      studentId: fullResult.studentId,
-      studentName: fullResult.studentName,
-      course: fullResult.course,
-      photoId: fullResult.photoId,
-      marks: fullResult.totalMarks,
-      grade: fullResult.grade,
-      semesterNumber: sem, // ✅ FIXED
-      marksArray: fullResult.marksArray,
-      courseType: fullResult.courseType,
-      certificateNo: "BNMI-" + Date.now(),
-      status: "pending",
-      createdAt: new Date().toISOString()
+      await databases.createDocument(
+        DATABASE_ID,
+        CERT_COLLECTION,
+        ID.unique(),
+        {
+          studentId: fullResult.studentId,
+          studentName: fullResult.studentName,
+          course: fullResult.course,
+          photoId: fullResult.photoId,
+          marks: fullResult.totalMarks,
+          grade: fullResult.grade,
+          semesterNumber: sem,
+          marksArray: fullResult.marksArray,
+          courseType: fullResult.courseType,
+          certificateNo: "BNMI-" + Date.now(),
+          status: "pending",
+          createdAt: new Date().toISOString()
+        }
+      );
     }
-  );
-}
+
+    // ✅ IMPORTANT: store applied IDs
+    setAppliedIds(prev => [...prev, ...selected]);
 
     alert("Certificate request sent to admin");
     setSelected([]);
@@ -122,7 +126,6 @@ const applyCertificate = async () => {
     alert(err.message);
   }
 };
-
     // 🔥 GET ALL SEMESTER RESULTS
 
    
@@ -204,11 +207,12 @@ const applyCertificate = async () => {
 
                                     <td className="border p-2">
 
-                                        <input
-                                            type="checkbox"
-                                            checked={selected.includes(r.$id)}
-                                            onChange={() => toggleSelect(r.$id)}
-                                        />
+                                      <input
+  type="checkbox"
+  checked={selected.includes(r.$id)}
+  disabled={appliedIds.includes(r.$id)} // ✅ disable after apply
+  onChange={() => toggleSelect(r.$id)}
+/>
 
                                     </td>
 
