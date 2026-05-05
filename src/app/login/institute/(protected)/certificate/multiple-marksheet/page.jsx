@@ -318,7 +318,7 @@ if (!student) return <div className="p-10">Loading...</div>;
 {qrCode && (
   <img
     src={qrCode}
-    className="absolute top-[240px] right-[50px] w-[110px] bg-white p-1"
+    className="absolute bottom-[120px] right-[170px] w-[80px] bg-white p-1"
   />
 )}
         {/* ===============================
@@ -405,13 +405,13 @@ if (!student) return <div className="p-10">Loading...</div>;
   id="sign-img"
   src={student.franchiseSignature + "&mode=admin"} 
   crossOrigin="anonymous"
-  className="absolute bottom-[90px] left-[130px] w-[100px]"
+  className="absolute bottom-[95px] left-[100px] w-[100px]"
 />
         )}
 
         {/* OWNER NAME */}
         {student?.ownerName && (
-          <div className="absolute bottom-[60px] left-[100px] text-sm text-center">
+          <div className="absolute bottom-[60px] left-[100px] text-sm">
             <div className="font-semibold">{student.ownerName}</div>
             <div className="text-xs text-gray-600 font font-bold">
               Controller Of Examination
