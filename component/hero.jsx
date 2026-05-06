@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { databases } from "@/lib/appwrite";
 import { Stars } from "@react-three/drei";
@@ -13,64 +13,108 @@ import {
 } from "framer-motion";
 import { useFrame } from "@react-three/fiber";
 
-/* ================= DYNAMIC CANVAS ================= */
+/* ================= CANVAS ================= */
 const Canvas = dynamic(
   () => import("@react-three/fiber").then((mod) => mod.Canvas),
   { ssr: false }
 );
 
-/* ================= CONFIG ================= */
 const DB = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION = "website";
 
-/* ================= COLORS ================= */
 const COLORS_TOP = ["#13FFAA", "#1E67C6", "#CE84CF", "#DD335C"];
 
-/* ================= SHUFFLE ================= */
-const shuffle = (array) => {
-  return [...array].sort(() => Math.random() - 0.5);
-};
-
-/* ================= PHOTO GRID ================= */
+/* ================= GRID ================= */
 const ShuffleGrid = ({ images }) => {
   const [grid, setGrid] = useState([]);
-  const timeoutRef = useRef(null);
 
   useEffect(() => {
     if (!images.length) return;
 
-    setGrid(shuffle(images));
+    setGrid(images);
 
-    const loop = () => {
-      setGrid(shuffle(images));
-      timeoutRef.current = setTimeout(loop, 3500);
-    };
+    const interval = setInterval(() => {
+      setGrid((prev) => {
+        const newArr = [...prev];
 
-    timeoutRef.current = setTimeout(loop, 3500);
+        const count = Math.min(6, newArr.length);
 
-    return () => clearTimeout(timeoutRef.current);
+        const indexes = [];
+        while (indexes.length < count) {
+          const rand = Math.floor(Math.random() * newArr.length);
+          if (!indexes.includes(rand)) indexes.push(rand);
+        }
+
+        const temp = newArr[indexes[0]];
+        for (let i = 0; i < indexes.length - 1; i++) {
+          newArr[indexes[i]] = newArr[indexes[i + 1]];
+        }
+        newArr[indexes[indexes.length - 1]] = temp;
+
+        return newArr;
+      });
+    }, 1400);
+
+    return () => clearInterval(interval);
   }, [images]);
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      {grid.map((img, i) => (
+      {grid.map((item) => (
         <motion.div
-          key={img + i}
+          key={item.id}
           layout
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
           transition={{
-            duration: 1.2,
-            ease: "easeInOut",
+            type: "spring",
+            stiffness: 90,
+            damping: 20,
           }}
-          className="w-full h-24 md:h-28 rounded-xl overflow-hidden"
+          className="relative w-full h-24 md:h-28 rounded-xl overflow-hidden group cursor-pointer"
         >
-          <motion.div
-            className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${img})` }}
-            whileHover={{ scale: 1.08 }}
-            transition={{ duration: 0.4 }}
+          {/* IMAGE */}
+          <div
+            className="w-full h-full bg-cover bg-center transition duration-500 group-hover:scale-110"
+            style={{ backgroundImage: `url(${item.src})` }}
           />
+
+          {/* 🔥 NEW HOVER (LEFT + RIGHT COURSES) */}
+          <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-between px-4">
+
+            {/* LEFT SIDE */}
+            <div className="flex flex-col gap-2 text-xs text-white">
+              {item.courses
+                .slice(0, Math.ceil(item.courses.length / 2))
+                .map((c, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ x: -30, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white/10 backdrop-blur-sm px-2 py-1 rounded"
+                  >
+                    {c}
+                  </motion.div>
+                ))}
+            </div>
+
+            {/* RIGHT SIDE */}
+            <div className="flex flex-col gap-2 text-xs text-white">
+              {item.courses
+                .slice(Math.ceil(item.courses.length / 2))
+                .map((c, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ x: 30, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white/10 backdrop-blur-sm px-2 py-1 rounded"
+                  >
+                    {c}
+                  </motion.div>
+                ))}
+            </div>
+
+          </div>
         </motion.div>
       ))}
     </div>
@@ -81,13 +125,10 @@ const ShuffleGrid = ({ images }) => {
 function CameraParallax({ mouse }) {
   useFrame((state) => {
     const { camera } = state;
-
     camera.position.x += (mouse.x * 0.3 - camera.position.x) * 0.05;
     camera.position.y += (-mouse.y * 0.3 - camera.position.y) * 0.05;
-
     camera.lookAt(0, 0, 0);
   });
-
   return null;
 }
 
@@ -98,31 +139,31 @@ export default function AuroraHero() {
   const [texts, setTexts] = useState([]);
   const [images, setImages] = useState([]);
 
-  /* ================= FETCH CMS ================= */
+  /* ================= FETCH ================= */
   useEffect(() => {
     const fetchCMS = async () => {
-      try {
-        const res = await databases.listDocuments(DB, COLLECTION);
+      const res = await databases.listDocuments(DB, COLLECTION);
 
-        const textData = res.documents
-          .filter((d) => d.type === "text")
-          .map((d) => d.text);
+      const textData = res.documents
+        .filter((d) => d.type === "text")
+        .map((d) => d.text);
 
-        const imageData = res.documents
-          .filter((d) => d.type === "image")
-          .map((d) => d.image);
+      const imageData = res.documents
+        .filter((d) => d.type === "image")
+        .map((d) => ({
+          id: d.$id,
+          src: d.image,
+          courses: d.courses || [],
+        }));
 
-        setTexts(textData);
-        setImages(imageData);
-      } catch (err) {
-        console.error(err);
-      }
+      setTexts(textData);
+      setImages(imageData);
     };
 
     fetchCMS();
   }, []);
 
-  /* ================= BG ANIMATION ================= */
+  /* ================= BG ================= */
   useEffect(() => {
     animate(color, COLORS_TOP, {
       duration: 10,
@@ -191,7 +232,7 @@ export default function AuroraHero() {
         {/* LEFT */}
         <div>
           <h1 className="text-4xl md:text-6xl font-semibold leading-tight">
-            {displayText || "Loading..."}
+            {displayText}
           </h1>
 
           <p className="mt-6 text-gray-300 max-w-md">

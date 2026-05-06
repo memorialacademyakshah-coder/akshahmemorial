@@ -14,9 +14,11 @@ export default function CMSPage() {
   const [textInput, setTextInput] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
+const [coursesInput, setCoursesInput] = useState("");
 
   const [editingTextId, setEditingTextId] = useState(null);
   const [editingImageId, setEditingImageId] = useState(null);
+
 
   /* ================= FETCH ================= */
   const fetchData = async () => {
@@ -92,10 +94,11 @@ export default function CMSPage() {
   const addImage = async () => {
     const url = await uploadImage();
 
-    await databases.createDocument(DB, COLLECTION, ID.unique(), {
-      type: "image",
-      image: url,
-    });
+await databases.createDocument(DB, COLLECTION, ID.unique(), {
+  type: "image",
+  image: url,
+  courses: formatCourses(coursesInput),
+});
 
     reset();
     fetchData();
@@ -113,17 +116,18 @@ export default function CMSPage() {
       url = await uploadImage();
     }
 
-    await databases.updateDocument(DB, COLLECTION, editingImageId, {
-      image: url,
-    });
-
-    reset();
+   await databases.updateDocument(DB, COLLECTION, editingImageId, {
+  image: url,
+  courses: formatCourses(coursesInput),
+});
+  
+    reset(() => setCoursesInput(""));
     fetchData();
   };
 
   const startEditImage = (img) => {
     setEditingImageId(img.$id);
-    setPreview(img.image);
+    setCoursesInput((img.courses || []).join("\n"));
   };
 
   /* ================= RESET ================= */
@@ -134,6 +138,14 @@ export default function CMSPage() {
     setEditingTextId(null);
     setEditingImageId(null);
   };
+
+  const formatCourses = (text) => {
+  return text
+    .split("\n")
+    .map((c) => c.trim())
+    .filter((c) => c !== "")
+    .slice(0, 10);
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#020617] to-[#0f172a] text-white p-10">
@@ -206,19 +218,27 @@ export default function CMSPage() {
           Image Upload
         </h2>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="mb-3"
-        />
+  <input
+  type="file"
+  accept="image/*"
+  onChange={handleImageChange}
+  className="mb-3"
+/>
 
-        {preview && (
-          <img
-            src={preview}
-            className="w-32 h-32 rounded-xl object-cover mb-3 border border-white/20"
-          />
-        )}
+{/* 🔥 ADD THIS HERE */}
+<textarea
+  placeholder="Enter courses (one per line)\nADCA\nDCA\nBCA"
+  value={coursesInput}
+  onChange={(e) => setCoursesInput(e.target.value)}
+  className="p-3 bg-black/40 border border-white/10 rounded-lg w-full mb-3"
+/>
+
+{preview && (
+  <img
+    src={preview}
+    className="w-32 h-32 rounded-xl object-cover mb-3 border border-white/20"
+  />
+)}
 
         <button
           onClick={editingImageId ? updateImage : addImage}

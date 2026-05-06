@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { databases } from '@/lib/appwrite'
 import { Query } from 'appwrite'
 
@@ -10,6 +10,7 @@ const COLLECTION_ID = 'services'
 export default function ServicesSection() {
   const [services, setServices] = useState([])
   const [index, setIndex] = useState(0)
+  const sliderRef = useRef(null)
 
   const itemsPerView = 4
 
@@ -34,10 +35,38 @@ export default function ServicesSection() {
     fetchServices()
   }, [])
 
-  const maxIndex =
-    services.length > 0
-      ? Math.ceil(services.length / itemsPerView) - 1
-      : 0
+  /* ---------------- DUPLICATE FOR INFINITE LOOP ---------------- */
+  const extendedServices = [...services, ...services]
+
+  /* ---------------- AUTO SLIDE ---------------- */
+  useEffect(() => {
+    if (services.length === 0) return
+
+    const interval = setInterval(() => {
+      setIndex((prev) => prev + 1)
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [services])
+
+  /* ---------------- RESET LOOP (SEAMLESS) ---------------- */
+  useEffect(() => {
+    if (index >= services.length) {
+      setTimeout(() => {
+        if (sliderRef.current) {
+          sliderRef.current.style.transition = 'none'
+        }
+        setIndex(0)
+
+        setTimeout(() => {
+          if (sliderRef.current) {
+            sliderRef.current.style.transition =
+              'transform 0.5s ease-in-out'
+          }
+        }, 50)
+      }, 500)
+    }
+  }, [index, services.length])
 
   return (
     <section className="w-full bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] py-28 overflow-hidden">
@@ -49,9 +78,8 @@ export default function ServicesSection() {
           <span className="text-[#19b9f1]">Trust-Focused</span>
         </h2>
 
-       <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-          OUR {' '}
-          <span className="text-[#19b9f1]">TOP INSTITUTE</span>
+        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+          OUR <span className="text-[#19b9f1]">TOP INSTITUTE</span>
         </h2>
 
         {/* EMPTY STATE */}
@@ -61,19 +89,23 @@ export default function ServicesSection() {
           </p>
         )}
 
-        {/* Slider */}
+        {/* SLIDER */}
         {services.length > 0 && (
-          <div className="relative mt-20">
+          <div className="relative mt-20 overflow-hidden">
 
             <div
-              className="flex gap-8 transition-transform duration-500 ease-in-out"
+              ref={sliderRef}
+              className="flex gap-8"
               style={{
-                transform: `translateX(-${index * 100}%)`,
+                transform: `translateX(-${
+                  index * (100 / itemsPerView)
+                }%)`,
+                transition: 'transform 0.5s ease-in-out',
               }}
             >
-              {services.map((item) => (
+              {extendedServices.map((item, i) => (
                 <div
-                  key={item.$id}
+                  key={i}
                   className="min-w-[100%] sm:min-w-[50%] lg:min-w-[25%]"
                 >
                   <ServiceCard
@@ -86,47 +118,24 @@ export default function ServicesSection() {
               ))}
             </div>
 
-            {/* Arrows */}
-            {services.length > itemsPerView && (
-              <>
-                <button
-                  onClick={() => setIndex(Math.max(index - 1, 0))}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 
-                  w-12 h-12 rounded-full bg-white/10 backdrop-blur-md 
-                  border border-white/20 hover:bg-[#19b9f1] transition"
-                >
-                  ‹
-                </button>
+            {/* ARROWS */}
+            <button
+              onClick={() => setIndex((prev) => prev - 1)}
+              className="absolute left-0 top-1/2 -translate-y-1/2 
+              w-12 h-12 rounded-full bg-white/10 backdrop-blur-md 
+              border border-white/20 hover:bg-[#19b9f1] transition"
+            >
+              ‹
+            </button>
 
-                <button
-                  onClick={() =>
-                    setIndex(Math.min(index + 1, maxIndex))
-                  }
-                  className="absolute right-0 top-1/2 -translate-y-1/2 
-                  w-12 h-12 rounded-full bg-white/10 backdrop-blur-md 
-                  border border-white/20 hover:bg-[#19b9f1] transition"
-                >
-                  ›
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Dots */}
-        {services.length > itemsPerView && (
-          <div className="mt-10 flex justify-center gap-3">
-            {Array.from({ length: maxIndex + 1 }).map((_, i) => (
-              <span
-                key={i}
-                onClick={() => setIndex(i)}
-                className={`cursor-pointer rounded-full transition-all duration-300 ${
-                  i === index
-                    ? 'w-8 h-2 bg-[#19b9f1]'
-                    : 'w-3 h-2 bg-gray-600'
-                }`}
-              />
-            ))}
+            <button
+              onClick={() => setIndex((prev) => prev + 1)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 
+              w-12 h-12 rounded-full bg-white/10 backdrop-blur-md 
+              border border-white/20 hover:bg-[#19b9f1] transition"
+            >
+              ›
+            </button>
           </div>
         )}
       </div>
@@ -138,55 +147,54 @@ export default function ServicesSection() {
 
 function ServiceCard({ title, text, imageUrl, state }) {
   return (
-    <div className="group relative rounded-2xl overflow-hidden
+    <div
+      className="group relative rounded-2xl overflow-hidden
       bg-white/5 backdrop-blur-xl
       p-8 text-center border border-white/10
       transition-all duration-500
       hover:-translate-y-3 hover:shadow-[0_10px_40px_rgba(25,185,241,0.25)]
-      min-h-[360px]">
-
-      {/* Glow Effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 
-        transition duration-500 bg-gradient-to-br from-[#19b9f1]/20 to-transparent blur-xl" />
+      min-h-[360px]"
+    >
+      {/* Glow */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 
+        transition duration-500 bg-gradient-to-br from-[#19b9f1]/20 to-transparent blur-xl"
+      />
 
       <div className="relative z-10 flex flex-col items-center">
 
-        {/* Image */}
-        <div className="mb-5 flex justify-center">
-          <div className="w-50 h-50 flex items-center justify-center 
-            rounded-full bg-white/10 border border-white/20
-            group-hover:bg-[#19b9f1]/20 transition">
+        {/* PERFECT CIRCLE IMAGE */}
+        <div className="mb-5">
+          <div className="w-40 h-40 rounded-full overflow-hidden border border-white/20">
             {imageUrl && (
               <img
                 src={imageUrl}
-                className="w-80 h-80 object-contain"
+                alt={title}
+                className="w-full h-full object-cover"
               />
             )}
           </div>
         </div>
 
-        {/* Title */}
+        {/* TITLE */}
         <h3 className="font-semibold text-xl tracking-wide">
           {title}
         </h3>
 
-
-        {/* Description */}
-        <p className="mt-4 text-gray-400 text-sm leading-relaxed 
-        group-hover:text-gray-300 transition">
+        {/* DESCRIPTION */}
+        <p className="mt-4 text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition">
           {text}
         </p>
 
-        
-        {/* STATE BADGE */}
+        {/* STATE */}
         {state && (
-          <span className="mt-2 px-3 py-1 text-xs rounded-full 
-          bg-[#19b9f1]/20 text-[#19b9f1] border border-[#19b9f1]/30">
+          <span
+            className="mt-3 px-3 py-1 text-xs rounded-full 
+            bg-[#19b9f1]/20 text-[#19b9f1] border border-[#19b9f1]/30"
+          >
             📍 {state}
           </span>
         )}
-
-
       </div>
     </div>
   )
