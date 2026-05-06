@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import QRCode from "qrcode";
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -30,7 +31,89 @@ export default function StudentDashboard() {
   }
 }, []);
 
+const openCertificate = async (cert) => {
+  try {
+
+    const studentData = await databases.getDocument(
+      DATABASE_ID,
+      "student_admissions",
+      cert.studentId
+    );
+
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", studentData.franchiseEmail)]
+    );
+
+    const franchiseData = franchiseRes.documents[0];
+
+    const certId = `CERT-${Date.now()}`;
+    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${certId}`;
+    const qrCode = await QRCode.toDataURL(verifyUrl);
+
+    const data = {
+      studentName: studentData.studentName,
+      course: studentData.courseName,
+      grade: cert.grade,
+      instituteName: studentData.instituteName,
+      photoId: studentData.photoId,
+      franchiseSignature: franchiseData?.signature || "",
+      logo: franchiseData?.logo || "",
+      qrCode,
+      verifyUrl,
+      certificateId: certId
+    };
+
+    localStorage.setItem("certificateStudent", JSON.stringify(data));
+
+    window.open("/login/institute/certificate/print", "_blank");
+
+  } catch (err) {
+    console.log(err);
+    alert("Certificate error");
+  }
+};
  
+const openMarksheet = async (cert) => {
+  try {
+
+    const studentData = await databases.getDocument(
+      DATABASE_ID,
+      "student_admissions",
+      cert.studentId
+    );
+
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", studentData.franchiseEmail)]
+    );
+
+    const franchiseData = franchiseRes.documents[0];
+
+    const data = {
+      studentName: studentData.studentName,
+      fatherName: studentData.fatherName,
+      course: studentData.courseName,
+      instituteName: studentData.instituteName,
+      studentId: cert.studentId,
+      marksArray: cert.marksArray || [],
+      grade: cert.grade,
+      marksheetNo: cert.$id,
+      franchiseSignature: franchiseData?.signature || "",
+      logo: franchiseData?.logo || ""
+    };
+
+    localStorage.setItem("marksheetStudent", JSON.stringify(data));
+
+    window.open("/login/institute/certificate/marksheet", "_blank");
+
+  } catch (err) {
+    console.log(err);
+    alert("Marksheet error");
+  }
+};
 const calculateAge = (dob) => {
   if (!dob) return "-";
 
@@ -47,24 +130,41 @@ const calculateAge = (dob) => {
   return age;
 };
 
-const loadCertificate = async (studentId) => {
+const loadCertificate = async (student) => {
   try {
     const res = await databases.listDocuments(
       DATABASE_ID,
       "certificates",
       [
-        Query.equal("studentId", studentId),
+        Query.equal("studentId", student.$id),
         Query.equal("status", "approved")
       ]
     );
 
+    console.log("STUDENT CERT:", res.documents);
+
     if (res.documents.length > 0) {
       setCertData(res.documents[0]);
     }
+
   } catch (err) {
-    console.log("CERT FETCH ERROR:", err);
+    console.log(err);
   }
 };
+
+useEffect(() => {
+  const data = localStorage.getItem("student");
+
+  if (!data) {
+    router.push("/student/login");
+  } else {
+    const parsed = JSON.parse(data);
+    setStudent(parsed);
+
+    loadCertificate(parsed); // 🔥 PASS FULL STUDENT
+  }
+}, []);
+
 
  if (!student) return null;
   return (
@@ -232,7 +332,7 @@ const loadCertificate = async (studentId) => {
       </button>
     </>
   ) : (
-    <span className="text-sm text-gray-400">
+    <span className="text-gray-400 text-sm">
       Certificate not available yet
     </span>
   )}

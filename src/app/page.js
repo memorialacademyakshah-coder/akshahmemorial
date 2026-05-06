@@ -10,6 +10,7 @@ import Footer from '../../component/Footer'
 import StagesSection from '../../component/StagesSection'
 import WorkShowcase from '../../component/WorkShowcase'
 import TeamSection from '../../component/TeamSection'
+import BrandSlider from '../../component/brandlogo'
 
 export default function Page() {
   return (
@@ -22,6 +23,7 @@ export default function Page() {
       <WorkShowcase />
       <TestimonialsSection />
       <TeamSection />
+      <BrandSlider />
       <Footer />
 
     </>

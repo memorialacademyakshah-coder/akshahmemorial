@@ -79,6 +79,14 @@ export default function AdminSidebar() {
           href="/admin/website/team"
         />
 
+
+        <MenuItem
+          icon={<Image size={18} />}
+          label="Affaliates Section"
+          href="/admin/website/affalation"
+        />
+
+
         <MenuItem
           icon={<Image size={18} />}
           label="Bottom Section"

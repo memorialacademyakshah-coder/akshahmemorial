@@ -12,20 +12,24 @@ export default function CMSPage() {
   const [images, setImages] = useState([]);
 
   const [textInput, setTextInput] = useState("");
+  const [titleInput, setTitleInput] = useState("");
+
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
-const [coursesInput, setCoursesInput] = useState("");
 
   const [editingTextId, setEditingTextId] = useState(null);
   const [editingImageId, setEditingImageId] = useState(null);
 
-
   /* ================= FETCH ================= */
   const fetchData = async () => {
-    const res = await databases.listDocuments(DB, COLLECTION);
+    try {
+      const res = await databases.listDocuments(DB, COLLECTION);
 
-    setTexts(res.documents.filter((d) => d.type === "text"));
-    setImages(res.documents.filter((d) => d.type === "image"));
+      setTexts(res.documents.filter((d) => d.type === "text"));
+      setImages(res.documents.filter((d) => d.type === "image"));
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   useEffect(() => {
@@ -35,6 +39,7 @@ const [coursesInput, setCoursesInput] = useState("");
   /* ================= IMAGE ================= */
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+
     if (!file) return;
 
     if (file.size > 3 * 1024 * 1024) {
@@ -92,13 +97,15 @@ const [coursesInput, setCoursesInput] = useState("");
 
   /* ================= IMAGE ================= */
   const addImage = async () => {
+    if (!imageFile) return;
+
     const url = await uploadImage();
 
-await databases.createDocument(DB, COLLECTION, ID.unique(), {
-  type: "image",
-  image: url,
-  courses: formatCourses(coursesInput),
-});
+    await databases.createDocument(DB, COLLECTION, ID.unique(), {
+      type: "image",
+      image: url,
+      title: titleInput,
+    });
 
     reset();
     fetchData();
@@ -116,36 +123,31 @@ await databases.createDocument(DB, COLLECTION, ID.unique(), {
       url = await uploadImage();
     }
 
-   await databases.updateDocument(DB, COLLECTION, editingImageId, {
-  image: url,
-  courses: formatCourses(coursesInput),
-});
-  
-    reset(() => setCoursesInput(""));
+    await databases.updateDocument(DB, COLLECTION, editingImageId, {
+      image: url,
+      title: titleInput,
+    });
+
+    reset();
     fetchData();
   };
 
   const startEditImage = (img) => {
     setEditingImageId(img.$id);
-    setCoursesInput((img.courses || []).join("\n"));
+    setTitleInput(img.title || "");
+    setPreview(img.image);
   };
 
   /* ================= RESET ================= */
   const reset = () => {
     setTextInput("");
+    setTitleInput("");
     setImageFile(null);
     setPreview(null);
+
     setEditingTextId(null);
     setEditingImageId(null);
   };
-
-  const formatCourses = (text) => {
-  return text
-    .split("\n")
-    .map((c) => c.trim())
-    .filter((c) => c !== "")
-    .slice(0, 10);
-};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#020617] to-[#0f172a] text-white p-10">
@@ -218,27 +220,28 @@ await databases.createDocument(DB, COLLECTION, ID.unique(), {
           Image Upload
         </h2>
 
-  <input
-  type="file"
-  accept="image/*"
-  onChange={handleImageChange}
-  className="mb-3"
-/>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="mb-3"
+        />
 
-{/* 🔥 ADD THIS HERE */}
-<textarea
-  placeholder="Enter courses (one per line)\nADCA\nDCA\nBCA"
-  value={coursesInput}
-  onChange={(e) => setCoursesInput(e.target.value)}
-  className="p-3 bg-black/40 border border-white/10 rounded-lg w-full mb-3"
-/>
+        {/* TITLE INPUT */}
+        <input
+          type="text"
+          placeholder="Enter image title"
+          value={titleInput}
+          onChange={(e) => setTitleInput(e.target.value)}
+          className="p-3 bg-black/40 border border-white/10 rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-pink-500"
+        />
 
-{preview && (
-  <img
-    src={preview}
-    className="w-32 h-32 rounded-xl object-cover mb-3 border border-white/20"
-  />
-)}
+        {preview && (
+          <img
+            src={preview}
+            className="w-32 h-32 rounded-xl object-cover mb-3 border border-white/20"
+          />
+        )}
 
         <button
           onClick={editingImageId ? updateImage : addImage}
@@ -262,6 +265,11 @@ await databases.createDocument(DB, COLLECTION, ID.unique(), {
                 src={img.image}
                 className="w-full h-32 object-cover group-hover:scale-110 transition duration-500"
               />
+
+              {/* TITLE */}
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2 text-center text-sm">
+                {img.title}
+              </div>
 
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition">
                 <button
