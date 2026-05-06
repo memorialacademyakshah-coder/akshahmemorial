@@ -1,254 +1,425 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { databases, storage } from '@/lib/appwrite'
-import { ID, Query } from 'appwrite'
+import { useEffect, useState } from "react";
+import {
+  Client,
+  Databases,
+  Storage,
+  ID,
+  Query,
+} from "appwrite";
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-const COLLECTION_ID = 'website'
-const BUCKET_ID = '6986e8a4001925504f6b'
+import {
+  FiUpload,
+  FiSave,
+  FiImage,
+} from "react-icons/fi";
+
+/* ================= APPWRITE ================= */
+const client = new Client();
+
+client
+  .setEndpoint("https://cloud.appwrite.io/v1")
+  .setProject(
+    process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID
+  );
+
+const databases = new Databases(client);
+const storage = new Storage(client);
+
+/* ================= IDS ================= */
+const DATABASE_ID =
+  "6986e1c00001cabf9b03";
+
+const COLLECTION_ID = "website";
+
+const BUCKET_ID =
+  "6986e8a4001925504f6b";
 
 export default function AboutCMS() {
-  const [docId, setDocId] = useState(null)
-  const [form, setForm] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
+  const [docId, setDocId] =
+    useState(null);
 
+  const [form, setForm] = useState({
+    aboutTitle: "",
+    aboutDescription: "",
+    missionTitle: "",
+    missionContent: "",
+    visionTitle: "",
+    visionContent: "",
+    aboutImageTop: "",
+    aboutImageCenter: "",
+    aboutImageBottom: "",
+  });
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [uploading, setUploading] =
+    useState(false);
+
+  /* ================= FETCH ================= */
   useEffect(() => {
     const fetchData = async () => {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [Query.limit(1)]
-      )
+      try {
+        const res =
+          await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTION_ID,
+            [Query.limit(1)]
+          );
 
-      if (res.documents.length) {
-        const doc = res.documents[0]
-        setDocId(doc.$id)
-        setForm(doc)
+        if (res.documents.length) {
+          const doc = res.documents[0];
+
+          setDocId(doc.$id);
+
+          setForm({
+            aboutTitle:
+              doc.aboutTitle || "",
+            aboutDescription:
+              doc.aboutDescription || "",
+            missionTitle:
+              doc.missionTitle || "",
+            missionContent:
+              doc.missionContent || "",
+            visionTitle:
+              doc.visionTitle || "",
+            visionContent:
+              doc.visionContent || "",
+            aboutImageTop:
+              doc.aboutImageTop || "",
+            aboutImageCenter:
+              doc.aboutImageCenter || "",
+            aboutImageBottom:
+              doc.aboutImageBottom || "",
+          });
+        }
+      } catch (err) {
+        console.log(err);
       }
 
-      setLoading(false)
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  /* ================= IMAGE UPLOAD ================= */
+  const uploadImage = async (
+    file,
+    field
+  ) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Max image size is 5MB");
+      return;
     }
 
-    fetchData()
-  }, [])
-
-  const uploadImage = async (file) => {
-    setUploading(true)
+    setUploading(true);
 
     try {
-      const uploaded = await storage.createFile(
-        BUCKET_ID,
-        ID.unique(),
-        file
-      )
+      const uploaded =
+        await storage.createFile(
+          BUCKET_ID,
+          ID.unique(),
+          file
+        );
 
-      const fileUrl = storage.getFileView(
-        BUCKET_ID,
-        uploaded.$id
-      )
+      const fileUrl = `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
 
-      setForm(prev => ({ ...prev, aboutImage: fileUrl }))
+      setForm((prev) => ({
+        ...prev,
+        [field]: fileUrl,
+      }));
+
+      alert("Image Uploaded ✅");
     } catch (err) {
-      console.error(err)
-      alert('Image upload failed')
+      console.log(err);
+      alert(
+        "Upload Failed. Check bucket permissions."
+      );
     }
 
-    setUploading(false)
-  }
+    setUploading(false);
+  };
 
+  /* ================= SAVE ================= */
   const saveAbout = async () => {
     try {
-      await databases.updateDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        docId,
-        form
-      )
-      alert('About updated ✅')
+      setSaving(true);
+
+      if (!docId) {
+        const created =
+          await databases.createDocument(
+            DATABASE_ID,
+            COLLECTION_ID,
+            ID.unique(),
+            form
+          );
+
+        setDocId(created.$id);
+      } else {
+        await databases.updateDocument(
+          DATABASE_ID,
+          COLLECTION_ID,
+          docId,
+          form
+        );
+      }
+
+      alert("Saved Successfully ✅");
     } catch (err) {
-      console.error(err)
-      alert('Save failed')
+      console.log(err);
+      alert(
+        "Save Failed. Check collection attributes."
+      );
     }
+
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#020617] text-white">
+        Loading...
+      </div>
+    );
   }
 
-  if (loading) return <p className="p-10">Loading...</p>
-
   return (
-    <div className="max-w-5xl mx-auto p-8">
+    <div className="min-h-screen bg-[#020617] text-white p-6 md:p-10">
 
-      <div className="bg-white shadow-xl rounded-xl p-8 space-y-6">
+      <div className="mx-auto max-w-7xl">
 
-        <h1 className="text-3xl font-bold border-b pb-4">
-          About Page CMS
-        </h1>
+        {/* HEADER */}
+        <div className="mb-10 flex items-center justify-between">
 
-        {/* Main Section */}
+          <div>
+            <h1 className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-5xl font-black text-transparent">
+              About CMS
+            </h1>
 
-        <div className="grid md:grid-cols-2 gap-6">
+            <p className="mt-2 text-gray-400">
+              Manage About Section
+            </p>
+          </div>
 
-          <input
-            className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Main Title"
-            value={form.aboutTitle || ''}
-            onChange={e =>
-              setForm({ ...form, aboutTitle: e.target.value })
-            }
-          />
+          <button
+            onClick={saveAbout}
+            disabled={saving}
+            className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 px-8 py-4 font-semibold transition hover:scale-105"
+          >
+            <FiSave />
 
-          <input
-            className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Highlighted Word"
-            value={form.aboutSubtitleHighlight || ''}
-            onChange={e =>
-              setForm({ ...form, aboutSubtitleHighlight: e.target.value })
-            }
-          />
-
+            {saving
+              ? "Saving..."
+              : "Save Changes"}
+          </button>
         </div>
 
-        <textarea
-          className="border rounded-lg p-3 w-full h-32 focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="Description"
-          value={form.aboutDescription || ''}
-          onChange={e =>
-            setForm({ ...form, aboutDescription: e.target.value })
-          }
-        />
+        <div className="grid gap-8 lg:grid-cols-2">
 
-        {/* Image Upload */}
-
-        <div className="space-y-3">
-
-          <label className="font-semibold text-gray-700">
-            Upload About Image
-          </label>
-
-          <input
-            type="file"
-            className="border rounded-lg p-2 w-full"
-            onChange={(e) => uploadImage(e.target.files[0])}
-          />
-
-          {uploading && (
-            <p className="text-sm text-gray-500">Uploading image...</p>
-          )}
-
-          {form.aboutImage && (
-            <img
-              src={form.aboutImage}
-              className="w-72 rounded-lg shadow-md border"
-            />
-          )}
-
-        </div>
-
-        {/* Accordion Section */}
-
-        <div className="border-t pt-6 space-y-6">
-
-          <h2 className="text-xl font-bold">
-            Accordion Sections
-          </h2>
-
-          {/* Mission */}
-
-          <div className="bg-gray-50 p-5 rounded-lg space-y-3">
-
-            <h3 className="font-semibold text-lg">
-              Mission
-            </h3>
+          {/* LEFT */}
+          <div className="rounded-[35px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-2xl">
 
             <input
-              className="border rounded-lg p-3 w-full"
+              value={form.aboutTitle}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  aboutTitle:
+                    e.target.value,
+                })
+              }
+              placeholder="About Title"
+              className="mb-5 w-full rounded-2xl border border-white/10 bg-black/30 p-4"
+            />
+
+            <textarea
+              rows={6}
+              value={
+                form.aboutDescription
+              }
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  aboutDescription:
+                    e.target.value,
+                })
+              }
+              placeholder="About Description"
+              className="mb-5 w-full rounded-2xl border border-white/10 bg-black/30 p-4"
+            />
+
+            <input
+              value={form.missionTitle}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  missionTitle:
+                    e.target.value,
+                })
+              }
               placeholder="Mission Title"
-              value={form.missionTitle || ''}
-              onChange={e =>
-                setForm({ ...form, missionTitle: e.target.value })
-              }
+              className="mb-4 w-full rounded-2xl border border-white/10 bg-black/30 p-4"
             />
 
             <textarea
-              className="border rounded-lg p-3 w-full"
+              rows={4}
+              value={
+                form.missionContent
+              }
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  missionContent:
+                    e.target.value,
+                })
+              }
               placeholder="Mission Content"
-              value={form.missionContent || ''}
-              onChange={e =>
-                setForm({ ...form, missionContent: e.target.value })
-              }
+              className="mb-5 w-full rounded-2xl border border-white/10 bg-black/30 p-4"
             />
 
-          </div>
-
-          {/* Vision */}
-
-          <div className="bg-gray-50 p-5 rounded-lg space-y-3">
-
-            <h3 className="font-semibold text-lg">
-              Vision
-            </h3>
-
             <input
-              className="border rounded-lg p-3 w-full"
+              value={form.visionTitle}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  visionTitle:
+                    e.target.value,
+                })
+              }
               placeholder="Vision Title"
-              value={form.visionTitle || ''}
-              onChange={e =>
-                setForm({ ...form, visionTitle: e.target.value })
-              }
+              className="mb-4 w-full rounded-2xl border border-white/10 bg-black/30 p-4"
             />
 
             <textarea
-              className="border rounded-lg p-3 w-full"
+              rows={4}
+              value={
+                form.visionContent
+              }
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  visionContent:
+                    e.target.value,
+                })
+              }
               placeholder="Vision Content"
-              value={form.visionContent || ''}
-              onChange={e =>
-                setForm({ ...form, visionContent: e.target.value })
-              }
+              className="w-full rounded-2xl border border-white/10 bg-black/30 p-4"
             />
-
           </div>
 
-          {/* Objective */}
+          {/* RIGHT */}
+          <div className="space-y-6">
 
-          <div className="bg-gray-50 p-5 rounded-lg space-y-3">
-
-            <h3 className="font-semibold text-lg">
-              Objective
-            </h3>
-
-            <input
-              className="border rounded-lg p-3 w-full"
-              placeholder="Objective Title"
-              value={form.objectiveTitle || ''}
-              onChange={e =>
-                setForm({ ...form, objectiveTitle: e.target.value })
+            <ImageCard
+              title="Top Right Image"
+              image={
+                form.aboutImageTop
+              }
+              onUpload={(file) =>
+                uploadImage(
+                  file,
+                  "aboutImageTop"
+                )
               }
             />
 
-            <textarea
-              className="border rounded-lg p-3 w-full"
-              placeholder="Objective Content"
-              value={form.objectiveContent || ''}
-              onChange={e =>
-                setForm({ ...form, objectiveContent: e.target.value })
+            <ImageCard
+              title="Center Image"
+              image={
+                form.aboutImageCenter
+              }
+              onUpload={(file) =>
+                uploadImage(
+                  file,
+                  "aboutImageCenter"
+                )
               }
             />
 
+            <ImageCard
+              title="Bottom Left Image"
+              image={
+                form.aboutImageBottom
+              }
+              onUpload={(file) =>
+                uploadImage(
+                  file,
+                  "aboutImageBottom"
+                )
+              }
+            />
+
+            {uploading && (
+              <p className="text-blue-300">
+                Uploading...
+              </p>
+            )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
+/* ================= CARD ================= */
+function ImageCard({
+  title,
+  image,
+  onUpload,
+}) {
+  return (
+    <div className="rounded-[30px] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-2xl">
+
+      <div className="mb-4 flex items-center gap-3">
+
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
+          <FiImage size={20} />
         </div>
 
-        {/* Save Button */}
-
-        <button
-          onClick={saveAbout}
-          className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition"
-        >
-          Save About Section
-        </button>
-
+        <h3 className="text-lg font-semibold">
+          {title}
+        </h3>
       </div>
 
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/30">
+
+        {image ? (
+          <img
+            src={image}
+            className="h-72 w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-72 items-center justify-center text-gray-500">
+            No Image
+          </div>
+        )}
+      </div>
+
+      <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 rounded-2xl border border-dashed border-white/20 bg-white/[0.03] px-6 py-4 transition hover:bg-white/[0.06]">
+
+        <FiUpload />
+
+        Upload Image
+
+        <input
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) =>
+            onUpload(
+              e.target.files[0]
+            )
+          }
+        />
+      </label>
     </div>
-  )
+  );
 }
