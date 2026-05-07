@@ -134,7 +134,7 @@ export default function StagesSection() {
               src={data.aboutImageCenter}
               className="
                 h-[620px]
-                w-[470px]
+                w-[400px]
                 object-cover
               "
             />
@@ -170,7 +170,7 @@ export default function StagesSection() {
               src={data.aboutImageTop}
               className="
                 h-[290px]
-                w-[270px]
+                w-[200px]
                 object-cover
               "
             />
@@ -204,7 +204,7 @@ export default function StagesSection() {
               src={data.aboutImageBottom}
               className="
                 h-[290px]
-                w-[270px]
+                w-[200px]
                 object-cover
               "
             />
@@ -225,7 +225,7 @@ export default function StagesSection() {
             }}
             className="
               absolute
-              bottom-24
+              bottom-15
               right-0
               z-40
               rounded-[32px]
@@ -292,7 +292,7 @@ export default function StagesSection() {
               text-[#0f172a]
             "
           >
-            {data.aboutTitle}
+           
           </h2>
 
           {/* DESC */}
