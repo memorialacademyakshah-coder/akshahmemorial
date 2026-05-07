@@ -14,6 +14,7 @@ export default function AddCourseSingle() {
   const [examFee, setExamFee] = useState(0)
   const [courses, setCourses] = useState([])
   const [selectedCourses, setSelectedCourses] = useState({})
+  const [search, setSearch] = useState('')
 
   const fetchCourses = async () => {
 
@@ -257,6 +258,18 @@ router.push('/login/institute/add-course/single/list') // change if your route i
 
         </div>
 
+        <div className="mb-4">
+
+  <input
+    type="text"
+    placeholder="Search Course Name..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-full bg-black border border-gray-700 text-white p-3 rounded-lg outline-none focus:border-orange-500"
+  />
+
+</div>
+
         <div className="overflow-x-auto">
 
           <table className="w-full border border-gray-800 text-sm">
@@ -279,7 +292,13 @@ router.push('/login/institute/add-course/single/list') // change if your route i
 
             <tbody>
 
-              {courses.map(course => (
+              {courses
+  .filter(course =>
+    course.courseName
+      ?.toLowerCase()
+      .includes(search.toLowerCase())
+  )
+  .map(course => (
 
                 <tr key={course.$id} className="border border-gray-800 hover:bg-[#1a1a1a]">
 
