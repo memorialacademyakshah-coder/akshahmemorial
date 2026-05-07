@@ -681,7 +681,7 @@ const getExpiryDate = () => {
                 {/* Pending */}
                 {activeTab === 'pending' && (
                 <div className="flex flex-wrap gap-2 md:gap-3">
-                    <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
+                 
                     <ActionBtn label="Approve" color="green" onClick={() => approveFranchise(req)} />
                     <ActionBtn label="Reject" color="red" onClick={() => rejectFranchise(req)} />
                   </div>
