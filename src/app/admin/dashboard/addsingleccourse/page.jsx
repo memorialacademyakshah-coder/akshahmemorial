@@ -10,6 +10,7 @@ const COLLECTION_ID = 'courses_master'
 export default function CourseCMS() {
 
   const [courses, setCourses] = useState([])
+  const [editingId, setEditingId] = useState(null)
 
   const awardList = [
     "CERTIFICATE",
@@ -33,21 +34,35 @@ export default function CourseCMS() {
     "PERSONAL"
   ]
 
+  const editCourse = (course) => {
+
+  setForm({
+    courseCode: course.courseCode,
+    award: course.award,
+    courseTitle: course.courseName.replace(`${course.award} IN `, ''),
+    duration: course.duration,
+    courseFees: course.courseFees || ''
+  })
+
+  setEditingId(course.$id)
+}
+
   const [form, setForm] = useState({
     courseCode: '',
     award: '',
     courseTitle: '',
-    duration: ''
+    duration: '',
+    courseFees: ''
   })
 
   const fetchCourses = async () => {
     const res = await databases.listDocuments(
       DATABASE_ID,
       COLLECTION_ID,
-       [
-          Query.orderDesc('courseCode'),
-          Query.limit(500) // 🔥 increase limit
-        ]
+      [
+        Query.orderDesc('courseCode'),
+        Query.limit(500) // 🔥 increase limit
+      ]
     )
     setCourses(res.documents)
   }
@@ -63,14 +78,41 @@ export default function CourseCMS() {
     })
   }
 
-  const addCourse = async () => {
+const addCourse = async () => {
 
-    if (!form.courseCode || !form.award || !form.courseTitle || !form.duration) {
-      alert("Please fill all fields")
-      return
-    }
+  if (
+    !form.courseCode ||
+    !form.award ||
+    !form.courseTitle ||
+    !form.duration ||
+    !form.courseFees
+  ) {
+    alert("Please fill all fields")
+    return
+  }
 
-    const courseName = `${form.award} IN ${form.courseTitle}`
+  const courseName = `${form.award} IN ${form.courseTitle}`
+
+  if (editingId) {
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      COLLECTION_ID,
+      editingId,
+      {
+        courseCode: form.courseCode,
+        courseName,
+        duration: form.duration,
+        award: form.award,
+        courseFees: form.courseFees
+      }
+    )
+
+    alert("Course Updated Successfully")
+
+    setEditingId(null)
+
+  } else {
 
     await databases.createDocument(
       DATABASE_ID,
@@ -78,24 +120,27 @@ export default function CourseCMS() {
       ID.unique(),
       {
         courseCode: form.courseCode,
-        courseName: courseName,
+        courseName,
         duration: form.duration,
         award: form.award,
+        courseFees: form.courseFees,
         status: "Active"
       }
     )
 
     alert("Course Added Successfully")
-
-    setForm({
-      courseCode: '',
-      award: '',
-      courseTitle: '',
-      duration: ''
-    })
-
-    fetchCourses()
   }
+
+  setForm({
+    courseCode: '',
+    award: '',
+    courseTitle: '',
+    duration: '',
+    courseFees: ''
+  })
+
+  fetchCourses()
+}
 
   const deleteCourse = async (id) => {
 
@@ -141,7 +186,7 @@ export default function CourseCMS() {
             className="border p-2 rounded"
           >
             <option value="">--select award--</option>
-            {awardList.map((a,i)=>(
+            {awardList.map((a, i) => (
               <option key={i} value={a}>{a}</option>
             ))}
           </select>
@@ -164,6 +209,14 @@ export default function CourseCMS() {
             className="border p-2 rounded"
           />
 
+          <input
+            type="text"
+            name="courseFees"
+            placeholder="Course Fees"
+            value={form.courseFees}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          />
         </div>
 
         <button
@@ -186,12 +239,13 @@ export default function CourseCMS() {
 
           <thead className="bg-gray-100">
 
-            <tr>
-              <th className="p-2 border">Code</th>
-              <th className="p-2 border">Course Name</th>
-              <th className="p-2 border">Duration</th>
-              <th className="p-2 border">Action</th>
-            </tr>
+           <tr>
+  <th className="p-2 border">Code</th>
+  <th className="p-2 border">Course Name</th>
+  <th className="p-2 border">Duration</th>
+  <th className="p-2 border">Fees</th>
+  <th className="p-2 border">Action</th>
+</tr>
 
           </thead>
 
@@ -212,15 +266,29 @@ export default function CourseCMS() {
                 <td className="p-2 border">
                   {course.duration}
                 </td>
+                <td className="p-2 border">
+  ₹ {course.courseFees}
+</td>
 
                 <td className="p-2 border">
+                  
+                 <div className="flex gap-2 justify-center">
 
-                  <button
-                    onClick={() => deleteCourse(course.$id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
+  <button
+    onClick={() => editCourse(course)}
+    className="bg-blue-500 text-white px-3 py-1 rounded"
+  >
+    Edit
+  </button>
+
+  <button
+    onClick={() => deleteCourse(course.$id)}
+    className="bg-red-500 text-white px-3 py-1 rounded"
+  >
+    Delete
+  </button>
+
+</div>
 
                 </td>
 

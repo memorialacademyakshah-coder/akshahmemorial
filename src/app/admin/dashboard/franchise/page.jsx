@@ -497,13 +497,7 @@ const fixUser = async (req) => {
     )
   }
 
-  /*...franchise plan ..*/
-  const institutePlans = {
-    "HOJAI": 400,
-    "BIHAR": 499,
-    "ARUNACHAL PRADESH": 499,
-    "BEAUTY": 500
-  }
+  
 
   const toBase64 = async (url) => {
   const res = await fetch(url);

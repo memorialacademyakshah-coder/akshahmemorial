@@ -33,7 +33,7 @@ const res = await databases.listDocuments(
     }
 
   }
-  useEffect(() => {
+useEffect(() => {
   const fetchPlan = async () => {
 
     const user = await account.get()
@@ -46,15 +46,15 @@ const res = await databases.listDocuments(
 
     const plan = res.documents[0]?.plan
 
-const planRes = await databases.listDocuments(
-  DATABASE_ID,
-  "franchise_plans",
-  [Query.equal("name", plan)]
-);
+    const planRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_plans",
+      [Query.equal("name", plan)]
+    );
 
-const fee = planRes.documents[0]?.amount || 0;
+    const fee = planRes.documents[0]?.amount || 0;
 
-setExamFee(fee);
+    setExamFee(fee);
 
     setExamFee(fee)
   }
@@ -67,6 +67,38 @@ setExamFee(fee);
   }, [])
 
 
+  const getExamFee = async (course) => {
+
+  const duration = course.duration?.toLowerCase()
+
+  // ✅ 1/2/3 MONTHS → use master course fees
+  if (
+    duration.includes("1 month") ||
+    duration.includes("2 month") ||
+    duration.includes("3 month")
+  ) {
+    return Number(course.courseFees || 0)
+  }
+
+  // ✅ 6 MONTH / 1 YEAR → use franchise plan
+  const user = await account.get()
+
+  const franchiseRes = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_approved",
+    [Query.equal("email", user.email)]
+  )
+
+  const userPlan = franchiseRes.documents[0]?.plan
+
+  const planRes = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_plans",
+    [Query.equal("name", userPlan)]
+  )
+
+  return Number(planRes.documents[0]?.amount || 0)
+}
 
   const handleCheck = (course) => {
 
@@ -133,13 +165,14 @@ const planRes = await databases.listDocuments(
 
 const examFee = planRes.documents[0]?.amount || 0;
 
-      for (const course of selected) {
+    for (const course of selected) {
 
-        if (!course.courseFees || !course.minimumFees) {
-          alert("Please enter Course Fee and Minimum Fee")
-          return
-        }
+  const dynamicExamFee = await getExamFee(course)
 
+  if (!course.enteredCourseFees || !course.minimumFees) {
+    alert("Please enter Course Fee and Minimum Fee")
+    return
+  }
         const existing = await databases.listDocuments(
                  DATABASE_ID,
                  SINGLE_COLLECTION,
@@ -159,7 +192,7 @@ const examFee = planRes.documents[0]?.amount || 0;
                    {
                      courseFees: Number(course.courseFees),
                      minimumFees: Number(course.minimumFees),
-                     examFees: examFee,
+                     examFees: dynamicExamFee,
                      status: "Active"
                    }
                  )
@@ -176,7 +209,7 @@ const examFee = planRes.documents[0]?.amount || 0;
                      courseCode: course.courseCode,
                      courseName: course.courseName,
                      duration: course.duration,
-                     examFees: examFee,
+                   examFees: dynamicExamFee,
                      courseFees: Number(course.courseFees),
                      minimumFees: Number(course.minimumFees),
                      status: "Active",
@@ -273,10 +306,18 @@ router.push('/login/institute/add-course/single/list') // change if your route i
                     {course.duration}
                   </td>
 
-                 <td className="border border-gray-800 p-2">
-  ₹{examFee}
-</td>
+        <td className="border border-gray-800 p-2">
 
+  {(
+    course.duration?.toLowerCase().includes("1 month") ||
+    course.duration?.toLowerCase().includes("2 month") ||
+    course.duration?.toLowerCase().includes("3 month")
+  )
+    ? `₹${course.courseFees || 0}`
+    : `₹${examFee}`
+  }
+
+</td>
                   <td className="border border-gray-800 p-2">
 
                     <input
