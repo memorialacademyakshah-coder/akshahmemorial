@@ -290,7 +290,7 @@ router.push('/login/institute/add-course/single/list') // change if your route i
 
             </thead>
 
-            <tbody>
+            <tbody> 
 
               {courses
   .filter(course =>

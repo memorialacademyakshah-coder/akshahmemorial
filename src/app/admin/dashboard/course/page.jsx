@@ -40,25 +40,57 @@ export default function CourseCMS() {
     loadCourses()
   }, [])
 
-  const loadCategories = async () => {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      CATEGORY_COLLECTION,
-      [Query.orderDesc("$createdAt")]
-    )
+  /* =========================
+      LOAD CATEGORIES
+  ========================= */
 
-    setCategories(res.documents)
+  const loadCategories = async () => {
+
+    try {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        CATEGORY_COLLECTION,
+        [Query.orderAsc("$createdAt")]
+      )
+
+      setCategories(res.documents)
+
+    } catch (err) {
+
+      console.log(err)
+
+    }
+
   }
+
+  /* =========================
+      LOAD COURSES
+  ========================= */
 
   const loadCourses = async () => {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      COURSE_COLLECTION,
-      [Query.orderDesc("$createdAt")]
-    )
 
-    setCourses(res.documents)
+    try {
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        COURSE_COLLECTION,
+        [Query.orderAsc("$createdAt")]
+      )
+
+      setCourses(res.documents)
+
+    } catch (err) {
+
+      console.log(err)
+
+    }
+
   }
+
+  /* =========================
+      CATEGORY CHANGE
+  ========================= */
 
   const handleCategoryChange = (e) => {
 
@@ -74,30 +106,45 @@ export default function CourseCMS() {
       setCategoryForm({
         ...categoryForm,
         name: value,
-        slug: slug
+        slug
       })
 
     } else {
+
       setCategoryForm({
         ...categoryForm,
         [name]: value
       })
+
     }
+
   }
 
+  /* =========================
+      COURSE CHANGE
+  ========================= */
+
   const handleCourseChange = (e) => {
+
     setCourseForm({
       ...courseForm,
       [e.target.name]: e.target.value
     })
+
   }
 
+  /* =========================
+      ADD CATEGORY
+  ========================= */
+
   const addCategory = async () => {
+
     try {
 
       let imageId = ""
 
       if (catImage) {
+
         const upload = await storage.createFile(
           BUCKET_ID,
           ID.unique(),
@@ -105,6 +152,7 @@ export default function CourseCMS() {
         )
 
         imageId = upload.$id
+
       }
 
       await databases.createDocument(
@@ -115,7 +163,7 @@ export default function CourseCMS() {
           name: categoryForm.name,
           slug: categoryForm.slug,
           subtitle: categoryForm.subtitle,
-          imageId: imageId,
+          imageId,
           createdAt: new Date().toISOString()
         }
       )
@@ -129,13 +177,21 @@ export default function CourseCMS() {
       })
 
       setCatImage(null)
+
       loadCategories()
 
     } catch (err) {
+
       console.log(err)
       alert("Error adding category")
+
     }
+
   }
+
+  /* =========================
+      SAVE COURSE
+  ========================= */
 
   const saveCourse = async () => {
 
@@ -149,6 +205,7 @@ export default function CourseCMS() {
       let imageId = ""
 
       if (courseImage) {
+
         const upload = await storage.createFile(
           BUCKET_ID,
           ID.unique(),
@@ -156,6 +213,7 @@ export default function CourseCMS() {
         )
 
         imageId = upload.$id
+
       }
 
       const slug = courseForm.title
@@ -165,7 +223,7 @@ export default function CourseCMS() {
 
       const payload = {
         title: courseForm.title,
-        slug: slug,
+        slug,
         description: courseForm.description,
         category: courseForm.category.trim(),
         duration: courseForm.duration,
@@ -198,6 +256,7 @@ export default function CourseCMS() {
         )
 
         alert("Course Added")
+
       }
 
       setCourseForm({
@@ -214,12 +273,20 @@ export default function CourseCMS() {
       loadCourses()
 
     } catch (err) {
+
       console.error(err)
       alert(err.message)
+
     }
+
   }
 
+  /* =========================
+      EDIT COURSE
+  ========================= */
+
   const editCourse = (course) => {
+
     setEditingCourseId(course.$id)
 
     setCourseForm({
@@ -227,16 +294,22 @@ export default function CourseCMS() {
       description: course.description || "",
       category: course.category || "",
       duration: course.duration || "",
-      fees: course.fees || ""
+      fees: course.fees?.toString() || ""
     })
 
     window.scrollTo({
       top: 600,
       behavior: "smooth"
     })
+
   }
 
+  /* =========================
+      DELETE COURSE
+  ========================= */
+
   const deleteCourse = async (id) => {
+
     try {
 
       await databases.deleteDocument(
@@ -246,15 +319,51 @@ export default function CourseCMS() {
       )
 
       alert("Course Deleted")
+
       loadCourses()
 
     } catch (err) {
+
       console.log(err)
       alert("Delete failed")
+
     }
+
   }
 
+  /* =========================
+      DELETE CATEGORY
+  ========================= */
+
+  const deleteCategory = async (id) => {
+
+    try {
+
+      await databases.deleteDocument(
+        DATABASE_ID,
+        CATEGORY_COLLECTION,
+        id
+      )
+
+      alert("Category Deleted")
+
+      loadCategories()
+
+    } catch (err) {
+
+      console.log(err)
+      alert("Delete failed")
+
+    }
+
+  }
+
+  /* =========================
+      CANCEL EDIT
+  ========================= */
+
   const cancelEdit = () => {
+
     setEditingCourseId(null)
 
     setCourseForm({
@@ -266,137 +375,338 @@ export default function CourseCMS() {
     })
 
     setCourseImage(null)
+
   }
+
+  /* =========================
+      GET IMAGE
+  ========================= */
 
   const getImage = (imageId) => {
+
     return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${imageId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+
   }
-return (
-  <div className="min-h-screen bg-gray-100 p-4 md:p-6 space-y-6">
 
-    {/* HEADER */}
-    <div>
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-        Course CMS Panel
-      </h1>
-      <p className="text-gray-500 text-sm">
-        Manage categories and courses easily
-      </p>
-    </div>
+  return (
 
-    {/* CATEGORY */}
-    <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-6 space-y-6">
 
-      <h2 className="text-lg font-semibold mb-4 text-gray-800">
-        Add Category
-      </h2>
+      {/* HEADER */}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
 
-        <input name="name" value={categoryForm.name} onChange={handleCategoryChange} placeholder="Category Name" className="input-clean"/>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+          Course CMS Panel
+        </h1>
 
-        <input name="slug" value={categoryForm.slug} disabled placeholder="Slug auto-generated" className="input-clean bg-gray-100"/>
+        <p className="text-gray-500 text-sm">
+          Manage categories and courses easily
+        </p>
 
-        <input name="subtitle" value={categoryForm.subtitle} onChange={handleCategoryChange} placeholder="Subtitle" className="input-clean"/>
+      </div>
 
-        <input type="file" onChange={(e)=>setCatImage(e.target.files[0])} className="input-clean"/>
+      {/* =========================
+          ADD CATEGORY
+      ========================= */}
 
-        <button onClick={addCategory} className="btn-primary col-span-full">
+      <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
+
+        <h2 className="text-lg font-semibold mb-4 text-gray-800">
           Add Category
-        </button>
+        </h2>
 
-      </div>
-    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-    {/* COURSE */}
-    <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
+          <input
+            name="name"
+            value={categoryForm.name || ""}
+            onChange={handleCategoryChange}
+            placeholder="Category Name"
+            className="input-clean"
+          />
 
-      <h2 className="text-lg font-semibold mb-4 text-gray-800">
-        {editingCourseId ? "Edit Course" : "Add Course"}
-      </h2>
+          <input
+            name="slug"
+            value={categoryForm.slug || ""}
+            disabled
+            placeholder="Slug auto-generated"
+            className="input-clean bg-gray-100"
+          />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            name="subtitle"
+            value={categoryForm.subtitle || ""}
+            onChange={handleCategoryChange}
+            placeholder="Subtitle"
+            className="input-clean"
+          />
 
-        <input name="title" value={courseForm.title} onChange={handleCourseChange} placeholder="Course Title" className="input-clean"/>
+          <input
+            type="file"
+            onChange={(e) => setCatImage(e.target.files[0])}
+            className="input-clean"
+          />
 
-        <select name="category" value={courseForm.category} onChange={handleCourseChange} className="input-clean">
-          <option value="">Select Category</option>
-          {categories.map(cat => (
-            <option key={cat.$id} value={cat.slug}>{cat.name}</option>
-          ))}
-        </select>
-
-        <input name="duration" value={courseForm.duration} onChange={handleCourseChange} placeholder="Course Duration" className="input-clean"/>
-
-        <input name="Rating" value={courseForm.fees} onChange={handleCourseChange} placeholder="Course Rating (out of 5)" className="input-clean"/>
-
-        <input type="file" onChange={(e)=>setCourseImage(e.target.files[0])} className="input-clean"/>
-
-        <textarea name="description" value={courseForm.description} onChange={handleCourseChange} placeholder="Course Description" className="input-clean col-span-full h-28"/>
-
-        <button onClick={saveCourse} className="btn-success col-span-full">
-          {editingCourseId ? "Update Course" : "Add Course"}
-        </button>
-
-        {editingCourseId && (
-          <button onClick={cancelEdit} className="btn-secondary col-span-full">
-            Cancel Edit
+          <button
+            onClick={addCategory}
+            className="btn-primary col-span-full"
+          >
+            Add Category
           </button>
-        )}
+
+        </div>
 
       </div>
-    </div>
+      
+      {/* =========================
+          MANAGE CATEGORIES
+      ========================= */}
 
-    {/* COURSE LIST */}
-    <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
 
-      <h2 className="text-lg font-semibold mb-4 text-gray-800">
-        All Courses
-      </h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-800">
+          Manage Categories
+        </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
 
-        {courses.map(course => (
-          <div key={course.$id} className="border rounded-xl p-4 hover:shadow-md transition">
+          {categories.map(cat => (
 
-            {course.imageId && (
-              <img
-                src={getImage(course.imageId)}
-                className="h-36 w-full object-cover rounded-lg mb-3"
-              />
-            )}
+            <div
+              key={cat.$id}
+              className="border rounded-xl p-4 hover:shadow-md transition"
+            >
 
-            <h3 className="font-semibold text-gray-800">
-              {course.title}
-            </h3>
+              {cat.imageId && (
 
-            <p className="text-sm text-gray-500">
-              {course.category}
-            </p>
+                <img
+                  src={getImage(cat.imageId)}
+                  className="h-36 w-full object-cover rounded-lg mb-3"
+                />
 
-            <p className="text-sm mt-2 line-clamp-2">
-              {course.description}
-            </p>
+              )}
 
-            <div className="flex justify-between mt-3 text-sm">
-              <span>⏱ {course.duration}</span>
-              <span className="text-yellow-500 font-semibold">
-                ⭐ {course.fees}
-              </span>
+              <h3 className="font-semibold text-gray-800 text-lg">
+                {cat.name}
+              </h3>
+
+              <p className="text-sm text-blue-600 mt-1">
+                Slug: {cat.slug}
+              </p>
+
+              <p className="text-sm text-gray-500 mt-2">
+                {cat.subtitle}
+              </p>
+
+              <button
+                onClick={() => deleteCategory(cat.$id)}
+                className="btn-danger w-full mt-4"
+              >
+                Delete
+              </button>
+
             </div>
 
-            <div className="flex gap-2 mt-4">
-              <button onClick={()=>editCourse(course)} className="btn-primary flex-1">Edit</button>
-              <button onClick={()=>deleteCourse(course.$id)} className="btn-danger flex-1">Delete</button>
+          ))}
+
+        </div>
+
+      </div>
+
+      {/* =========================
+          ADD COURSE
+      ========================= */}
+
+      <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
+
+        <h2 className="text-lg font-semibold mb-4 text-gray-800">
+          {editingCourseId ? "Edit Course" : "Add Course"}
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <input
+            name="title"
+            value={courseForm.title || ""}
+            onChange={handleCourseChange}
+            placeholder="Course Title"
+            className="input-clean"
+          />
+
+          <input
+            value={
+              (courseForm.title || "")
+                .toLowerCase()
+                .replace(/[^a-z0-9 ]/g, "")
+                .replace(/\s+/g, "-")
+            }
+            disabled
+            placeholder="Course Slug"
+            className="input-clean bg-gray-100"
+          />
+
+          <select
+            name="category"
+            value={courseForm.category || ""}
+            onChange={handleCourseChange}
+            className="input-clean"
+          >
+
+            <option value="">
+              Select Category
+            </option>
+
+            {categories.map(cat => (
+
+              <option
+                key={cat.$id}
+                value={cat.slug}
+              >
+                {cat.name}
+              </option>
+
+            ))}
+
+          </select>
+
+          <input
+            name="duration"
+            value={courseForm.duration || ""}
+            onChange={handleCourseChange}
+            placeholder="Course Duration"
+            className="input-clean"
+          />
+
+          <input
+            name="fees"
+            value={courseForm.fees || ""}
+            onChange={handleCourseChange}
+            placeholder="Course Rating (out of 5)"
+            className="input-clean"
+          />
+
+          <input
+            type="file"
+            onChange={(e) => setCourseImage(e.target.files[0])}
+            className="input-clean"
+          />
+
+          <textarea
+            name="description"
+            value={courseForm.description || ""}
+            onChange={handleCourseChange}
+            placeholder="Course Description"
+            className="input-clean col-span-full h-28"
+          />
+
+          <button
+            onClick={saveCourse}
+            className="btn-success col-span-full"
+          >
+            {editingCourseId ? "Update Course" : "Add Course"}
+          </button>
+
+          {editingCourseId && (
+
+            <button
+              onClick={cancelEdit}
+              className="btn-secondary col-span-full"
+            >
+              Cancel Edit
+            </button>
+
+          )}
+
+        </div>
+
+      </div>
+
+
+      {/* =========================
+          ALL COURSES
+      ========================= */}
+
+      <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
+
+        <h2 className="text-lg font-semibold mb-4 text-gray-800">
+          All Courses
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+
+          {courses.map(course => (
+
+            <div
+              key={course.$id}
+              className="border rounded-xl p-4 hover:shadow-md transition"
+            >
+
+              {course.imageId && (
+
+                <img
+                  src={getImage(course.imageId)}
+                  className="h-36 w-full object-cover rounded-lg mb-3"
+                />
+
+              )}
+
+              <h3 className="font-semibold text-gray-800">
+                {course.title}
+              </h3>
+
+              <p className="text-sm text-green-600 mt-1">
+                Slug: {course.slug}
+              </p>
+
+              <p className="text-sm text-gray-500">
+                Category: {course.category}
+              </p>
+
+              <p className="text-sm mt-2 line-clamp-2">
+                {course.description}
+              </p>
+
+              <div className="flex justify-between mt-3 text-sm">
+
+                <span>
+                  ⏱ {course.duration}
+                </span>
+
+                <span className="text-yellow-500 font-semibold">
+                  ⭐ {course.fees}
+                </span>
+
+              </div>
+
+              <div className="flex gap-2 mt-4">
+
+                <button
+                  onClick={() => editCourse(course)}
+                  className="btn-primary flex-1"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => deleteCourse(course.$id)}
+                  className="btn-danger flex-1"
+                >
+                  Delete
+                </button>
+
+              </div>
+
             </div>
 
-          </div>
-        ))}
+          ))}
+
+        </div>
 
       </div>
 
     </div>
 
-  </div>
-)
+  )
+
 }

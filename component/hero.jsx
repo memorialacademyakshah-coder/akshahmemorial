@@ -225,7 +225,7 @@ export default function AuroraHero() {
           </h1>
 
           <p className="mt-6 text-gray-300 max-w-md">
-            BNMI  is a leading educational institution dedicated to providing high-quality education and fostering a nurturing learning environment. With a commitment to academic excellence and holistic development, BNMI offers a wide range of programs and resources to empower students to achieve their full potential. Our experienced faculty, state-of-the-art facilities, and vibrant campus community create an ideal setting for students to thrive academically, socially, and personally. Join us at BNMI and embark on a transformative educational journey that prepares you for success in the ever-evolving global landscape.
+             BNMI  is a leading educational institution dedicated to providing high-quality education and fostering a nurturing learning environment. This is the indias no. 1 franchise provider in the field of education. 
           </p>
 
           <button className="mt-6 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center gap-2 hover:scale-105 transition">

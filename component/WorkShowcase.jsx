@@ -26,7 +26,7 @@ const loadCategories = async () => {
     const res = await databases.listDocuments(
       DATABASE_ID,
       COLLECTION,
-      [Query.orderDesc("$createdAt")]
+      [Query.orderAsc("$createdAt")]
     )
 
     setCategories(res.documents)

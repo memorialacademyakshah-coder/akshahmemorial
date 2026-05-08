@@ -402,9 +402,25 @@ delete updatedData.newPlanAmount;
         updatedData
       )
       
-      // ✅ UPDATE AUTH PASSWORD ALSO
+      // ✅ UPDATE AUTH EMAIL
+if (editData.email && editData.userId) {
 
+  await fetch("/api/change-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userId: editData.userId,
+      email: editData.email
+    })
+  });
+
+}
+
+// ✅ UPDATE AUTH PASSWORD
 if (editData.password && editData.userId) {
+
   await fetch("/api/change-password", {
     method: "POST",
     headers: {
@@ -415,6 +431,7 @@ if (editData.password && editData.userId) {
       newPassword: editData.password
     })
   });
+
 }
       alert("Updated successfully")
 
