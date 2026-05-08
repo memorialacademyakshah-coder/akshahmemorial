@@ -20,6 +20,7 @@ export default function CourseCMS() {
   const [courseImage, setCourseImage] = useState(null)
 
   const [editingCourseId, setEditingCourseId] = useState(null)
+  const [editingCategoryId, setEditingCategoryId] = useState(null)
 
   const [categoryForm, setCategoryForm] = useState({
     name: "",
@@ -139,55 +140,89 @@ export default function CourseCMS() {
 
   const addCategory = async () => {
 
-    try {
+  try {
 
-      let imageId = ""
+    let payload = {
+      name: categoryForm.name,
+      slug: categoryForm.slug,
+      subtitle: categoryForm.subtitle
+    }
 
-      if (catImage) {
+    /* =========================
+        IMAGE UPDATE
+    ========================= */
 
-        const upload = await storage.createFile(
-          BUCKET_ID,
-          ID.unique(),
-          catImage
-        )
+    if (catImage) {
 
-        imageId = upload.$id
+      const upload = await storage.createFile(
+        BUCKET_ID,
+        ID.unique(),
+        catImage
+      )
 
-      }
+      payload.imageId = upload.$id
+
+    }
+
+    /* =========================
+        UPDATE CATEGORY
+    ========================= */
+
+    if (editingCategoryId) {
+
+      await databases.updateDocument(
+        DATABASE_ID,
+        CATEGORY_COLLECTION,
+        editingCategoryId,
+        payload
+      )
+
+      alert("Category Updated")
+
+    }
+
+    /* =========================
+        ADD CATEGORY
+    ========================= */
+
+    else {
+
+      payload.createdAt = new Date().toISOString()
 
       await databases.createDocument(
         DATABASE_ID,
         CATEGORY_COLLECTION,
         ID.unique(),
-        {
-          name: categoryForm.name,
-          slug: categoryForm.slug,
-          subtitle: categoryForm.subtitle,
-          imageId,
-          createdAt: new Date().toISOString()
-        }
+        payload
       )
 
       alert("Category Added")
 
-      setCategoryForm({
-        name: "",
-        slug: "",
-        subtitle: ""
-      })
-
-      setCatImage(null)
-
-      loadCategories()
-
-    } catch (err) {
-
-      console.log(err)
-      alert("Error adding category")
-
     }
 
+    /* =========================
+        RESET
+    ========================= */
+
+    setCategoryForm({
+      name: "",
+      slug: "",
+      subtitle: ""
+    })
+
+    setCatImage(null)
+    setEditingCategoryId(null)
+
+    loadCategories()
+
+  } catch (err) {
+
+    console.log(err)
+    alert("Error adding category")
+
   }
+
+}
 
   /* =========================
       SAVE COURSE
@@ -330,6 +365,23 @@ export default function CourseCMS() {
     }
 
   }
+
+  const editCategory = (cat) => {
+
+  setEditingCategoryId(cat.$id)
+
+  setCategoryForm({
+    name: cat.name || "",
+    slug: cat.slug || "",
+    subtitle: cat.subtitle || ""
+  })
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  })
+
+}
 
   /* =========================
       DELETE CATEGORY
@@ -499,12 +551,23 @@ export default function CourseCMS() {
                 {cat.subtitle}
               </p>
 
-              <button
-                onClick={() => deleteCategory(cat.$id)}
-                className="btn-danger w-full mt-4"
-              >
-                Delete
-              </button>
+             <div className="flex gap-2 mt-4">
+
+  <button
+    onClick={() => editCategory(cat)}
+    className="btn-primary flex-1"
+  >
+    Edit
+  </button>
+
+  <button
+    onClick={() => deleteCategory(cat.$id)}
+    className="btn-danger flex-1"
+  >
+    Delete
+  </button>
+
+</div>
 
             </div>
 

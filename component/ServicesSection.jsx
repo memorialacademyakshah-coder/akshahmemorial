@@ -23,7 +23,9 @@ export default function ServicesSection() {
         const res = await databases.listDocuments(
           DATABASE_ID,
           COLLECTION_ID,
-          [Query.orderAsc('order')]
+          [Query.orderAsc('order'),
+             Query.limit(100)
+          ]
         )
 
         setServices(res.documents)
