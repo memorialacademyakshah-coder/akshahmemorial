@@ -1,53 +1,56 @@
-export const runtime = 'nodejs'
+import { Client, Databases } from "node-appwrite";
+import { NextResponse } from "next/server";
 
-import { NextResponse } from 'next/server'
-import { Client, Databases, Users } from 'node-appwrite'
+const client = new Client()
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
+  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID)
+  .setKey(process.env.APPWRITE_API_KEY);
+
+const databases = new Databases(client);
+
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export async function POST(req) {
+
   try {
-    const { requestId, franchiseData } = await req.json()
 
-    const client = new Client()
-      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
-      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID)
-      .setKey(process.env.APPWRITE_API_KEY)
+    const body = await req.json();
 
-    const databases = new Databases(client)
-    const users = new Users(client)
+    const {
+      $id,
+      $createdAt,
+      $updatedAt,
+      $permissions,
+      $databaseId,
+      $collectionId,
+      ...cleanReq
+    } = body;
 
-    const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-
-    /* 1️⃣ DELETE AUTH USER IF EXISTS */
-    try {
-      const authUsers = await users.list({
-        search: franchiseData.email
-      })
-
-      if (authUsers.users.length > 0) {
-        await users.delete(authUsers.users[0].$id)
-      }
-
-    } catch {}
-
-    /* 2️⃣ MOVE TO REJECTED */
     await databases.createDocument(
       DATABASE_ID,
-      'franchise_rejected',
-      'unique()',
-      franchiseData
-    )
+      "franchise_rejected",
+      $id,
+      cleanReq
+    );
 
-    /* 3️⃣ DELETE FROM PENDING */
     await databases.deleteDocument(
       DATABASE_ID,
-      'franchise_requests',
-      requestId
-    )
+      "franchise_requests",
+      $id
+    );
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({
+      success: true
+    });
 
-  } catch (error) {
-    console.error(error)
-    return NextResponse.json({ success: false, error: error.message })
+  } catch (err) {
+
+    console.error(err);
+
+    return NextResponse.json({
+      success: false,
+      error: err.message
+    }, { status: 500 });
+
   }
 }
