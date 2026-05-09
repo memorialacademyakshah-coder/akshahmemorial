@@ -205,95 +205,42 @@ export default function Dashboard() {
       alert("QR fix failed")
     }
   }
-  const approveFranchise = async (req) => {
+const approveFranchise = async (req) => {
+
   try {
-    // ✅ 1. CREATE USER IN AUTH (via API)
-    const res = await fetch("/api/create-user", {
+
+    // ✅ CALL BACKEND API
+    const res = await fetch("/api/approve-franchise", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        email: req.email,
-        password: req.password
-      })
+      body: JSON.stringify(req)
     });
 
     const data = await res.json();
 
-    if (!data.userId) {
-      throw new Error(data.error || "User creation failed");
+    // ✅ ERROR HANDLE
+    if (!data.success) {
+      throw new Error(data.error || "Approval failed");
     }
 
-    const userId = data.userId; // ✅ NOW WE HAVE REAL USER ID
+    // ✅ SUCCESS
+    alert("Franchise approved successfully");
 
-    // ✅ 2. VERIFY URL
-    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${req.$id}`;
-
-    // ✅ 3. QR CODE
-    const qrCode = await QRCode.toDataURL(verifyUrl);
-
-    // ✅ 4. DATES
-    const issueDate = new Date();
-    const expiryDate = new Date();
-    expiryDate.setFullYear(issueDate.getFullYear() + 1);
-
-    // ✅ 5. SAVE IN DATABASE (WITH userId)
-const {
-  $id,
-  $createdAt,
-  $updatedAt,
-  $permissions,
-  $databaseId,
-  $collectionId,
-  ...cleanReq
-} = req;
-
-await databases.createDocument(
-  DATABASE_ID,
-  'franchise_approved',
-  req.$id,
-  {
-    ...cleanReq,
-    userId,
-    qrCode,
-    verifyUrl,
-    wallet: req.wallet || "0.00",
-    courierWallet: req.courierWallet || "0.00",
-    issueDate: issueDate.toISOString(),
-    expiryDate: expiryDate.toISOString()
-  }
-);
-
-    // ✅ 6. DELETE FROM PENDING
-    await databases.deleteDocument(
-      DATABASE_ID,
-      'franchise_requests',
-      req.$id
-    );
-
+    // ✅ REFRESH DATA
     fetchAll();
 
-  } catch (error) {
-    console.error("APPROVE ERROR:", error);
-    alert(error.message);
+  } catch (err) {
+
+    console.error("APPROVE ERROR:", err);
+
+    alert(err.message);
+
   }
 };
 
-const checkSession = async () => {
-  try {
-    const user = await account.get();
 
-    console.log("LIVE USER:", user);
-
-    if (user.email !== 'bnmiindia@gmail.com') {
-      router.replace('/login');
-    }
-  } catch (err) {
-    console.log("SESSION ERROR:", err);
-    router.replace('/login');
-  }
-}
   /* ---------------- REJECT ---------------- */
 
   const rejectFranchise = async (req) => {
