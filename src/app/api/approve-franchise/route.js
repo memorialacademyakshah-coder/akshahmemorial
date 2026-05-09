@@ -1,81 +1,212 @@
-export const runtime = 'nodejs'
+import { Client, Databases, Users, ID, Query } from "node-appwrite";
+import { NextResponse } from "next/server";
+import QRCode from "qrcode";
 
-import { NextResponse } from 'next/server'
-import { Client, Users, Databases, ID } from 'node-appwrite'
+const client = new Client()
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
+  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID)
+  .setKey(process.env.APPWRITE_API_KEY);
+
+const databases = new Databases(client);
+const users = new Users(client);
+
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export async function POST(req) {
 
   try {
 
-    const { requestId, franchiseData } = await req.json()
+    // =========================
+    // GET REQUEST BODY
+    // =========================
 
-    const client = new Client()
-      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
-      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID)
-      .setKey(process.env.APPWRITE_API_KEY)
+    const franchiseData = await req.json();
 
-    const users = new Users(client)
-    const databases = new Databases(client)
+    console.log("FRANCHISE DATA:", franchiseData);
 
-    const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+    // =========================
+    // VALIDATION
+    // =========================
 
-    console.log("Creating auth user...")
-
-    let newUser = null
-
-    /* 1️⃣ CREATE AUTH USER */
-
-    try {
-
-      newUser = await users.create(
-        ID.unique(),
-        franchiseData.email,
-        franchiseData.password,
-        franchiseData.name
-      )
-
-    } catch (err) {
-
-      console.log("User already exists, skipping creation")
-
+    if (!franchiseData) {
+      throw new Error("No franchise data received");
     }
 
-    console.log("Auth user created:", newUser?.$id)
+    if (!franchiseData.instituteName) {
+      throw new Error("Institute name missing");
+    }
 
-    /* 2️⃣ SAVE TO APPROVED COLLECTION */
+    if (!franchiseData.email) {
+      throw new Error("Email missing");
+    }
+
+    if (!franchiseData.password) {
+      throw new Error("Password missing");
+    }
+
+    // =========================
+    // REMOVE APPWRITE SYSTEM FIELDS
+    // =========================
+
+    const {
+      $id,
+      $createdAt,
+      $updatedAt,
+      $permissions,
+      $databaseId,
+      $collectionId,
+      ...cleanReq
+    } = franchiseData;
+
+    // =========================
+    // CHECK EXISTING USER
+    // =========================
+
+    console.log("Checking existing user...");
+
+    const existingUsers = await users.list([
+      Query.equal("email", cleanReq.email)
+    ]);
+
+    let userId = "";
+
+    // =========================
+    // USER EXISTS
+    // =========================
+
+    if (existingUsers.total > 0) {
+
+      userId = existingUsers.users[0].$id;
+
+      console.log("Existing user found:", userId);
+
+      // OPTIONAL → update password
+      try {
+
+        await users.updatePassword(
+          userId,
+          cleanReq.password
+        );
+
+        console.log("Password updated");
+
+      } catch (passErr) {
+
+        console.log("Password update skipped:", passErr.message);
+
+      }
+
+    } else {
+
+      // =========================
+      // CREATE NEW USER
+      // =========================
+
+      console.log("Creating new auth user...");
+
+      const newUser = await users.create(
+        ID.unique(),
+        cleanReq.email,
+        undefined,
+        cleanReq.password,
+        cleanReq.name
+      );
+
+      userId = newUser.$id;
+
+      console.log("New user created:", userId);
+    }
+
+    // =========================
+    // QR GENERATION
+    // =========================
+
+    const verifyUrl =
+      `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${$id}`;
+
+    const qrCode = await QRCode.toDataURL(verifyUrl);
+
+    // =========================
+    // ISSUE & EXPIRY DATE
+    // =========================
+
+    const issueDate = new Date();
+
+    const expiryDate = new Date();
+
+    expiryDate.setFullYear(issueDate.getFullYear() + 1);
+
+    // =========================
+    // CREATE APPROVED DOCUMENT
+    // =========================
+
+    console.log("Creating approved franchise document...");
 
     await databases.createDocument(
       DATABASE_ID,
       "franchise_approved",
-      ID.unique(),
+      $id,
       {
-        ...franchiseData,
-        instituteName: franchiseData.instituteName,
-        email: franchiseData.email,
-        userId: newUser?.$id || "",
-        createdAt: new Date().toISOString()
-      }
-    )
+        ...cleanReq,
 
-    /* 3️⃣ DELETE FROM PENDING REQUESTS */
+        // REQUIRED
+        instituteName: cleanReq.instituteName,
+        email: cleanReq.email,
+        password: cleanReq.password,
+        name: cleanReq.name,
+
+        // USER
+        userId,
+
+        // QR
+        qrCode,
+        verifyUrl,
+
+        // WALLET
+        wallet: cleanReq.wallet || "0.00",
+        courierWallet: cleanReq.courierWallet || "0.00",
+
+        // DATES
+        issueDate: issueDate.toISOString(),
+        expiryDate: expiryDate.toISOString(),
+
+    
+      }
+    );
+
+    console.log("Approved document created");
+
+    // =========================
+    // DELETE FROM PENDING
+    // =========================
 
     await databases.deleteDocument(
       DATABASE_ID,
       "franchise_requests",
-      requestId
-    )
+      $id
+    );
 
-    return NextResponse.json({ success: true })
+    console.log("Pending request deleted");
 
-  } catch (error) {
+    // =========================
+    // SUCCESS RESPONSE
+    // =========================
 
-    console.error("APPROVE ERROR FULL:", error)
+    return NextResponse.json({
+      success: true,
+      userId
+    });
+
+  } catch (err) {
+
+    console.error("APPROVE API ERROR FULL:", err);
 
     return NextResponse.json({
       success: false,
-      error: error.message
-    })
+      error: err.message || "Approval failed"
+    }, {
+      status: 500
+    });
 
   }
-
 }

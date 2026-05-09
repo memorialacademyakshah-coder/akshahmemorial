@@ -243,27 +243,36 @@ const approveFranchise = async (req) => {
 
   /* ---------------- REJECT ---------------- */
 
-  const rejectFranchise = async (req) => {
-    try {
-      await databases.createDocument(
-        DATABASE_ID,
-        'franchise_rejected',
-        req.$id,
-        { ...req }
-      )
+const rejectFranchise = async (req) => {
 
-      await databases.deleteDocument(
-        DATABASE_ID,
-        'franchise_requests',
-        req.$id
-      )
+  try {
 
-      fetchAll()
-    } catch (error) {
-      console.error(error)
-      alert('Reject failed')
+    const res = await fetch("/api/reject-franchise", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(req)
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.error || "Reject failed");
     }
+
+    alert("Franchise rejected successfully");
+
+    fetchAll();
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(err.message);
+
   }
+};
 
   /* ---------------- LOGIN ---------------- */
 
@@ -472,19 +481,30 @@ const fixUser = async (req) => {
 };
   /* ---------------- FILTER ---------------- */
 
-  const getCurrentData = () => {
-    let data = []
+ const getCurrentData = () => {
 
-    if (activeTab === 'pending') data = pending
-    if (activeTab === 'approved') data = approved
-    if (activeTab === 'rejected') data = rejected
+  let data = [];
 
-    return data.filter(item =>
-      item.name?.toLowerCase().includes(search.toLowerCase()) ||
-      item.email?.toLowerCase().includes(search.toLowerCase()) ||
-      item.instituteName?.toLowerCase().includes(search.toLowerCase())
-    )
-  }
+  if (activeTab === 'pending') data = pending;
+  if (activeTab === 'approved') data = approved;
+  if (activeTab === 'rejected') data = rejected;
+
+  return data.filter((item) => {
+
+    // ✅ prevent undefined/null crash
+    if (!item) return false;
+
+    const searchText = search.toLowerCase();
+
+    return (
+      (item.name || "").toLowerCase().includes(searchText) ||
+      (item.email || "").toLowerCase().includes(searchText) ||
+      (item.instituteName || "").toLowerCase().includes(searchText)
+    );
+
+  });
+
+};
 
   
 
@@ -617,7 +637,7 @@ const getExpiryDate = () => {
             </div>
           )}
 
-          {getCurrentData().map((req) => (
+       {getCurrentData().map((req) => (
             <div
               key={req.$id}
             className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition p-4 md:p-6 flex flex-col lg:flex-row justify-between gap-4 md:gap-6"
@@ -628,7 +648,7 @@ const getExpiryDate = () => {
 
                 <h3 className="text-lg font-semibold text-gray-900">
                   
-                   Institute: {req.instituteName}
+                   Institute: {req?.instituteName}
                 </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
@@ -685,8 +705,16 @@ const getExpiryDate = () => {
                       <ActionBtn label="Fix User" color="purple" onClick={() => fixUser(req)} />
                     <ActionBtn label="Login" color="blue" onClick={() => loginAsFranchise(req)} />
                     <ActionBtn label="Edit" color="yellow" onClick={() => openEdit(req)} />
-                    <ActionBtn label="ATC" color="indigo" onClick={() => openIdCard(req)} />
-                    <ActionBtn label="Print" color="dark" onClick={() => openPrint(req)} />
+                    <ActionBtn
+  label="ATC"
+  color="indigo"
+  onClick={() => req && openIdCard(req)}
+/>
+                    <ActionBtn
+  label="Print"
+  color="dark"
+  onClick={() => req && openPrint(req)}
+/>
                     <ActionBtn label="Delete" color="red" onClick={() => deleteFranchise(req)} />
                   </div>
                 )}
