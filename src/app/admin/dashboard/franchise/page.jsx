@@ -868,7 +868,7 @@ const getExpiryDate = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setLogoFile(e.target.files[0])}
+                  onChange={(e) => setPhotoFile(e.target.files[0])}
 
                     className="w-full border p-2 rounded-lg"
                   />
@@ -973,7 +973,7 @@ const getExpiryDate = () => {
                 className="w-full"
               />
               <img
-                src={selectedFranchise.qrCode}
+                src={selectedFranchise?.qrCode}
                 className="absolute top-[550px] left-[130px] w-[100px]"
               />
               {/* ----------- DYNAMIC TEXT ----------- */}
@@ -981,27 +981,27 @@ const getExpiryDate = () => {
               {/* Institute Name (RED CENTER) */}
               <div className="absolute top-[470px] w-full text-center">
                 <h1 className="text-red-600 text-2xl font-bold">
-                  {selectedFranchise.instituteName}
+                  {selectedFranchise?.instituteName}
                 </h1>
               </div>
 
               {/* ATC Code */}
               <div className="absolute top-[580px] left-[304px] font-bold">
-                ATC Code: {selectedFranchise.atcCode}
+                ATC Code: {selectedFranchise?.atcCode}
               </div>
 
               {/* Owner Name */}
               <div className="absolute top-[540px] w-full text-center font-semibold">
-                Applicant Name :  {selectedFranchise.name}
+                Applicant Name :  {selectedFranchise?.name}
               </div>
 
               {/* Address */}
               <div className="absolute top-[520px] w-full text-center text-sm px-10">
-                {selectedFranchise.address}{selectedFranchise.city}, {selectedFranchise.state} - {selectedFranchise.pincode}
+                {selectedFranchise?.address}{selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
               </div>
 
                 <div className="absolute bottom-[90px] left-[220px] font-bold">
-                ATC Code: {selectedFranchise.atcCode}
+                ATC Code: {selectedFranchise?.atcCode}
               </div>
 
               {/* Issue Date */}
@@ -1048,7 +1048,7 @@ Expiry Date: {formatDate(getExpiryDate())}
               <p><strong>ATC Code:</strong> {selectedFranchise.atcCode}</p>
 
               <h2 className="font-bold text-lg">
-                {selectedFranchise.instituteName}
+                {selectedFranchise?.instituteName}
               </h2>
               <p>{selectedFranchise.name}</p>
 
