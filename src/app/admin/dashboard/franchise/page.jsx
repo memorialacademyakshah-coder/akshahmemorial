@@ -1045,21 +1045,21 @@ Expiry Date: {formatDate(getExpiryDate())}
 
               <p><strong>To,</strong></p>
 
-              <p><strong>ATC Code:</strong> {selectedFranchise.atcCode}</p>
+              <p><strong>ATC Code:</strong> {selectedFranchise?.atcCode}</p>
 
               <h2 className="font-bold text-lg">
                 {selectedFranchise?.instituteName}
               </h2>
-              <p>{selectedFranchise.name}</p>
+              <p>{selectedFranchise?.name}</p>
 
 
-              <p>{selectedFranchise.address}</p>
+              <p>{selectedFranchise?.address}</p>
 
-              <p>Mobile: {selectedFranchise.mobile}</p>
+              <p>Mobile: {selectedFranchise?.mobile}</p>
 
 
               <p>
-                {selectedFranchise.city}, {selectedFranchise.state} - {selectedFranchise.pincode}
+                {selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
               </p>
 
             </div>
