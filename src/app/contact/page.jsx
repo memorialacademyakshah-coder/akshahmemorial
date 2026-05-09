@@ -7,11 +7,11 @@ export default function HelpDeskPage() {
   const contacts = [
     {
       title: 'Call Support',
-      desc: '+91 9508524835',
+      desc: '+91 8011211185',
       icon: Phone,
       bg: 'bg-green-100',
       color: 'text-green-600',
-      action: () => window.open('tel:+919508524835')
+      action: () => window.open('tel:+918011211185')
     },
     {
       title: 'WhatsApp Support',
@@ -19,7 +19,7 @@ export default function HelpDeskPage() {
       icon: MessageCircle,
       bg: 'bg-green-100',
       color: 'text-green-600',
-      action: () => window.open('https://wa.me/919508524835')
+      action: () => window.open('https://wa.me/918011211185')
     },
     {
       title: 'Instagram',
@@ -27,7 +27,7 @@ export default function HelpDeskPage() {
       icon: Instagram,
       bg: 'bg-pink-100',
       color: 'text-pink-600',
-      action: () => window.open('https://instagram.com/yourpage')
+      action: () => window.open('https://www.instagram.com/bnmiindia?igsh=YTdyMHJrajV4ZzZn&utm_source=qr')
     },
     {
       title: 'Facebook',
@@ -35,7 +35,7 @@ export default function HelpDeskPage() {
       icon: Facebook,
       bg: 'bg-blue-100',
       color: 'text-blue-600',
-      action: () => window.open('https://facebook.com/yourpage')
+      action: () => window.open('https://www.facebook.com/share/1AVYsNJM1i/?mibextid=wwXIfr')
     }
   ]
 

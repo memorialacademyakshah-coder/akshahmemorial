@@ -583,7 +583,7 @@ export default function CourseCMS() {
 
       <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 border border-gray-200">
 
-        <h2 className="text-lg font-semibold mb-4 text-gray-800">
+        <h2 className="text-lg font-semibold mb-4 text-gray-800 bg-white/6 ">
           {editingCourseId ? "Edit Course" : "Add Course"}
         </h2>
 

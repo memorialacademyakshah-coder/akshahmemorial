@@ -1,70 +1,53 @@
-import { Client, Users, ID } from "node-appwrite";
+import { Client, Users, ID, Query } from "node-appwrite";
+import { NextResponse } from "next/server";
+
+const client = new Client()
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
+  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID)
+  .setKey(process.env.APPWRITE_API_KEY);
+
+const users = new Users(client);
 
 export async function POST(req) {
   try {
-    const { email, password } = await req.json();
+    const body = await req.json();
 
-    // ❌ Basic validation
-    if (!email || !password) {
-      return Response.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+    const { email, password } = body;
+
+    // ✅ CHECK EXISTING USER
+    const existingUsers = await users.list([
+      Query.equal("email", email)
+    ]);
+
+    // ✅ IF USER EXISTS
+    if (existingUsers.total > 0) {
+      return NextResponse.json({
+        success: true,
+        userId: existingUsers.users[0].$id
+      });
     }
 
-    // ✅ Init Appwrite Admin Client
-    const client = new Client()
-      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
-      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID)
-      .setKey(process.env.APPWRITE_API_KEY);
+    // ✅ CREATE NEW USER
+    const newUser = await users.create(
+      ID.unique(),
+      email,
+      undefined,
+      password
+    );
 
-    const users = new Users(client);
-
-    let userId;
-
-    try {
-      // ✅ Try to create new user
-      const user = await users.create(
-        ID.unique(),
-        email,
-        null, // name (optional)
-        password
-      );
-
-      userId = user.$id;
-
-    } catch (err) {
-      // 🔥 If user already exists → fetch existing user
-      if (err.message.includes("already exists")) {
-        const list = await users.list();
-
-        const existingUser = list.users.find(
-          (u) => u.email === email
-        );
-
-        if (!existingUser) {
-          throw new Error("User exists but not found");
-        }
-
-        userId = existingUser.$id;
-
-      } else {
-        throw err;
-      }
-    }
-
-    // ✅ Return userId
-    return Response.json({
+    return NextResponse.json({
       success: true,
-      userId
+      userId: newUser.$id
     });
 
   } catch (err) {
+
     console.error("CREATE USER ERROR:", err);
 
-    return Response.json(
-      { error: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      error: err.message
+    }, { status: 500 });
+
   }
 }

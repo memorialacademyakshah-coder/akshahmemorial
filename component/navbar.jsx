@@ -78,7 +78,7 @@ export default function Navbar() {
           {/* DESKTOP BUTTONS */}
           <div className="hidden lg:flex gap-3">
             <Link href="/contact"><CTAButton text="CONTACT" /></Link>
-            <Link href="/franchise/signup"><CTAButton text="FRANCHISE" /></Link>
+            <Link href="/franchise/signup"><CTAButton text="FRANCHISE FORM" /></Link>
             <Link href="/login/institute"><CTAButton text="LOGIN" /></Link>
             <Link href="/student/login"><CTAButton text="STUDENT LOGIN" /></Link>
           </div>
@@ -104,7 +104,7 @@ export default function Navbar() {
 
             <div className="flex flex-col gap-3 mt-3">
               <Link href="/contact"><CTAButton text="CONTACT" /></Link>
-              <Link href="/franchise/signup"><CTAButton text="FRANCHISE" /></Link>
+              <Link href="/franchise/signup"><CTAButton text="FRANCHISE FORM" /></Link>
               <Link href="/login/institute"><CTAButton text="LOGIN" /></Link>
               <Link href="/login/student/login"><CTAButton text="STUDENT LOGIN" /></Link>
             </div>

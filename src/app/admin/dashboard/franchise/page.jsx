@@ -239,21 +239,31 @@ export default function Dashboard() {
     expiryDate.setFullYear(issueDate.getFullYear() + 1);
 
     // ✅ 5. SAVE IN DATABASE (WITH userId)
-    await databases.createDocument(
-      DATABASE_ID,
-      'franchise_approved',
-      req.$id,
-      {
-        ...req,
-        userId, // ✅ IMPORTANT
-        qrCode,
-        verifyUrl,
-        wallet: req.wallet || "0.00",
-        courierWallet: req.courierWallet || "0.00",
-        issueDate: issueDate.toISOString(),
-        expiryDate: expiryDate.toISOString()
-      }
-    );
+const {
+  $id,
+  $createdAt,
+  $updatedAt,
+  $permissions,
+  $databaseId,
+  $collectionId,
+  ...cleanReq
+} = req;
+
+await databases.createDocument(
+  DATABASE_ID,
+  'franchise_approved',
+  req.$id,
+  {
+    ...cleanReq,
+    userId,
+    qrCode,
+    verifyUrl,
+    wallet: req.wallet || "0.00",
+    courierWallet: req.courierWallet || "0.00",
+    issueDate: issueDate.toISOString(),
+    expiryDate: expiryDate.toISOString()
+  }
+);
 
     // ✅ 6. DELETE FROM PENDING
     await databases.deleteDocument(
@@ -269,6 +279,21 @@ export default function Dashboard() {
     alert(error.message);
   }
 };
+
+const checkSession = async () => {
+  try {
+    const user = await account.get();
+
+    console.log("LIVE USER:", user);
+
+    if (user.email !== 'bnmiindia@gmail.com') {
+      router.replace('/login');
+    }
+  } catch (err) {
+    console.log("SESSION ERROR:", err);
+    router.replace('/login');
+  }
+}
   /* ---------------- REJECT ---------------- */
 
   const rejectFranchise = async (req) => {
