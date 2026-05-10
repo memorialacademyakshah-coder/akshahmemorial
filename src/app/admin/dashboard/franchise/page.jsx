@@ -209,8 +209,7 @@ const approveFranchise = async (req) => {
 
   try {
 
-    // ✅ CALL BACKEND API
-    const res = await fetch("/api/approve-franchise", {
+    const response = await fetch("/api/approve-franchise", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -218,28 +217,34 @@ const approveFranchise = async (req) => {
       body: JSON.stringify(req)
     });
 
-    const data = await res.json();
+    const data = await response.json();
 
-    // ✅ ERROR HANDLE
-    if (!data.success) {
-      throw new Error(data.error || "Approval failed");
+    console.log("APPROVE RESPONSE:", data);
+
+    // IMPORTANT
+    // DO NOT THROW ERROR IF DOC ALREADY CREATED
+
+    if (data.success) {
+
+      alert("Franchise approved successfully");
+
+      fetchAll();
+
+    } else {
+
+      alert(data.error || "Approval failed");
+
     }
-
-    // ✅ SUCCESS
-    alert("Franchise approved successfully");
-
-    // ✅ REFRESH DATA
-    fetchAll();
 
   } catch (err) {
 
-    console.error("APPROVE ERROR:", err);
+    console.error("APPROVE FRONTEND ERROR:", err);
 
     alert(err.message);
 
   }
-};
 
+};
 
   /* ---------------- REJECT ---------------- */
 
