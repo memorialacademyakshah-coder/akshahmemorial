@@ -12,6 +12,9 @@ const users = new Users(client);
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
+console.log("APPWRITE_API_KEY:", process.env.APPWRITE_API_KEY);
+console.log("PROJECT:", process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
+console.log("DATABASE:", process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID);
 export async function POST(req) {
 
   try {
@@ -141,6 +144,7 @@ export async function POST(req) {
     // =========================
 
     console.log("Creating approved franchise document...");
+    console.log("TRYING CREATE DOCUMENT");
 
     await databases.createDocument(
       DATABASE_ID,
@@ -165,7 +169,6 @@ export async function POST(req) {
         // WALLET
         wallet: cleanReq.wallet || "0.00",
         courierWallet: cleanReq.courierWallet || "0.00",
-
         // DATES
         issueDate: issueDate.toISOString(),
         expiryDate: expiryDate.toISOString(),
@@ -175,6 +178,8 @@ export async function POST(req) {
     );
 
     console.log("Approved document created");
+
+    console.log("TRYING DELETE DOCUMENT");
 
     // =========================
     // DELETE FROM PENDING
