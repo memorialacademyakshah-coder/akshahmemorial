@@ -19,7 +19,7 @@ export async function GET(request) {
 
     const pendingRes = await databases.listDocuments(
       DATABASE_ID,
-      "franchise_requests"
+      "franchise_requests_admin"
     );
 
     const approvedRes = await databases.listDocuments(
