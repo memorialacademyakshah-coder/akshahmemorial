@@ -70,21 +70,51 @@ const fetchAll = async () => {
 
   try {
 
-    const res = await fetch("/api/fetch-franchise-data");
+    setLoading(true);
 
-    const data = await res.json();
+    const response = await fetch("/api/fetch-franchise-data");
 
-    if (!data.success) {
-      throw new Error(data.error);
+    const data = await response.json();
+
+    console.log("FETCH DATA:", data);
+
+    if (data.success) {
+
+      setPending(
+        Array.isArray(data.pending)
+          ? data.pending.reverse()
+          : []
+      );
+
+      setApproved(
+        Array.isArray(data.approved)
+          ? data.approved.reverse()
+          : []
+      );
+
+      setRejected(
+        Array.isArray(data.rejected)
+          ? data.rejected.reverse()
+          : []
+      );
+
+    } else {
+
+      console.log(data.error);
+
+      setPending([]);
+      setApproved([]);
+      setRejected([]);
+
     }
-
-    setPending(data.pending.reverse());
-    setApproved(data.approved.reverse());
-    setRejected(data.rejected.reverse());
 
   } catch (err) {
 
     console.error("FETCH ERROR:", err);
+
+    setPending([]);
+    setApproved([]);
+    setRejected([]);
 
   } finally {
 
@@ -93,6 +123,7 @@ const fetchAll = async () => {
   }
 
 };
+
 
   const openIdCard = (req) => {
     setSelectedFranchise(req)
