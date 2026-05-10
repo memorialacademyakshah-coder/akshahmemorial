@@ -51,15 +51,15 @@ export async function POST(req) {
     // REMOVE APPWRITE SYSTEM FIELDS
     // =========================
 
-    const {
-      $id,
-      $createdAt,
-      $updatedAt,
-      $permissions,
-      $databaseId,
-      $collectionId,
-      ...cleanReq
-    } = franchiseData;
+   const cleanReq = JSON.parse(JSON.stringify(franchiseData));
+
+delete cleanReq.$id;
+delete cleanReq.$createdAt;
+delete cleanReq.$updatedAt;
+delete cleanReq.$permissions;
+delete cleanReq.$databaseId;
+delete cleanReq.$collectionId;
+delete cleanReq.$sequence;
 
     // =========================
     // CHECK EXISTING USER
@@ -146,10 +146,10 @@ export async function POST(req) {
     console.log("Creating approved franchise document...");
     console.log("TRYING CREATE DOCUMENT");
 
-    await databases.createDocument(
-      DATABASE_ID,
-      "franchise_approved",
-      $id,
+await databases.createDocument(
+  DATABASE_ID,
+  "franchise_approved",
+  franchiseData.$id,
       {
         ...cleanReq,
 
@@ -185,10 +185,11 @@ export async function POST(req) {
     // DELETE FROM PENDING
     // =========================
 
-    await databases.deleteDocument(
-      DATABASE_ID,
-      "franchise_requests",
-      $id
+  await databases.deleteDocument(
+  DATABASE_ID,
+  "franchise_requests",
+  franchiseData.$id
+
     );
 
     console.log("Pending request deleted");
