@@ -12,127 +12,95 @@ const users = new Users(client);
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
-console.log("APPWRITE_API_KEY:", process.env.APPWRITE_API_KEY);
-console.log("PROJECT:", process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
-console.log("DATABASE:", process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID);
 export async function POST(req) {
 
   try {
 
     // =========================
-    // GET REQUEST BODY
+    // GET DATA
     // =========================
 
     const franchiseData = await req.json();
 
     console.log("FRANCHISE DATA:", franchiseData);
 
-    // =========================
-    // VALIDATION
-    // =========================
-
     if (!franchiseData) {
-      throw new Error("No franchise data received");
-    }
-
-    if (!franchiseData.instituteName) {
-      throw new Error("Institute name missing");
-    }
-
-    if (!franchiseData.email) {
-      throw new Error("Email missing");
-    }
-
-    if (!franchiseData.password) {
-      throw new Error("Password missing");
+      throw new Error("No data received");
     }
 
     // =========================
-    // REMOVE APPWRITE SYSTEM FIELDS
+    // CLEAN APPWRITE SYSTEM FIELDS
     // =========================
 
-   const cleanReq = JSON.parse(JSON.stringify(franchiseData));
+    const cleanReq = JSON.parse(JSON.stringify(franchiseData));
 
-delete cleanReq.$id;
-delete cleanReq.$createdAt;
-delete cleanReq.$updatedAt;
-delete cleanReq.$permissions;
-delete cleanReq.$databaseId;
-delete cleanReq.$collectionId;
-delete cleanReq.$sequence;
+    delete cleanReq.$id;
+    delete cleanReq.$sequence;
+    delete cleanReq.$createdAt;
+    delete cleanReq.$updatedAt;
+    delete cleanReq.$permissions;
+    delete cleanReq.$databaseId;
+    delete cleanReq.$collectionId;
 
     // =========================
-    // CHECK EXISTING USER
+    // USER CHECK / CREATE
     // =========================
-
-    console.log("Checking existing user...");
-
-    const existingUsers = await users.list([
-      Query.equal("email", cleanReq.email)
-    ]);
 
     let userId = "";
 
-    // =========================
-    // USER EXISTS
-    // =========================
+    try {
 
-    if (existingUsers.total > 0) {
+      const existingUsers = await users.list([
+        Query.equal("email", cleanReq.email)
+      ]);
 
-      userId = existingUsers.users[0].$id;
+      if (existingUsers.total > 0) {
 
-      console.log("Existing user found:", userId);
+        userId = existingUsers.users[0].$id;
 
-      // OPTIONAL → update password
-      try {
+        console.log("EXISTING USER:", userId);
 
-        await users.updatePassword(
-          userId,
-          cleanReq.password
+      } else {
+
+        console.log("CREATING USER...");
+
+        const newUser = await users.create(
+          ID.unique(),
+          cleanReq.email,
+          undefined,
+          cleanReq.password,
+          cleanReq.name
         );
 
-        console.log("Password updated");
+        userId = newUser.$id;
 
-      } catch (passErr) {
-
-        console.log("Password update skipped:", passErr.message);
-
+        console.log("NEW USER:", userId);
       }
 
-    } else {
+    } catch (userErr) {
 
-      // =========================
-      // CREATE NEW USER
-      // =========================
+      console.error("USER ERROR:", userErr);
 
-      console.log("Creating new auth user...");
+      return NextResponse.json({
+        success: false,
+        error: "USER ERROR: " + userErr.message
+      }, { status: 500 });
 
-      const newUser = await users.create(
-        ID.unique(),
-        cleanReq.email,
-        undefined,
-        cleanReq.password,
-        cleanReq.name
-      );
-
-      userId = newUser.$id;
-
-      console.log("New user created:", userId);
     }
 
     // =========================
-    // QR GENERATION
+    // QR CODE
     // =========================
 
     const newDocId = ID.unique();
 
-   const verifyUrl =
-  `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${newDocId}`;
+    const verifyUrl =
+      `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${newDocId}`;
 
     const qrCode = await QRCode.toDataURL(verifyUrl);
 
     // =========================
-    // ISSUE & EXPIRY DATE
+    // DATES
     // =========================
 
     const issueDate = new Date();
@@ -145,55 +113,78 @@ delete cleanReq.$sequence;
     // CREATE APPROVED DOCUMENT
     // =========================
 
-    console.log("Creating approved franchise document...");
-    console.log("TRYING CREATE DOCUMENT");
+    try {
 
-await databases.createDocument(
-  DATABASE_ID,
-  "franchise_approved",
-  ID.unique(),
-  {
-    ...cleanReq,
+      console.log("CREATING APPROVED DOCUMENT...");
 
-    requestId: franchiseData.$id,
+      const createdDoc = await databases.createDocument(
+        DATABASE_ID,
+        "franchise_approved",
+        newDocId,
+        {
+          ...cleanReq,
 
-    instituteName: cleanReq.instituteName,
-    email: cleanReq.email,
-    password: cleanReq.password,
-    name: cleanReq.name,
+          requestId: franchiseData.$id,
 
-    userId,
+          instituteName: cleanReq.instituteName || "",
+          email: cleanReq.email || "",
+          password: cleanReq.password || "",
+          name: cleanReq.name || "",
 
-    qrCode,
-    verifyUrl,
+          userId,
 
-    wallet: cleanReq.wallet || "0.00",
-    courierWallet: cleanReq.courierWallet || "0.00",
+          qrCode,
+          verifyUrl,
 
-    issueDate: issueDate.toISOString(),
-    expiryDate: expiryDate.toISOString()
-  }
-);
+          wallet: cleanReq.wallet || "0.00",
+          courierWallet: cleanReq.courierWallet || "0.00",
 
-    console.log("Approved document created");
+          issueDate: issueDate.toISOString(),
+          expiryDate: expiryDate.toISOString()
+        }
+      );
 
-    console.log("TRYING DELETE DOCUMENT");
+      console.log("APPROVED CREATED:", createdDoc.$id);
 
-    // =========================
-    // DELETE FROM PENDING
-    // =========================
+    } catch (createErr) {
 
-  await databases.deleteDocument(
-  DATABASE_ID,
-  "franchise_requests",
-  franchiseData.$id
+      console.error("CREATE DOCUMENT ERROR:", createErr);
 
-    );
+      return NextResponse.json({
+        success: false,
+        error: "CREATE ERROR: " + createErr.message
+      }, { status: 500 });
 
-    console.log("Pending request deleted");
+    }
 
     // =========================
-    // SUCCESS RESPONSE
+    // DELETE PENDING DOCUMENT
+    // =========================
+
+    try {
+
+      console.log("DELETING PENDING DOCUMENT...");
+
+      await databases.deleteDocument(
+        DATABASE_ID,
+        "franchise_requests",
+        franchiseData.$id
+      );
+
+      console.log("PENDING DOCUMENT DELETED");
+
+    } catch (deleteErr) {
+
+      console.error("DELETE ERROR:", deleteErr);
+
+      // TEMPORARY:
+      // don't fail approval if delete fails
+
+      console.log("DELETE SKIPPED");
+    }
+
+    // =========================
+    // SUCCESS
     // =========================
 
     return NextResponse.json({
@@ -203,7 +194,7 @@ await databases.createDocument(
 
   } catch (err) {
 
-    console.error("APPROVE API ERROR FULL:", err);
+    console.error("FINAL APPROVE ERROR:", err);
 
     return NextResponse.json({
       success: false,
@@ -213,4 +204,5 @@ await databases.createDocument(
     });
 
   }
+
 }
