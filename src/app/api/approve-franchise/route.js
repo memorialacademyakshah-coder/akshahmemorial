@@ -124,8 +124,10 @@ delete cleanReq.$sequence;
     // QR GENERATION
     // =========================
 
-    const verifyUrl =
-      `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${$id}`;
+    const newDocId = ID.unique();
+
+   const verifyUrl =
+  `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${newDocId}`;
 
     const qrCode = await QRCode.toDataURL(verifyUrl);
 
@@ -149,33 +151,29 @@ delete cleanReq.$sequence;
 await databases.createDocument(
   DATABASE_ID,
   "franchise_approved",
-  franchiseData.$id,
-      {
-        ...cleanReq,
+  ID.unique(),
+  {
+    ...cleanReq,
 
-        // REQUIRED
-        instituteName: cleanReq.instituteName,
-        email: cleanReq.email,
-        password: cleanReq.password,
-        name: cleanReq.name,
+    requestId: franchiseData.$id,
 
-        // USER
-        userId,
+    instituteName: cleanReq.instituteName,
+    email: cleanReq.email,
+    password: cleanReq.password,
+    name: cleanReq.name,
 
-        // QR
-        qrCode,
-        verifyUrl,
+    userId,
 
-        // WALLET
-        wallet: cleanReq.wallet || "0.00",
-        courierWallet: cleanReq.courierWallet || "0.00",
-        // DATES
-        issueDate: issueDate.toISOString(),
-        expiryDate: expiryDate.toISOString(),
+    qrCode,
+    verifyUrl,
 
-    
-      }
-    );
+    wallet: cleanReq.wallet || "0.00",
+    courierWallet: cleanReq.courierWallet || "0.00",
+
+    issueDate: issueDate.toISOString(),
+    expiryDate: expiryDate.toISOString()
+  }
+);
 
     console.log("Approved document created");
 
