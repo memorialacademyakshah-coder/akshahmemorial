@@ -16,7 +16,7 @@ export async function POST(req) {
   try {
 
     // =========================
-    // GET DATA
+    // GET REQUEST DATA
     // =========================
 
     const franchiseData = await req.json();
@@ -28,7 +28,7 @@ export async function POST(req) {
     }
 
     // =========================
-    // CLEAN DATA
+    // CLEAN APPWRITE SYSTEM FIELDS
     // =========================
 
     const cleanReq = JSON.parse(JSON.stringify(franchiseData));
@@ -42,7 +42,7 @@ export async function POST(req) {
     delete cleanReq.$collectionId;
 
     // =========================
-    // GENERATE NEW DOC ID
+    // GENERATE NEW DOCUMENT ID
     // =========================
 
     const newDocId = ID.unique();
@@ -57,7 +57,7 @@ export async function POST(req) {
     const qrCode = await QRCode.toDataURL(verifyUrl);
 
     // =========================
-    // DATES
+    // ISSUE & EXPIRY DATE
     // =========================
 
     const issueDate = new Date();
@@ -86,27 +86,32 @@ export async function POST(req) {
         password: cleanReq.password || "",
         name: cleanReq.name || "",
 
-        // TEMP USER PLACEHOLDER
+        // PLACEHOLDER USER ID
         userId: "manual-user",
 
+        // QR
         qrCode,
         verifyUrl,
 
+        // WALLET
         wallet: cleanReq.wallet || "0.00",
         courierWallet: cleanReq.courierWallet || "0.00",
 
+        // DATES
         issueDate: issueDate.toISOString(),
         expiryDate: expiryDate.toISOString()
       }
     );
 
-    console.log("APPROVED CREATED:", createdDoc.$id);
+    console.log("APPROVED DOCUMENT CREATED:", createdDoc.$id);
 
     // =========================
-    // DELETE PENDING
+    // DELETE PENDING DOCUMENT
     // =========================
 
     try {
+
+      console.log("TRYING TO DELETE PENDING DOCUMENT...");
 
       await databases.deleteDocument(
         DATABASE_ID,
@@ -114,16 +119,25 @@ export async function POST(req) {
         franchiseData.$id
       );
 
-      console.log("PENDING DELETED");
+      console.log("PENDING DOCUMENT DELETED");
 
     } catch (deleteErr) {
 
-      console.log("DELETE SKIPPED:", deleteErr.message);
+      // IMPORTANT:
+      // DO NOT FAIL APPROVAL
+      // IF DELETE FAILS
+
+      console.log("DELETE FAILED:", deleteErr.message);
 
     }
 
+    // =========================
+    // SUCCESS RESPONSE
+    // =========================
+
     return NextResponse.json({
-      success: true
+      success: true,
+      approvedId: createdDoc.$id
     });
 
   } catch (err) {
