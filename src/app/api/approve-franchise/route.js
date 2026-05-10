@@ -15,21 +15,7 @@ export async function POST(req) {
 
   try {
 
-    // =========================
-    // GET REQUEST DATA
-    // =========================
-
     const franchiseData = await req.json();
-
-    console.log("FRANCHISE DATA:", franchiseData);
-
-    if (!franchiseData) {
-      throw new Error("No franchise data received");
-    }
-
-    // =========================
-    // CLEAN APPWRITE SYSTEM FIELDS
-    // =========================
 
     const cleanReq = JSON.parse(JSON.stringify(franchiseData));
 
@@ -41,36 +27,18 @@ export async function POST(req) {
     delete cleanReq.$databaseId;
     delete cleanReq.$collectionId;
 
-    // =========================
-    // GENERATE NEW DOCUMENT ID
-    // =========================
-
     const newDocId = ID.unique();
-
-    // =========================
-    // QR CODE
-    // =========================
 
     const verifyUrl =
       `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${newDocId}`;
 
     const qrCode = await QRCode.toDataURL(verifyUrl);
 
-    // =========================
-    // ISSUE & EXPIRY DATE
-    // =========================
-
     const issueDate = new Date();
 
     const expiryDate = new Date();
 
     expiryDate.setFullYear(issueDate.getFullYear() + 1);
-
-    // =========================
-    // CREATE APPROVED DOCUMENT
-    // =========================
-
-    console.log("CREATING APPROVED DOCUMENT...");
 
     const createdDoc = await databases.createDocument(
       DATABASE_ID,
@@ -86,54 +54,18 @@ export async function POST(req) {
         password: cleanReq.password || "",
         name: cleanReq.name || "",
 
-        // PLACEHOLDER USER ID
         userId: "manual-user",
 
-        // QR
         qrCode,
         verifyUrl,
 
-        // WALLET
         wallet: cleanReq.wallet || "0.00",
         courierWallet: cleanReq.courierWallet || "0.00",
 
-        // DATES
         issueDate: issueDate.toISOString(),
         expiryDate: expiryDate.toISOString()
       }
     );
-
-    console.log("APPROVED DOCUMENT CREATED:", createdDoc.$id);
-
-    // =========================
-    // DELETE PENDING DOCUMENT
-    // =========================
-
-    try {
-
-      console.log("TRYING TO DELETE PENDING DOCUMENT...");
-
-      await databases.deleteDocument(
-        DATABASE_ID,
-        "franchise_requests",
-        franchiseData.$id
-      );
-
-      console.log("PENDING DOCUMENT DELETED");
-
-    } catch (deleteErr) {
-
-      // IMPORTANT:
-      // DO NOT FAIL APPROVAL
-      // IF DELETE FAILS
-
-      console.log("DELETE FAILED:", deleteErr.message);
-
-    }
-
-    // =========================
-    // SUCCESS RESPONSE
-    // =========================
 
     return NextResponse.json({
       success: true,
@@ -146,9 +78,7 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: false,
-      error: err.message || "Approval failed"
-    }, {
-      status: 500
+      error: err.message
     });
 
   }

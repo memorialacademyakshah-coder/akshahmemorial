@@ -29,7 +29,7 @@ export async function POST(req) {
     /* MOVE BACK TO PENDING */
     await databases.createDocument(
       DATABASE_ID,
-      'franchise_requests',
+      'franchise_requests-admin',
       ID.unique(),
       franchiseData
     )
