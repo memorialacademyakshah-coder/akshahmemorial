@@ -21,7 +21,7 @@ export async function GET() {
 
     const result = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-      "franchise_requests_admin"
+      "franchise_requests"
     );
 
     return NextResponse.json({
@@ -33,6 +33,7 @@ export async function GET() {
   } catch (err) {
 
     console.error("DEBUG ERROR:", err);
+    
 
     return NextResponse.json({
       success: false,

@@ -728,6 +728,8 @@ const getExpiryDate = () => {
   <p><b>City:</b> {req.city}</p>
   <p><b>Pincode:</b> {req.pincode}</p>
   <p><b>ATC Code:</b> {req.atcCode}</p>
+  <p><b>Address:</b> {req.address}</p>
+  <p><b>Amc Code:</b> {req.amcCode}</p>
 </div>
                 {/* Stats */}
                 <div className="flex flex-wrap gap-2 mt-2 text-xs">

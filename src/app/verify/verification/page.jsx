@@ -10,7 +10,7 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
 export default function VerifyHome() {
 
-  const [activeTab, setActiveTab] = useState("atc")
+  const [activeTab, setActiveTab] = useState("student")
 
   const [atc, setAtc] = useState("")
   const [username, setUsername] = useState("")   // kept (not used)
@@ -152,6 +152,17 @@ try {
           {/* TABS */}
           <div className="flex mb-6 border-b">
 
+ <button
+              onClick={() => setActiveTab("student")}
+              className={`flex-1 py-2 font-semibold ${
+                activeTab === "student"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-500"
+              }`}
+            >
+              Student Verification
+            </button>
+
             <button
               onClick={() => setActiveTab("atc")}
               className={`flex-1 py-2 font-semibold ${
@@ -163,42 +174,9 @@ try {
               Franchise Verification
             </button>
 
-            <button
-              onClick={() => setActiveTab("student")}
-              className={`flex-1 py-2 font-semibold ${
-                activeTab === "student"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500"
-              }`}
-            >
-              Student Verification
-            </button>
+           
 
           </div>
-
-          {/* CONTENT */}
-
-          {activeTab === "atc" && (
-
-            <div className="space-y-4">
-
-              <input
-                type="text"
-                placeholder="Enter ATC Code"
-                value={atc}
-                onChange={(e)=>setAtc(e.target.value)}
-                className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
-
-              <button
-                onClick={handleATCSearch}
-                className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition"
-              >
-                {loading ? "Verifying..." : "Verify ATC"}
-              </button>
-
-            </div>
-          )}
 
           {activeTab === "student" && (
 
@@ -223,6 +201,31 @@ try {
                 className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
               >
                 {loading ? "Verifying..." : "Verify Student"}
+              </button>
+
+            </div>
+          )}
+
+
+          {/* CONTENT */}
+
+          {activeTab === "atc" && (
+
+            <div className="space-y-4">
+
+              <input
+                type="text"
+                placeholder="Enter ATC Code"
+                value={atc}
+                onChange={(e)=>setAtc(e.target.value)}
+                className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              />
+
+              <button
+                onClick={handleATCSearch}
+                className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition"
+              >
+                {loading ? "Verifying..." : "Verify ATC"}
               </button>
 
             </div>

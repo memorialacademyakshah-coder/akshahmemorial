@@ -35,7 +35,7 @@ export async function POST(req) {
 
     await databases.deleteDocument(
       DATABASE_ID,
-      "franchise_requests-admin",
+      "franchise_requests",
       $id
     );
 

@@ -6,7 +6,7 @@ import { ID } from 'appwrite'
 import { useRouter } from 'next/navigation'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-const COLLECTION_ID = 'franchise_requests_admin'
+const COLLECTION_ID = 'franchise_requests'
 
 /* ---------------- STATE + CITY LIST ---------------- */
 
@@ -61,6 +61,8 @@ export default function FranchiseSignup() {
     dob: '',
     address: '',
     pincode: '',
+    amcCode: '',
+
     state: '',
     city: '',
     mobile: ''
@@ -134,7 +136,7 @@ if (form.city === "Other" && !customCity) {
       )
 
       alert('Signup successful! Wait for admin approval.')
-      router.push('/login')
+      router.push('/login/institute')
 
     } catch (error) {
       console.error("ERROR:", error)
@@ -182,8 +184,12 @@ if (form.city === "Other" && !customCity) {
           className="input"
           onChange={(e)=>setForm({...form,mobile:e.target.value})} />
 
-        <select
+          <input placeholder="AMC Code"
           className="input"
+          onChange={(e)=>setForm({...form,amcCode:e.target.value})} />
+
+        <select
+          className="input  text-black border border-gray-300"
           value={form.designation}
           onChange={(e)=>setForm({...form,designation:e.target.value})}
         >
@@ -197,21 +203,21 @@ if (form.city === "Other" && !customCity) {
         </select>
 
         <input type="date"
-          className="input"
+          className="input  text-black border border-gray-300"
           onChange={(e)=>setForm({...form,dob:e.target.value})} />
 
         <input placeholder="Address"
-          className="input md:col-span-2"
+          className="input md:col-span-2  text-black border border-gray-300"
           onChange={(e)=>setForm({...form,address:e.target.value})} />
 
         <input placeholder="Pincode"
-          className="input"
+          className="input  text-black border border-gray-300"
           onChange={(e)=>setForm({...form,pincode:e.target.value})} />
 
         {/* STATE */}
         <select
           value={form.state}
-          className="input"
+          className="input  text-black border border-gray-300"
           onChange={(e)=>handleStateChange(e.target.value)}
         >
           <option value="">Select State</option>

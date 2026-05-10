@@ -99,20 +99,20 @@ export default function ManageImagesPage() {
                 </div>
               )}
 
-              <input
+              {/* <input
                 type="file"
                 onChange={(e) => handleFileChange(e, key)}
                 className="mb-3 w-full text-sm border border-gray-300 rounded-lg p-2 file:mr-3 file:py-2 file:px-4 file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
+              /> */}
 
               <div className="flex gap-2">
-                <button
+                {/* <button
                   onClick={() => uploadImage(key)}
                   disabled={!docId}
                   className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
                 >
                   {docId ? 'Upload' : 'Loading...'}
-                </button>
+                </button> */}
 
                 {images[key] && (
                   <button
