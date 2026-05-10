@@ -490,13 +490,48 @@ const fixUser = async (req) => {
 
   let data = [];
 
-  if (activeTab === 'pending') data = pending;
-  if (activeTab === 'approved') data = approved;
-  if (activeTab === 'rejected') data = rejected;
+  // =========================
+  // PENDING
+  // =========================
+
+  if (activeTab === "pending") {
+
+    // REMOVE ALREADY APPROVED REQUESTS
+    data = pending.filter((item) => {
+
+      if (!item) return false;
+
+      const alreadyApproved = approved.some(
+        (a) => a.requestId === item.$id
+      );
+
+      return !alreadyApproved;
+    });
+
+  }
+
+  // =========================
+  // APPROVED
+  // =========================
+
+  if (activeTab === "approved") {
+    data = approved;
+  }
+
+  // =========================
+  // REJECTED
+  // =========================
+
+  if (activeTab === "rejected") {
+    data = rejected;
+  }
+
+  // =========================
+  // SEARCH FILTER
+  // =========================
 
   return data.filter((item) => {
 
-    // ✅ prevent undefined/null crash
     if (!item) return false;
 
     const searchText = search.toLowerCase();
