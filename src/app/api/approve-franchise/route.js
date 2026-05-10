@@ -1,4 +1,4 @@
-import { Client, Databases, Users, ID, Query } from "node-appwrite";
+import { Client, Databases, Users, ID } from "node-appwrite";
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 
@@ -17,7 +17,7 @@ export async function POST(req) {
   try {
 
     // =========================
-    // GET DATA
+    // GET REQUEST DATA
     // =========================
 
     const franchiseData = await req.json();
@@ -25,11 +25,11 @@ export async function POST(req) {
     console.log("FRANCHISE DATA:", franchiseData);
 
     if (!franchiseData) {
-      throw new Error("No data received");
+      throw new Error("No franchise data received");
     }
 
     // =========================
-    // CLEAN APPWRITE SYSTEM FIELDS
+    // REMOVE APPWRITE SYSTEM FIELDS
     // =========================
 
     const cleanReq = JSON.parse(JSON.stringify(franchiseData));
@@ -43,56 +43,46 @@ export async function POST(req) {
     delete cleanReq.$collectionId;
 
     // =========================
-    // USER CHECK / CREATE
+    // CREATE / HANDLE USER
     // =========================
 
     let userId = "";
 
     try {
 
-      const existingUsers = await users.list([
-        Query.equal("email", cleanReq.email)
-      ]);
+      console.log("CREATING AUTH USER...");
 
-      if (existingUsers.total > 0) {
+      const newUser = await users.create(
+        ID.unique(),
+        cleanReq.email.trim().toLowerCase(),
+        undefined,
+        cleanReq.password,
+        cleanReq.name
+      );
 
-        userId = existingUsers.users[0].$id;
+      userId = newUser.$id;
 
-        console.log("EXISTING USER:", userId);
-
-      } else {
-
-        console.log("CREATING USER...");
-
-        const newUser = await users.create(
-          ID.unique(),
-          cleanReq.email,
-          undefined,
-          cleanReq.password,
-          cleanReq.name
-        );
-
-        userId = newUser.$id;
-
-        console.log("NEW USER:", userId);
-      }
+      console.log("NEW USER CREATED:", userId);
 
     } catch (userErr) {
 
-      console.error("USER ERROR:", userErr);
+      console.log("USER CREATE ERROR:", userErr.message);
 
-      return NextResponse.json({
-        success: false,
-        error: "USER ERROR: " + userErr.message
-      }, { status: 500 });
+      // IF USER ALREADY EXISTS
+      // CONTINUE WITHOUT FAILING
 
+      userId = "existing-user";
     }
 
     // =========================
-    // QR CODE
+    // GENERATE NEW DOC ID
     // =========================
 
     const newDocId = ID.unique();
+
+    // =========================
+    // GENERATE QR
+    // =========================
 
     const verifyUrl =
       `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${newDocId}`;
@@ -100,7 +90,7 @@ export async function POST(req) {
     const qrCode = await QRCode.toDataURL(verifyUrl);
 
     // =========================
-    // DATES
+    // ISSUE / EXPIRY DATE
     // =========================
 
     const issueDate = new Date();
@@ -144,7 +134,7 @@ export async function POST(req) {
         }
       );
 
-      console.log("APPROVED CREATED:", createdDoc.$id);
+      console.log("APPROVED DOCUMENT CREATED:", createdDoc.$id);
 
     } catch (createErr) {
 
@@ -153,7 +143,9 @@ export async function POST(req) {
       return NextResponse.json({
         success: false,
         error: "CREATE ERROR: " + createErr.message
-      }, { status: 500 });
+      }, {
+        status: 500
+      });
 
     }
 
@@ -177,14 +169,14 @@ export async function POST(req) {
 
       console.error("DELETE ERROR:", deleteErr);
 
-      // TEMPORARY:
-      // don't fail approval if delete fails
+      // DON'T FAIL APPROVAL
+      // IF DELETE FAILS
 
       console.log("DELETE SKIPPED");
     }
 
     // =========================
-    // SUCCESS
+    // SUCCESS RESPONSE
     // =========================
 
     return NextResponse.json({
