@@ -1,4 +1,4 @@
-import { Client, Databases, Users, ID } from "node-appwrite";
+import { Client, Databases, ID } from "node-appwrite";
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 
@@ -8,7 +8,6 @@ const client = new Client()
   .setKey(process.env.APPWRITE_API_KEY);
 
 const databases = new Databases(client);
-const users = new Users(client);
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
@@ -17,7 +16,7 @@ export async function POST(req) {
   try {
 
     // =========================
-    // GET REQUEST DATA
+    // GET DATA
     // =========================
 
     const franchiseData = await req.json();
@@ -29,7 +28,7 @@ export async function POST(req) {
     }
 
     // =========================
-    // REMOVE APPWRITE SYSTEM FIELDS
+    // CLEAN DATA
     // =========================
 
     const cleanReq = JSON.parse(JSON.stringify(franchiseData));
@@ -43,45 +42,13 @@ export async function POST(req) {
     delete cleanReq.$collectionId;
 
     // =========================
-    // CREATE / HANDLE USER
-    // =========================
-
-    let userId = "";
-
-    try {
-
-      console.log("CREATING AUTH USER...");
-
-      const newUser = await users.create(
-        ID.unique(),
-        cleanReq.email.trim().toLowerCase(),
-        undefined,
-        cleanReq.password,
-        cleanReq.name
-      );
-
-      userId = newUser.$id;
-
-      console.log("NEW USER CREATED:", userId);
-
-    } catch (userErr) {
-
-      console.log("USER CREATE ERROR:", userErr.message);
-
-      // IF USER ALREADY EXISTS
-      // CONTINUE WITHOUT FAILING
-
-      userId = "existing-user";
-    }
-
-    // =========================
     // GENERATE NEW DOC ID
     // =========================
 
     const newDocId = ID.unique();
 
     // =========================
-    // GENERATE QR
+    // QR CODE
     // =========================
 
     const verifyUrl =
@@ -90,7 +57,7 @@ export async function POST(req) {
     const qrCode = await QRCode.toDataURL(verifyUrl);
 
     // =========================
-    // ISSUE / EXPIRY DATE
+    // DATES
     // =========================
 
     const issueDate = new Date();
@@ -103,59 +70,43 @@ export async function POST(req) {
     // CREATE APPROVED DOCUMENT
     // =========================
 
-    try {
+    console.log("CREATING APPROVED DOCUMENT...");
 
-      console.log("CREATING APPROVED DOCUMENT...");
+    const createdDoc = await databases.createDocument(
+      DATABASE_ID,
+      "franchise_approved",
+      newDocId,
+      {
+        ...cleanReq,
 
-      const createdDoc = await databases.createDocument(
-        DATABASE_ID,
-        "franchise_approved",
-        newDocId,
-        {
-          ...cleanReq,
+        requestId: franchiseData.$id,
 
-          requestId: franchiseData.$id,
+        instituteName: cleanReq.instituteName || "",
+        email: cleanReq.email || "",
+        password: cleanReq.password || "",
+        name: cleanReq.name || "",
 
-          instituteName: cleanReq.instituteName || "",
-          email: cleanReq.email || "",
-          password: cleanReq.password || "",
-          name: cleanReq.name || "",
+        // TEMP USER PLACEHOLDER
+        userId: "manual-user",
 
-          userId,
+        qrCode,
+        verifyUrl,
 
-          qrCode,
-          verifyUrl,
+        wallet: cleanReq.wallet || "0.00",
+        courierWallet: cleanReq.courierWallet || "0.00",
 
-          wallet: cleanReq.wallet || "0.00",
-          courierWallet: cleanReq.courierWallet || "0.00",
+        issueDate: issueDate.toISOString(),
+        expiryDate: expiryDate.toISOString()
+      }
+    );
 
-          issueDate: issueDate.toISOString(),
-          expiryDate: expiryDate.toISOString()
-        }
-      );
-
-      console.log("APPROVED DOCUMENT CREATED:", createdDoc.$id);
-
-    } catch (createErr) {
-
-      console.error("CREATE DOCUMENT ERROR:", createErr);
-
-      return NextResponse.json({
-        success: false,
-        error: "CREATE ERROR: " + createErr.message
-      }, {
-        status: 500
-      });
-
-    }
+    console.log("APPROVED CREATED:", createdDoc.$id);
 
     // =========================
-    // DELETE PENDING DOCUMENT
+    // DELETE PENDING
     // =========================
 
     try {
-
-      console.log("DELETING PENDING DOCUMENT...");
 
       await databases.deleteDocument(
         DATABASE_ID,
@@ -163,25 +114,16 @@ export async function POST(req) {
         franchiseData.$id
       );
 
-      console.log("PENDING DOCUMENT DELETED");
+      console.log("PENDING DELETED");
 
     } catch (deleteErr) {
 
-      console.error("DELETE ERROR:", deleteErr);
+      console.log("DELETE SKIPPED:", deleteErr.message);
 
-      // DON'T FAIL APPROVAL
-      // IF DELETE FAILS
-
-      console.log("DELETE SKIPPED");
     }
 
-    // =========================
-    // SUCCESS RESPONSE
-    // =========================
-
     return NextResponse.json({
-      success: true,
-      userId
+      success: true
     });
 
   } catch (err) {
