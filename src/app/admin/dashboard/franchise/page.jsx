@@ -70,82 +70,17 @@ const fetchAll = async () => {
 
   try {
 
-    // =========================
-    // PENDING
-    // =========================
+    const res = await fetch("/api/fetch-franchise-data");
 
-    let pendingDocs = [];
+    const data = await res.json();
 
-    try {
-
-      const pendingRes = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_requests"
-      );
-
-      pendingDocs = pendingRes.documents.reverse();
-
-    } catch (pendingErr) {
-
-      console.log("PENDING FETCH FAILED:", pendingErr.message);
-
-      // IMPORTANT
-      // DON'T BREAK DASHBOARD
-
-      pendingDocs = [];
+    if (!data.success) {
+      throw new Error(data.error);
     }
 
-    // =========================
-    // APPROVED
-    // =========================
-
-    let approvedDocs = [];
-
-    try {
-
-      const approvedRes = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_approved"
-      );
-
-      approvedDocs = approvedRes.documents.reverse();
-
-    } catch (approvedErr) {
-
-      console.log("APPROVED FETCH FAILED:", approvedErr.message);
-
-      approvedDocs = [];
-    }
-
-    // =========================
-    // REJECTED
-    // =========================
-
-    let rejectedDocs = [];
-
-    try {
-
-      const rejectedRes = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_rejected"
-      );
-
-      rejectedDocs = rejectedRes.documents.reverse();
-
-    } catch (rejectedErr) {
-
-      console.log("REJECTED FETCH FAILED:", rejectedErr.message);
-
-      rejectedDocs = [];
-    }
-
-    // =========================
-    // SET STATES
-    // =========================
-
-    setPending(pendingDocs);
-    setApproved(approvedDocs);
-    setRejected(rejectedDocs);
+    setPending(data.pending.reverse());
+    setApproved(data.approved.reverse());
+    setRejected(data.rejected.reverse());
 
   } catch (err) {
 
