@@ -66,36 +66,98 @@ export default function Dashboard() {
 
   /* ---------------- FETCH DATA ---------------- */
 
-  const fetchAll = async () => {
+const fetchAll = async () => {
+
+  try {
+
+    // =========================
+    // PENDING
+    // =========================
+
+    let pendingDocs = [];
+
     try {
+
       const pendingRes = await databases.listDocuments(
         DATABASE_ID,
-        'franchise_requests'
-      )
+        "franchise_requests"
+      );
+
+      pendingDocs = pendingRes.documents.reverse();
+
+    } catch (pendingErr) {
+
+      console.log("PENDING FETCH FAILED:", pendingErr.message);
+
+      // IMPORTANT
+      // DON'T BREAK DASHBOARD
+
+      pendingDocs = [];
+    }
+
+    // =========================
+    // APPROVED
+    // =========================
+
+    let approvedDocs = [];
+
+    try {
 
       const approvedRes = await databases.listDocuments(
         DATABASE_ID,
-        'franchise_approved'
-      )
+        "franchise_approved"
+      );
+
+      approvedDocs = approvedRes.documents.reverse();
+
+    } catch (approvedErr) {
+
+      console.log("APPROVED FETCH FAILED:", approvedErr.message);
+
+      approvedDocs = [];
+    }
+
+    // =========================
+    // REJECTED
+    // =========================
+
+    let rejectedDocs = [];
+
+    try {
 
       const rejectedRes = await databases.listDocuments(
         DATABASE_ID,
-        'franchise_rejected'
-      )
+        "franchise_rejected"
+      );
 
-      // ✅ latest on top
-      setPending(pendingRes.documents.reverse())
-      setApproved(approvedRes.documents.reverse())
-      setRejected(rejectedRes.documents.reverse())
+      rejectedDocs = rejectedRes.documents.reverse();
 
-    } catch (err) {
-      console.error('Fetch error:', err)
-    } finally {
-      setLoading(false)
+    } catch (rejectedErr) {
+
+      console.log("REJECTED FETCH FAILED:", rejectedErr.message);
+
+      rejectedDocs = [];
     }
+
+    // =========================
+    // SET STATES
+    // =========================
+
+    setPending(pendingDocs);
+    setApproved(approvedDocs);
+    setRejected(rejectedDocs);
+
+  } catch (err) {
+
+    console.error("FETCH ERROR:", err);
+
+  } finally {
+
+    setLoading(false);
+
   }
 
-
+};
 
   const openIdCard = (req) => {
     setSelectedFranchise(req)
