@@ -6,7 +6,7 @@ import { ID } from 'appwrite'
 import { useRouter } from 'next/navigation'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-const COLLECTION_ID = 'franchise_requests'
+const COLLECTION_ID = 'franchise_requests_admin'
 
 /* ---------------- STATE + CITY LIST ---------------- */
 
