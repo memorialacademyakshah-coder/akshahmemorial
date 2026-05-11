@@ -19,7 +19,7 @@ const databases = new Databases(client);
 const storage = new Storage(client);
 
 const DATABASE_ID = "6986e1c00001cabf9b03";
-const COLLECTION_ID = "website";
+const COLLECTION_ID = "brand_logos";
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function CMSPage() {
@@ -44,11 +44,7 @@ export default function CMSPage() {
           COLLECTION_ID
         );
 
-      setImages(
-        res.documents.filter(
-          (d) => d.type === "image"
-        )
-      );
+     setImages(res.documents);
     } catch (err) {
       console.log(err);
     }
@@ -91,11 +87,10 @@ export default function CMSPage() {
         DATABASE_ID,
         COLLECTION_ID,
         ID.unique(),
-        {
-          type: "image",
-          title,
-          image: fileId,
-        }
+       {
+  title,
+  image: fileId,
+}
       );
 
       reset();
