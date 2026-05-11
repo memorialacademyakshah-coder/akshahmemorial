@@ -176,7 +176,7 @@ if (form.city === "Other" && !customCity) {
           className="input"
           onChange={(e)=>setForm({...form,email:e.target.value})} required />
 
-        <input type="password" placeholder="Password"
+        <input type="password" placeholder="Password (min 8 chars)  of your own choice"
           className="input"
           onChange={(e)=>setForm({...form,password:e.target.value})} required />
 
