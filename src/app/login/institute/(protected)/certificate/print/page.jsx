@@ -227,10 +227,35 @@ export default function PrintCertificate() {
           )}
         </div>
 
-        {/* NAME */}
-        <div className="absolute top-[660px] left-[10px] w-full text-center text-3xl font-bold">
-          {student.studentName}
-        </div>
+
+{/* NAME */}
+<div className="absolute top-[660px] left-[10px] w-full text-center">
+
+  <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
+
+    {/* STUDENT NAME */}
+    <span>
+      {student.studentName || student.name || ""}
+    </span>
+
+    {/* FATHER NAME */}
+    {String(student.showFatherInCertificate).toLowerCase() === "true" && (
+      <span className="text-3xl font-semibold">
+        {student.relationType || "S/O"} {student.fatherName || ""}
+      </span>
+    )}
+
+    {/* MOTHER NAME */}
+    {String(student.showMotherInCertificate).toLowerCase() === "true" && (
+      <span className="text-3xl font-semibold">
+        M/O {student.motherName || ""}
+      </span>
+    )}
+
+  </div>
+
+</div>
+
 
         {/* COURSE */}
        <div className="absolute top-[837px] left-[0px] font-bold w-full text-center text-xl">

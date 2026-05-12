@@ -40,6 +40,8 @@ const [semesterSubjects, setSemesterSubjects] = useState([]);
     surname: "",
     fatherName: "",
     motherName: "",
+    showFatherInCertificate: false,
+showMotherInCertificate: false,
 
     courseType: "single",
     courseName: "",
@@ -264,12 +266,13 @@ const handleCourseChange = async (e) => {
     // =========================
     // ✅ MULTIPLE COURSE (IMPORTANT FIX)
     // =========================
-    if (form.courseType === "multiple") {
-      // 🔥 ONLY SELECTED SUBJECTS FROM DB
-subjectsText = course.subjects
-  ? course.subjects.split("||").join(", ")
-  : "";
-    }
+  if (form.courseType === "multiple") {
+
+  // ✅ KEEP ORIGINAL FORMAT
+  subjectsText = course.subjects || "";
+
+
+}
 
     // =========================
     // ✅ SINGLE / BEAUTY COURSE
@@ -330,7 +333,8 @@ subjectsText = course.subjects
 
   } catch (err) {
     console.error("COURSE CHANGE ERROR:", err);
-    alert("Error loading course data");
+    alert(err?.message);
+console.log(err);
   }
 };
 const handleChange = (e) => {
@@ -708,6 +712,22 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             onChange={handleChange}
             className="border p-2 w-full"
           />
+          <div className="flex items-center gap-2 mt-2">
+  <input
+    type="checkbox"
+    checked={form.showFatherInCertificate}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        showFatherInCertificate: e.target.checked
+      })
+    }
+  />
+
+  <label className="text-sm">
+    Show in Certificate
+  </label>
+</div>
 
         </div>
 
@@ -724,6 +744,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             className="border p-2 w-full"
           />
 
+
         </div>
 
         <div>
@@ -738,6 +759,22 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             onChange={handleChange}
             className="border p-2 w-full"
           />
+ <div className="flex items-center gap-2 mt-2">
+  <input
+    type="checkbox"
+    checked={form.showMotherInCertificate}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        showMotherInCertificate: e.target.checked
+      })
+    }
+  />
+
+  <label className="text-sm">
+    Show in Certificate
+  </label>
+</div>
 
         </div>
 
@@ -951,7 +988,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
         </div>
 
         <div><label className="block mb-1 font-semibold">
-            Address
+            Gender
           </label>
 <select
   name="gender"

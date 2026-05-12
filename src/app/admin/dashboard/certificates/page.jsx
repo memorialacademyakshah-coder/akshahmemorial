@@ -388,6 +388,18 @@ if (studentData.courseType === "semester") {
       duration: studentData.duration || "",
       signatureId: studentData.signatureId || "",
       franchiseSignature: franchiseData?.signature || "",
+      fatherName: studentData.fatherName || "",
+motherName: studentData.motherName || "",
+
+showFatherInCertificate:
+  String(studentData.showFatherInCertificate).toLowerCase() === "true",
+
+showMotherInCertificate:
+  String(studentData.showMotherInCertificate).toLowerCase() === "true", 
+
+
+
+relationType: studentData.relationType || "",
       photoId: studentData.photoId || "",
       instituteName: studentData.instituteName || "",
       semesterNumber:

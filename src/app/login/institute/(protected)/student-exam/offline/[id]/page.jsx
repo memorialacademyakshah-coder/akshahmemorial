@@ -103,7 +103,11 @@ if (res.courseType === "semester") {
 
 if (res.subjects) {
 
-  if (res.courseType === "single" || res.courseType === "beauty") {
+  // ✅ SINGLE / BEAUTY
+  if (
+    res.courseType === "single" ||
+    res.courseType === "beauty"
+  ) {
 
     subjectList = [
       res.subjects
@@ -112,12 +116,32 @@ if (res.subjects) {
         .join(", ")
     ];
 
-  } else {
+  }
 
-    subjectList = res.subjects
-      .split("||")
-      .map(s => s.trim())
-      .filter(Boolean);
+  // ✅ MULTIPLE
+  else if (res.courseType === "multiple") {
+
+    // 🔥 SUPPORT BOTH || AND NORMAL SUBJECTS
+    if (res.subjects.includes("||")) {
+
+      subjectList = res.subjects
+        .split("||")
+        .map(s => s.trim())
+        .filter(Boolean);
+
+    } else {
+
+      // ✅ KEEP WHOLE SUBJECT AS ONE
+      subjectList = [res.subjects];
+
+    }
+
+  }
+
+  // ✅ FALLBACK
+  else {
+
+    subjectList = [res.subjects];
 
   }
 }
