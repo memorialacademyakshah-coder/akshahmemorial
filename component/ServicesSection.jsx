@@ -75,7 +75,7 @@ const [isPaused, setIsPaused] = useState(false)
   <motion.div
   initial={{ x: 0 }}
   animate={{
-    x: isPaused ? undefined : '-50%',
+    x: isPaused ? 0 : '-50%',
   }}
   transition={{
     repeat: Infinity,

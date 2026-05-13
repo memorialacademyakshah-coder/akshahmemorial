@@ -12,7 +12,9 @@ const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 export default function TeamSlider() {
   const [team, setTeam] = useState([]);
   const [itemsPerView, setItemsPerView] = useState(3);
-
+  const [isPaused, setIsPaused] = useState(false)
+const [position, setPosition] = useState(0)
+const [currentX, setCurrentX] = useState(0)
   const startX = useRef(0);
   const isDragging = useRef(false);
 
@@ -48,6 +50,15 @@ export default function TeamSlider() {
     fetchTeam();
   }, []);
 
+  useEffect(() => {
+  if (isPaused) return
+
+  const interval = setInterval(() => {
+    setCurrentX((prev) => prev - 1)
+  }, 20)
+
+  return () => clearInterval(interval)
+}, [isPaused])
   /* ================= SAFE VALUES ================= */
   const safeTeam = Array.isArray(team) ? team : [];
 
@@ -122,18 +133,61 @@ export default function TeamSlider() {
             isDragging.current = false;
           }}
         >
+  {/* LEFT ARROW */}
+<button
+  onClick={() => setCurrentX((prev) => prev + 300)}
+  className="
+    absolute
+    left-2
+    top-1/2
+    -translate-y-1/2
+    z-30
+    w-12
+    h-12
+    rounded-full
+    bg-black/60
+    border
+    border-white/20
+    text-white
+    text-2xl
+    hover:bg-cyan-500
+    transition
+  "
+>
+  ←
+</button>
 
-          <motion.div
-            id="team-slider"
-            initial={{ x: 0 }}
-            animate={{ x: "-50%" }}
-            transition={{
-              repeat: Infinity,
-              duration: 50,
-              ease: "linear",
-            }}
-            className="flex min-w-max gap-6"
-          >
+{/* RIGHT ARROW */}
+<button
+  onClick={() => setCurrentX((prev) => prev - 300)}
+  className="
+    absolute
+    right-2
+    top-1/2
+    -translate-y-1/2
+    z-30
+    w-12
+    h-12
+    rounded-full
+    bg-black/60
+    border
+    border-white/20
+    text-white
+    text-2xl
+    hover:bg-cyan-500
+    transition
+  "
+>
+  →
+</button>
+
+<motion.div
+  animate={{ x: currentX }}
+  transition={{ ease: "linear", duration: 0 }}
+  onMouseEnter={() => setIsPaused(true)}
+  onMouseLeave={() => setIsPaused(false)}
+  className="flex min-w-max gap-8"
+>
             {[...safeTeam, ...safeTeam].map((member, index) => (
               <motion.div
                 key={index}
@@ -189,6 +243,7 @@ export default function TeamSlider() {
                     {member.experience}
                   </p>
                 </div>
+
               </motion.div>
             ))}
           </motion.div>
