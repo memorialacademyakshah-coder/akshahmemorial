@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { databases, account } from "@/lib/appwrite";
 import { Query } from "appwrite";
 
+
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION = "student_admissions";
 const BUCKET_ID = "6986e8a4001925504f6b";

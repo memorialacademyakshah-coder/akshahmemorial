@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import QRCode from "react-qr-code";
+import * as htmlToImage from "html-to-image";
 
 const BUCKET_ID = "6986e8a4001925504f6b";
 
@@ -9,6 +11,8 @@ export default function PrintHallTicket() {
   const [students, setStudents] = useState([]);
   const [exam, setExam] = useState(null);
   const [franchise, setFranchise] = useState(null);
+
+  const printRef = useRef();
 
   useEffect(() => {
 
@@ -26,6 +30,77 @@ export default function PrintHallTicket() {
     window.print();
   };
 
+  // ✅ IMAGE TO BASE64
+  const toBase64 = async (url) => {
+
+    const res = await fetch(url);
+    const blob = await res.blob();
+
+    return new Promise((resolve) => {
+
+      const reader = new FileReader();
+
+      reader.onloadend = () => resolve(reader.result);
+
+      reader.readAsDataURL(blob);
+
+    });
+
+  };
+
+  // ✅ DOWNLOAD
+  const handleDownload = async () => {
+
+    try {
+
+      const node = printRef.current;
+
+      const images = node.querySelectorAll("img");
+
+      for (let img of images) {
+
+        const src = img.src;
+
+        if (!src.startsWith("data:")) {
+
+          try {
+
+            const base64 = await toBase64(src);
+
+            img.src = base64;
+
+          } catch (err) {
+            console.log(err);
+          }
+
+        }
+
+      }
+
+      const dataUrl = await htmlToImage.toPng(node, {
+        quality: 1,
+        pixelRatio: 3,
+        cacheBust: true,
+        width: node.scrollWidth,
+        height: node.scrollHeight,
+      });
+
+      const link = document.createElement("a");
+
+      link.download = `hall-ticket.png`;
+
+      link.href = dataUrl;
+
+      link.click();
+
+    } catch (err) {
+
+      console.log("DOWNLOAD ERROR:", err);
+
+    }
+
+  };
+
   if (!exam) {
     return (
       <div className="p-10 bg-black text-white min-h-screen">
@@ -38,170 +113,198 @@ export default function PrintHallTicket() {
 
     <div className="p-6 bg-black min-h-screen text-white">
 
-      <button
-        onClick={printPage}
-        className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-6 py-2 rounded mb-6"
-      >
-        Print Hall Ticket
-      </button>
+      <div className="flex gap-4 mb-6">
 
-      {students.map((student, index) => {
+        <button
+          onClick={printPage}
+          className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-6 py-2 rounded"
+        >
+          Print Hall Ticket
+        </button>
 
-        // ✅ PHOTO
-        const photoUrl = student.photoId
-          ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-          : null;
+        <button
+          onClick={handleDownload}
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded"
+        >
+          Download Hall Ticket
+        </button>
 
-const signatureUrl = student.signatureId
-  ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-  : null;
-const franchiseSign = franchise?.signature || null; `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${franchise.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
- 
+      </div>
 
-        return (
+      <div ref={printRef}>
 
-          <div key={index} className="relative w-[800px] h-[1100px] mb-10 bg-white text-black">
+        {students.map((student, index) => {
 
-            {/* BACKGROUND TEMPLATE */}
-            <img
-              src="/hall.png"
-              className="absolute top-0 left-0 w-full h-full"
-            />
+          // ✅ PHOTO
+          const photoUrl = student.photoId
+            ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+            : null;
 
-            {/* FRANCHISE LOGO */}
-{franchise?.logo && (
-  <img
-    src={franchise.logo}
-    className="absolute top-[10px] left-[340px] w-[140px]"
-  />
-)}
+          const signatureUrl = student.signatureId
+            ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+            : null;
 
-{/* FRANCHISE NAME */}
-<div className="absolute top-[140px]  w-full text-center text-2xl font-bold text-red-700">
-  {franchise?.instituteName || ""}
-</div>
+          const franchiseSign = franchise?.signature || null;
 
-            {/* PHOTO */}
-            {photoUrl && (
+          return (
+
+            <div
+              key={index}
+              className="relative w-[800px] h-[1100px] mb-10 bg-white text-black"
+            >
+
+              {/* BACKGROUND TEMPLATE */}
               <img
-                src={photoUrl}
-                className="absolute top-[270px] left-[86px] w-[120px] h-[120px] object-cover"
+                src="/hall.png"
+                className="absolute top-0 left-0 w-full h-full"
               />
-            )}
 
-            {/* COURSE NAME */}
-            <div className="absolute top-[275px] left-[310px] font-semibold">
-              {student.courseName}
+              {/* QR CODE */}
+              <div className="absolute top-[140px] right-[60px] bg-white p-2">
+                <QRCode
+                  value={`${window.location.origin}/verify-student/${student.$id}`}
+                  size={90}
+                />
+              </div>
+
+              {/* FRANCHISE LOGO */}
+              {franchise?.logo && (
+                <img
+                  src={franchise.logo}
+                  className="absolute top-[10px] left-[340px] w-[140px]"
+                />
+              )}
+
+              {/* FRANCHISE NAME */}
+              <div className="absolute top-[140px] w-full text-center text-2xl font-bold text-red-700">
+                {franchise?.instituteName || ""}
+              </div>
+
+              {/* PHOTO */}
+              {photoUrl && (
+                <img
+                  src={photoUrl}
+                  className="absolute top-[270px] left-[86px] w-[120px] h-[120px] object-cover"
+                />
+              )}
+
+              {/* COURSE NAME */}
+              <div className="absolute top-[279px] left-[310px] font-semibold text-xs">
+                {student.courseName}
+              </div>
+
+              {/* COURSE DURATION */}
+              <div className="absolute top-[300px] left-[330px]">
+                {exam.duration || student.duration || "N/A"}
+              </div>
+
+              {/* STUDENT NAME */}
+              <div className="absolute top-[415px] left-[190px]">
+                {student.studentName}
+              </div>
+
+              {/* FATHER NAME */}
+              <div className="absolute top-[460px] left-[240px]">
+                {student.fatherName}
+              </div>
+
+              {/* SURNAME */}
+              <div className="absolute top-[504px] left-[160px]">
+                {student.surname}
+              </div>
+
+              {/* MOTHER NAME */}
+              <div className="absolute top-[546px] left-[180px]">
+                {student.motherName}
+              </div>
+
+              {/* USERNAME */}
+              <div className="absolute top-[345px] left-[350px]">
+                {student.username}
+              </div>
+
+              {/* PASSWORD */}
+              <div className="absolute top-[370px] left-[350px]">
+                {student.password}
+              </div>
+
+              {/* EXAM DATE */}
+              <div className="absolute top-[415px] left-[470px]">
+                {exam.examDate}
+              </div>
+
+              {/* EXAM TIME */}
+              <div className="absolute top-[460px] left-[490px]">
+                {exam.startTime} - {exam.endTime}
+              </div>
+
+              {/* DURATION */}
+              <div className="absolute top-[502px] left-[510px]">
+                {exam.duration || student.duration || "N/A"}
+              </div>
+
+              {/* REPORTING TIME */}
+              <div className="absolute top-[545px] left-[500px]">
+                {exam.reportingTime}
+              </div>
+
+              {/* CENTER ADDRESS */}
+              <div className="absolute top-[585px] left-[390px] w-[300px] text-sm">
+                {franchise?.address || ""}
+                <br />
+                {franchise?.city || ""}, {franchise?.state || ""}
+              </div>
+
+              {/* STUDENT SIGNATURE */}
+              {signatureUrl ? (
+                <img
+                  src={signatureUrl}
+                  className="absolute bottom-[280px] left-[490px] w-[140px] h-[60px] object-contain border"
+                />
+              ) : (
+                <div className="absolute bottom-[250px] left-[120px] text-red-500">
+                  No Signature
+                </div>
+              )}
+
+              {/* FRANCHISE SIGNATURE */}
+              {franchiseSign && (
+                <img
+                  src={franchiseSign}
+                  className="absolute bottom-[280px] right-[500px] w-[160px] h-[60px] object-contain"
+                />
+              )}
+
+              {/* EXTRA SIGNATURE */}
+              {franchiseSign && (
+                <img
+                  src={franchiseSign}
+                  className="absolute bottom-[110px] right-[70px] w-[120px] h-[60px] object-contain"
+                />
+              )}
+
+              {/* FRANCHISE OWNER NAME */}
+              <div className="absolute bottom-[100px] right-[80px] text-sm font-semibold text-center">
+                {franchise?.name || ""}
+              </div>
+
+              {/* FRANCHISE EMAIL */}
+              <div className="absolute bottom-[70px] w-full text-center text-sm">
+                Email: {franchise?.email || ""}
+              </div>
+
+              {/* FRANCHISE ADDRESS */}
+              <div className="absolute bottom-[90px] w-full text-center text-sm">
+                {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
+              </div>
+
             </div>
 
-            {/* COURSE DURATION */}
-            <div className="absolute top-[300px] left-[330px]">
-             {exam.duration || student.duration || "N/A"}
-            </div>
+          );
 
-            {/* STUDENT NAME */}
-            <div className="absolute top-[415px] left-[190px]">
-              {student.studentName}
-            </div>
+        })}
 
-            {/* FATHER NAME */}
-            <div className="absolute top-[460px] left-[240px]">
-              {student.fatherName}
-            </div>
-
-            {/* SURNAME */}
-            <div className="absolute top-[504px] left-[160px]">
-              {student.surname}
-            </div>
-
-            {/* MOTHER NAME */}
-            <div className="absolute top-[546px] left-[180px]">
-              {student.motherName}
-            </div>
-
-            {/* USERNAME */}
-            <div className="absolute top-[345px] left-[350px]">
-              {student.username}
-            </div>
-
-            {/* PASSWORD */}
-            <div className="absolute top-[370px] left-[350px]">
-              {student.password}
-            </div>
-
-            {/* EXAM DATE */}
-            <div className="absolute top-[415px] left-[470px]">
-              {exam.examDate}
-            </div>
-
-            {/* EXAM TIME */}
-            <div className="absolute top-[460px] left-[490px]">
-              {exam.startTime} - {exam.endTime}
-            </div>
-            {/* EXAM TIME */}
-            <div className="absolute top-[502px] left-[510px]">
-            {exam.duration || student.duration || "N/A"}
-            </div>
-
-
-            {/* REPORTING TIME */}
-            <div className="absolute top-[545px] left-[500px]">
-              {exam.reportingTime}
-            </div>
-
-            {/* CENTER ADDRESS */}
-           <div className="absolute top-[585px] left-[390px] w-[300px] text-sm">
-  {franchise?.address || ""}
-  <br />
-  {franchise?.city || ""}, {franchise?.state || ""}
-</div>
-
-            {/* STUDENT SIGNATURE */}
-            {signatureUrl ? (
-  <img
-    src={signatureUrl}
-    className="absolute bottom-[280px] left-[490px] w-[140px] h-[60px] object-contain border"
-  />
-) : (
-  <div className="absolute bottom-[250px] left-[120px] text-red-500">
-    No Signature
-  </div>
-)}
-
-            {/* FRANCHISE SIGNATURE */}
-           {franchiseSign && (
-  <img
-    src={franchiseSign}
-    className="absolute bottom-[280px] right-[500px] w-[160px] h-[60px] object-contain"
-  />
-)}
-
-
-
-{franchiseSign && (
-  <img
-    src={franchiseSign}
-    className="absolute bottom-[110px] right-[70px] w-[120px] h-[60px] object-contain"
-  />
-)}
-
-{/* FRANCHISE OWNER NAME */}
-<div className="absolute bottom-[100px] right-[80px] text-sm font-semibold text-center">
-  {franchise?.name || ""}
-</div>
-
-{/* FRANCHISE EMAIL */}
-<div className="absolute bottom-[70px]  w-full text-center text-sm text-sm">
-  Email: {franchise?.email || ""}
-</div>
-        <div className="absolute bottom-[90px]  w-full text-center text-sm">
-  {franchise?.address || ""},  {franchise?.city || ""}, {franchise?.state || ""}
-</div>
-          </div>
-
-        );
-
-      })}
+      </div>
 
     </div>
 

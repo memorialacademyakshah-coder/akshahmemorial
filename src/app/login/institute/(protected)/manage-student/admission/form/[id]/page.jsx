@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
+import * as htmlToImage from "html-to-image";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "student_admissions";
@@ -12,8 +13,11 @@ const BUCKET_ID = "6986e8a4001925504f6b";
 export default function AdmissionForm() {
 
     const { id } = useParams();
+
     const [student, setStudent] = useState(null);
     const [franchise, setFranchise] = useState(null);
+
+    const printRef = useRef();
 
     useEffect(() => {
         if (id) fetchStudent();
@@ -30,18 +34,91 @@ export default function AdmissionForm() {
             );
 
             setStudent(res);
-            const franchiseRes = await databases.listDocuments(
-  DATABASE_ID,
-  "franchise_approved",
-  [Query.equal("email", res.franchiseEmail)]
-);
 
-if (franchiseRes.documents.length > 0) {
-  setFranchise(franchiseRes.documents[0]);
-}
+            const franchiseRes = await databases.listDocuments(
+                DATABASE_ID,
+                "franchise_approved",
+                [Query.equal("email", res.franchiseEmail)]
+            );
+
+            if (franchiseRes.documents.length > 0) {
+                setFranchise(franchiseRes.documents[0]);
+            }
 
         } catch (error) {
             console.log("Error loading student:", error);
+        }
+
+    };
+
+    // ✅ CONVERT IMAGE TO BASE64
+    const toBase64 = async (url) => {
+
+        const res = await fetch(url);
+
+        const blob = await res.blob();
+
+        return new Promise((resolve) => {
+
+            const reader = new FileReader();
+
+            reader.onloadend = () => resolve(reader.result);
+
+            reader.readAsDataURL(blob);
+
+        });
+
+    };
+
+    // ✅ DOWNLOAD FUNCTION
+    const handleDownload = async () => {
+
+        try {
+
+            const node = printRef.current;
+
+            const images = node.querySelectorAll("img");
+
+            for (let img of images) {
+
+                const src = img.src;
+
+                if (!src.startsWith("data:")) {
+
+                    try {
+
+                        const base64 = await toBase64(src);
+
+                        img.src = base64;
+
+                    } catch (err) {
+                        console.log(err);
+                    }
+
+                }
+
+            }
+
+            const dataUrl = await htmlToImage.toPng(node, {
+                quality: 1,
+                pixelRatio: 3,
+                cacheBust: true,
+                width: node.scrollWidth,
+                height: node.scrollHeight,
+            });
+
+            const link = document.createElement("a");
+
+            link.download = `${student.studentName}_admission_form.png`;
+
+            link.href = dataUrl;
+
+            link.click();
+
+        } catch (err) {
+
+            console.log("DOWNLOAD ERROR:", err);
+
         }
 
     };
@@ -54,7 +131,10 @@ if (franchiseRes.documents.length > 0) {
 
         <div className="flex justify-center p-10 bg-gray-100">
 
-            <div className="relative w-[900px] bg-white shadow">
+            <div
+                ref={printRef}
+                className="relative w-[900px] bg-white shadow"
+            >
 
                 {/* TEMPLATE */}
 
@@ -63,28 +143,38 @@ if (franchiseRes.documents.length > 0) {
                     className="w-full"
                     alt="Admission Template"
                 />
-{franchise?.logo && (
-  <img
-    src={franchise.logo}
-   className="absolute top-[20px] left-[390px] w-[140px]"
-  />
-)}
-                {/* ADMISSION DATE */}
+
+                {/* FRANCHISE LOGO */}
+
+                {franchise?.logo && (
+                    <img
+                        src={franchise.logo}
+                        className="absolute top-[20px] left-[390px] w-[140px]"
+                    />
+                )}
+
+                {/* INSTITUTE NAME */}
 
                 <div className="absolute top-[160px] left-[350px] text-lg">
-                 {franchise?.instituteName || ""}
+                    {franchise?.instituteName || ""}
                 </div>
+
+                {/* ADMISSION DATE */}
+
                 <div className="absolute top-[320px] left-[260px] text-lg">
                     {student.admissionDate || ""}
+                </div>
+
+                {/* COURSE NAME */}
+
+                <div className="absolute top-[365px] left-[210px] text-lg">
+                    {student.courseName || ""}
                 </div>
 
                 {/* STUDENT NAME */}
 
                 <div className="absolute top-[408px] left-[210px] text-lg">
                     {student.studentName || ""}
-                </div>
-                 <div className="absolute top-[365px] left-[210px] text-lg">
-                  {student.courseName || ""}
                 </div>
 
                 {/* FATHER NAME */}
@@ -141,7 +231,7 @@ if (franchiseRes.documents.length > 0) {
                     {student.address || ""}
                 </div>
 
-                {/* SIGNATURE */}
+                {/* STUDENT SIGNATURE */}
 
                 {student.signatureId && (
 
@@ -183,36 +273,52 @@ if (franchiseRes.documents.length > 0) {
                     {student.createdByName || ""}
                 </div>
 
+                {/* FRANCHISE SIGNATURE */}
+
                 {franchise?.signature && (
-  <img
-    src={franchise.signature}
-    className="absolute bottom-[230px] right-[80px] w-[120px]"
-  />
-)}
+                    <img
+                        src={franchise.signature}
+                        className="absolute bottom-[230px] right-[80px] w-[120px]"
+                    />
+                )}
+
+                {/* FRANCHISE EMAIL */}
+
                 <div className="absolute bottom-[180px] left-[340px] text-lg">
-                  Email: {franchise?.email || ""}
+                    Email: {franchise?.email || ""}
                 </div>
 
-                <div className="absolute bottom-[150px] left-[337px] text-lg text-center ">
-                  Address: {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
+                {/* FRANCHISE ADDRESS */}
+
+                <div className="absolute bottom-[150px] left-[337px] text-lg text-center">
+                    Address: {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
                 </div>
+
+                {/* FRANCHISE OWNER */}
 
                 <div className="absolute bottom-[200px] right-[70px] text-lg">
-                 {franchise?.name || ""}
+                    {franchise?.name || ""}
                 </div>
 
-                {/* PRINT BUTTON */}
+            </div>
 
-                <div className="text-center mt-10">
+            {/* BUTTONS */}
 
-                    <button
-                        onClick={() => window.print()}
-                        className="bg-blue-600 text-white px-6 py-2 rounded"
-                    >
-                        Print Admission Form
-                    </button>
+            <div className="fixed bottom-10 right-10 flex gap-4">
 
-                </div>
+                <button
+                    onClick={() => window.print()}
+                    className="bg-blue-600 text-white px-6 py-2 rounded shadow-lg"
+                >
+                    Print Admission Form
+                </button>
+
+                <button
+                    onClick={handleDownload}
+                    className="bg-green-600 text-white px-6 py-2 rounded shadow-lg"
+                >
+                    Download Admission Form
+                </button>
 
             </div>
 

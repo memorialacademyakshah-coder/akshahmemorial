@@ -9,7 +9,7 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "student_admissions";
 const BUCKET_ID = "6986e8a4001925504f6b";
 
-const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300 MB
+const MAX_FILE_SIZE = 300 * 1024; // 300 KB
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
@@ -558,7 +558,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
     const file = e.target.files[0];
 
     if (file && file.size > MAX_FILE_SIZE) {
-      alert("Photo must be less than 300 MB");
+      alert("Photo must be less than 300 kb");
       e.target.value = "";
       return;
     }
@@ -571,7 +571,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
 />
 
 <p className="text-xs text-gray-500 mt-1">
-  Max size: 300 MB
+  Max size: 300 kb
 </p>
 
 {/* ✅ PREVIEW */}
@@ -609,7 +609,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
 />
 
 <p className="text-xs text-gray-500 mt-1">
-  Max size: 300 MB
+  Max size: 300 kb
 </p>
 
 {/* ✅ PREVIEW */}
