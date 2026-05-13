@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { databases } from "@/lib/appwrite";
+import { Query } from "appwrite";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "student_admissions";
@@ -12,6 +13,7 @@ export default function AdmissionForm() {
 
     const { id } = useParams();
     const [student, setStudent] = useState(null);
+    const [franchise, setFranchise] = useState(null);
 
     useEffect(() => {
         if (id) fetchStudent();
@@ -28,6 +30,15 @@ export default function AdmissionForm() {
             );
 
             setStudent(res);
+            const franchiseRes = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_approved",
+  [Query.equal("email", res.franchiseEmail)]
+);
+
+if (franchiseRes.documents.length > 0) {
+  setFranchise(franchiseRes.documents[0]);
+}
 
         } catch (error) {
             console.log("Error loading student:", error);
@@ -52,9 +63,17 @@ export default function AdmissionForm() {
                     className="w-full"
                     alt="Admission Template"
                 />
-
+{franchise?.logo && (
+  <img
+    src={franchise.logo}
+   className="absolute top-[20px] left-[370px] w-[140px]"
+  />
+)}
                 {/* ADMISSION DATE */}
 
+                <div className="absolute top-[200px] left-[260px] text-lg">
+                 {franchise?.instituteName || ""}
+                </div>
                 <div className="absolute top-[320px] left-[260px] text-lg">
                     {student.admissionDate || ""}
                 </div>
@@ -63,6 +82,9 @@ export default function AdmissionForm() {
 
                 <div className="absolute top-[365px] left-[210px] text-lg">
                     {student.studentName || ""}
+                </div>
+                 <div className="absolute top-[365px] left-[210px] text-lg">
+                  {student.courseName || ""}
                 </div>
 
                 {/* FATHER NAME */}
@@ -159,6 +181,24 @@ export default function AdmissionForm() {
 
                 <div className="absolute top-[955px] left-[520px] text-lg">
                     {student.createdByName || ""}
+                </div>
+
+                {franchise?.signature && (
+  <img
+    src={franchise.signature}
+    className="absolute bottom-[80px] right-[80px] w-[120px]"
+  />
+)}
+                <div className="absolute top-[955px] left-[520px] text-lg">
+                   {franchise?.email || ""}
+                </div>
+
+                <div className="absolute top-[995px] left-[520px] text-lg">
+                  {franchise?.address || ""}
+                </div>
+
+                <div className="absolute top-[975px] left-[520px] text-lg">
+                 {franchise?.name || ""}
                 </div>
 
                 {/* PRINT BUTTON */}

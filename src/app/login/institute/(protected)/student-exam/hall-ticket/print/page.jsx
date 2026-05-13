@@ -68,6 +68,19 @@ const franchiseSign = franchise?.signature || null; `${process.env.NEXT_PUBLIC_A
               className="absolute top-0 left-0 w-full h-full"
             />
 
+            {/* FRANCHISE LOGO */}
+{franchise?.logo && (
+  <img
+    src={franchise.logo}
+    className="absolute top-[40px] left-[320px] w-[150px] h-[150px] object-contain"
+  />
+)}
+
+{/* FRANCHISE NAME */}
+<div className="absolute top-[190px] w-full text-center text-2xl font-bold text-red-700">
+  {franchise?.instituteName || ""}
+</div>
+
             {/* PHOTO */}
             {photoUrl && (
               <img
@@ -137,10 +150,11 @@ const franchiseSign = franchise?.signature || null; `${process.env.NEXT_PUBLIC_A
             </div>
 
             {/* CENTER ADDRESS */}
-            <div className="absolute top-[585px] left-[390px] w-[300px] text-sm">
-              Rukminigaon House No 74<br />
-              Opp Golmohar Apartment, Guwahati
-            </div>
+           <div className="absolute top-[585px] left-[390px] w-[300px] text-sm">
+  {franchise?.address || ""}
+  <br />
+  {franchise?.city || ""}, {franchise?.state || ""}
+</div>
 
             {/* STUDENT SIGNATURE */}
             {signatureUrl ? (
@@ -162,6 +176,24 @@ const franchiseSign = franchise?.signature || null; `${process.env.NEXT_PUBLIC_A
   />
 )}
 
+
+
+{franchiseSign && (
+  <img
+    src={franchiseSign}
+    className="absolute bottom-[400px] right-[500px] w-[160px] h-[60px] object-contain"
+  />
+)}
+
+{/* FRANCHISE OWNER NAME */}
+<div className="absolute bottom-[240px] right-[500px] text-sm font-semibold text-center">
+  {franchise?.name || ""}
+</div>
+
+{/* FRANCHISE EMAIL */}
+<div className="absolute top-[230px] left-[250px] text-sm">
+  Email: {franchise?.email || ""}
+</div>
           </div>
 
         );

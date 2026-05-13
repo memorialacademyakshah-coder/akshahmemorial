@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { databases } from "@/lib/appwrite";
+import { Query } from "appwrite";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const PAYMENT_COLLECTION = "student_payments";
@@ -15,6 +16,7 @@ export default function ReceiptPage() {
     const [payment, setPayment] = useState(null);
     const [admission, setAdmission] = useState(null);
     const [receiptNumber, setReceiptNumber] = useState("");
+    const [franchise, setFranchise] = useState(null);
 
     useEffect(() => {
         if (id) {
@@ -52,9 +54,22 @@ export default function ReceiptPage() {
             pay.admissionId
         );
 
-        setAdmission(adm);
 
-        setReceiptNumber(generateReceiptNumber());
+
+setAdmission(adm);
+
+// 🔥 FETCH FRANCHISE
+const franchiseRes = await databases.listDocuments(
+  DATABASE_ID,
+  "franchise_approved",
+  [Query.equal("email", adm.franchiseEmail)]
+);
+
+if (franchiseRes.documents.length > 0) {
+  setFranchise(franchiseRes.documents[0]);
+}
+
+setReceiptNumber(generateReceiptNumber());
 
     };
 
@@ -78,6 +93,21 @@ export default function ReceiptPage() {
                     src="/FEES.png"
                     className="w-full"
                 />
+
+
+{/* FRANCHISE LOGO */}
+{franchise?.logo && (
+  <img
+    src={franchise.logo}
+    className="absolute top-[40px] left-[70px] w-[120px] h-[120px] object-contain"
+  />
+)}
+
+{/* INSTITUTE NAME */}
+<div className="absolute top-[60px] left-0 w-full text-center text-3xl font-bold text-red-700">
+  {franchise?.instituteName || ""}
+</div>
+
 
                 {/* RECEIPT NUMBER */}
 
@@ -134,7 +164,7 @@ export default function ReceiptPage() {
                     <span className="font-semibold">Course Name :</span>
 
                     <div className="border px-3 py-1 w-[550px]">
-                        {payment.course}
+                        {admission.courseName || payment.course || ""}
                     </div>
 
                 </div>
@@ -172,6 +202,37 @@ export default function ReceiptPage() {
                         </div>
 
                     </div>
+
+
+                    {/* OWNER NAME */}
+<div className="absolute bottom-[120px] right-[120px] text-center">
+
+  <div className="font-semibold text-lg">
+    {franchise?.name || ""}
+  </div>
+
+
+
+</div>
+
+                    {/* FRANCHISE SIGNATURE */}
+{franchise?.signature && (
+  <img
+    src={franchise.signature}
+    className="absolute bottom-[170px] right-[110px] w-[140px] h-[60px] object-contain"
+  />
+)}
+
+
+                    {/* FRANCHISE EMAIL */}
+<div className="absolute top-[110px] left-0 w-full text-center text-sm">
+  {franchise?.email || ""}
+</div>
+
+{/* FRANCHISE ADDRESS */}
+<div className="absolute top-[135px] left-0 w-full text-center text-sm">
+  {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
+</div>
 
                 </div>
 
