@@ -166,32 +166,39 @@ if (form.city === "Other" && !customCity) {
 
         <input placeholder="Full Name"
           className="input"
-          onChange={(e)=>setForm({...form,name:e.target.value})} required />
+           style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>setForm({...form,name:e.target.value.toUpperCase()})} required />
 
         <input placeholder="Institute Name"
           className="input"
-          onChange={(e)=>setForm({...form,instituteName:e.target.value})} required />
+           style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>setForm({...form,instituteName:e.target.value.toUpperCase()})} required />
 
         <input type="email" placeholder="Email"
           className="input"
-          onChange={(e)=>setForm({...form,email:e.target.value})} required />
+            style={{ textTransform: 'lowercase' }}
+          onChange={(e)=>setForm({...form,email:e.target.value.toLowerCase()})} required />
 
         <input type="password" placeholder="Password (min 8 chars)  of your own choice"
           className="input"
+
           onChange={(e)=>setForm({...form,password:e.target.value})} required />
 
         <input placeholder="Mobile"
           className="input"
+            style={{ textTransform: 'uppercase' }}
           onChange={(e)=>setForm({...form,mobile:e.target.value})} />
 
           <input placeholder="AMC Code"
           className="input"
-          onChange={(e)=>setForm({...form,amcCode:e.target.value})} />
+            style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>setForm({...form,amcCode:e.target.value.toUpperCase()})} />
 
         <select
           className="input  text-black border border-gray-300"
           value={form.designation}
-          onChange={(e)=>setForm({...form,designation:e.target.value})}
+          style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>setForm({...form,designation:e.target.value.toUpperCase()})}
         >
           <option value="">Select Designation</option>
           <option>Director</option>
@@ -204,21 +211,25 @@ if (form.city === "Other" && !customCity) {
 
         <input type="date"
           className="input  text-black border border-gray-300"
-          onChange={(e)=>setForm({...form,dob:e.target.value})} />
+          style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>setForm({...form,dob:e.target.value.toUpperCase()})} />
 
         <input placeholder="Address"
           className="input md:col-span-2  text-black border border-gray-300"
-          onChange={(e)=>setForm({...form,address:e.target.value})} />
+          style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>setForm({...form,address:e.target.value.toUpperCase()})} />
 
         <input placeholder="Pincode"
           className="input  text-black border border-gray-300"
-          onChange={(e)=>setForm({...form,pincode:e.target.value})} />
+          style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>setForm({...form,pincode:e.target.value.toUpperCase()})} />
 
         {/* STATE */}
         <select
           value={form.state}
           className="input  text-black border border-gray-300"
-          onChange={(e)=>handleStateChange(e.target.value)}
+          style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>handleStateChange(e.target.value.toUpperCase())}
         >
           <option value="">Select State</option>
           {Object.keys(statesAndCities).map((state)=>(
@@ -230,7 +241,8 @@ if (form.city === "Other" && !customCity) {
         <select
           value={form.city}
          className="w-full p-3 rounded-xl  text-black border border-gray-300"
-          onChange={(e)=>setForm({...form,city:e.target.value})}
+          style={{ textTransform: 'uppercase' }}
+          onChange={(e)=>setForm({...form,city:e.target.value.toUpperCase()})}
         >
           <option value="">Select City</option>
           {cities.map((city)=>(
@@ -244,8 +256,9 @@ if (form.city === "Other" && !customCity) {
           <input
             placeholder="Enter your city"
             className="input md:col-span-2"
+            style={{ textTransform: 'uppercase' }}
             value={customCity}
-            onChange={(e)=>setCustomCity(e.target.value)}
+            onChange={(e)=>setCustomCity(e.target.value.toUpperCase() )}
           />
         )}
 

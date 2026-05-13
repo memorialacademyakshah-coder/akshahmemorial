@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { databases } from '@/lib/appwrite'
 import { Query } from 'appwrite'
 
@@ -9,11 +10,7 @@ const COLLECTION_ID = 'services'
 
 export default function ServicesSection() {
   const [services, setServices] = useState([])
-  const [index, setIndex] = useState(0)
-  const sliderRef = useRef(null)
-
-  const itemsPerView = 4
-
+const [isPaused, setIsPaused] = useState(false)
   /* ---------------- FETCH SERVICES ---------------- */
   useEffect(() => {
     const fetchServices = async () => {
@@ -23,8 +20,9 @@ export default function ServicesSection() {
         const res = await databases.listDocuments(
           DATABASE_ID,
           COLLECTION_ID,
-          [Query.orderAsc('order'),
-             Query.limit(100)
+          [
+            Query.orderAsc('order'),
+            Query.limit(100)
           ]
         )
 
@@ -37,38 +35,16 @@ export default function ServicesSection() {
     fetchServices()
   }, [])
 
-  /* ---------------- DUPLICATE FOR INFINITE LOOP ---------------- */
-  const extendedServices = [...services, ...services]
-
-  /* ---------------- AUTO SLIDE ---------------- */
-  useEffect(() => {
-    if (services.length === 0) return
-
-    const interval = setInterval(() => {
-      setIndex((prev) => prev + 1)
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [services])
-
-  /* ---------------- RESET LOOP (SEAMLESS) ---------------- */
-  useEffect(() => {
-    if (index >= services.length) {
-      setTimeout(() => {
-        if (sliderRef.current) {
-          sliderRef.current.style.transition = 'none'
-        }
-        setIndex(0)
-
-        setTimeout(() => {
-          if (sliderRef.current) {
-            sliderRef.current.style.transition =
-              'transform 0.5s ease-in-out'
-          }
-        }, 50)
-      }, 500)
-    }
-  }, [index, services.length])
+  /* ---------------- EMPTY ---------------- */
+  if (services.length === 0) {
+    return (
+      <section className="w-full bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] py-28 overflow-hidden">
+        <div className="text-center text-gray-400">
+          Loading services...
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="w-full bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] py-28 overflow-hidden">
@@ -77,69 +53,68 @@ export default function ServicesSection() {
         {/* Heading */}
         <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
           Professional &{' '}
-          <span className="text-[#19b9f1]">Trust-Focused</span>
+          <span className="text-[#19b9f1]">
+            Trust-Focused
+          </span>
         </h2>
 
-        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mt-2">
           OUR <span className="text-[#19b9f1]">TOP INSTITUTE</span>
         </h2>
 
-        {/* EMPTY STATE */}
-        {services.length === 0 && (
-          <p className="mt-10 text-gray-500">
-            No services available
-          </p>
-        )}
-
         {/* SLIDER */}
-        {services.length > 0 && (
-          <div className="relative mt-20 overflow-hidden">
+        <div className="relative mt-20 overflow-hidden">
 
-            <div
-              ref={sliderRef}
-              className="flex gap-8"
-              style={{
-                transform: `translateX(-${
-                  index * (100 / itemsPerView)
-                }%)`,
-                transition: 'transform 0.5s ease-in-out',
-              }}
-            >
-              {extendedServices.map((item, i) => (
-                <div
-                  key={i}
-                  className="min-w-[100%] sm:min-w-[50%] lg:min-w-[25%]"
-                >
-                  <ServiceCard
-                    title={item.title}
-                    imageUrl={item.imageUrl}
-                    text={item.description}
-                    state={item.state}
-                  />
-                </div>
-              ))}
-            </div>
+          {/* LEFT FADE */}
+          <div className="absolute left-0 top-0 z-20 h-full w-24 bg-gradient-to-r from-[#0f0f0f] to-transparent" />
 
-            {/* ARROWS */}
-            <button
-              onClick={() => setIndex((prev) => prev - 1)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 
-              w-12 h-12 rounded-full bg-white/10 backdrop-blur-md 
-              border border-white/20 hover:bg-[#19b9f1] transition"
-            >
-              ‹
-            </button>
+          {/* RIGHT FADE */}
+          <div className="absolute right-0 top-0 z-20 h-full w-24 bg-gradient-to-l from-[#0f0f0f] to-transparent" />
 
-            <button
-              onClick={() => setIndex((prev) => prev + 1)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 
-              w-12 h-12 rounded-full bg-white/10 backdrop-blur-md 
-              border border-white/20 hover:bg-[#19b9f1] transition"
-            >
-              ›
-            </button>
+       <div className="group overflow-hidden">
+  <motion.div
+  initial={{ x: 0 }}
+  animate={{
+    x: isPaused ? undefined : '-50%',
+  }}
+  transition={{
+    repeat: Infinity,
+    duration: 60,
+    ease: 'linear',
+  }}
+  onMouseEnter={() => setIsPaused(true)}
+  onMouseLeave={() => setIsPaused(false)}
+  className="flex min-w-max gap-8"
+>
+            {[...services, ...services].map((item, i) => (
+              <motion.div
+                key={i}
+                whileHover={{
+                  y: -10,
+                  scale: 1.03,
+                }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 200,
+                  damping: 15,
+                }}
+                className="
+                  min-w-[300px]
+                  sm:min-w-[340px]
+                  lg:min-w-[360px]
+                "
+              >
+                <ServiceCard
+                  title={item.title}
+                  imageUrl={item.imageUrl}
+                  text={item.description}
+                  state={item.state}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   )
@@ -147,52 +122,113 @@ export default function ServicesSection() {
 
 /* ================= SERVICE CARD ================= */
 
-function ServiceCard({ title, text, imageUrl, state }) {
+function ServiceCard({
+  title,
+  text,
+  imageUrl,
+  state,
+}) {
   return (
     <div
-      className="group relative rounded-2xl overflow-hidden
-      bg-white/5 backdrop-blur-xl
-      p-8 text-center border border-white/10
-      transition-all duration-500
-      hover:-translate-y-3 hover:shadow-[0_10px_40px_rgba(25,185,241,0.25)]
-      min-h-[360px]"
+      className="
+      group
+      relative
+      rounded-3xl
+      overflow-hidden
+      bg-white/5
+      backdrop-blur-xl
+      p-8
+      text-center
+      border
+      border-white/10
+      transition-all
+      duration-500
+      hover:-translate-y-3
+      hover:shadow-[0_10px_40px_rgba(25,185,241,0.25)]
+      min-h-[380px]
+    "
     >
       {/* Glow */}
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 
-        transition duration-500 bg-gradient-to-br from-[#19b9f1]/20 to-transparent blur-xl"
+        className="
+        absolute
+        inset-0
+        opacity-0
+        group-hover:opacity-100
+        transition
+        duration-500
+        bg-gradient-to-br
+        from-[#19b9f1]/20
+        to-transparent
+        blur-xl
+      "
       />
 
       <div className="relative z-10 flex flex-col items-center">
 
-        {/* PERFECT CIRCLE IMAGE */}
-        <div className="mb-5">
-          <div className="w-40 h-40 rounded-full overflow-hidden border border-white/20">
+        {/* IMAGE */}
+        <div className="mb-6">
+          <div
+            className="
+            w-44
+            h-44
+            rounded-full
+            overflow-hidden
+            border
+            border-white/20
+            shadow-lg
+          "
+          >
             {imageUrl && (
               <img
                 src={imageUrl}
                 alt={title}
-                className="w-full h-full object-cover"
+                className="
+                  w-full
+                  h-full
+                  object-cover
+                  transition-transform
+                  duration-500
+                  group-hover:scale-110
+                "
               />
             )}
           </div>
         </div>
 
         {/* TITLE */}
-        <h3 className="font-semibold text-xl tracking-wide">
+        <h3 className="font-bold text-2xl tracking-wide">
           {title}
         </h3>
 
         {/* DESCRIPTION */}
-        <p className="mt-4 text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition">
+        <p
+          className="
+          mt-4
+          text-gray-400
+          text-sm
+          leading-relaxed
+          group-hover:text-gray-300
+          transition
+        "
+        >
           {text}
         </p>
 
         {/* STATE */}
         {state && (
           <span
-            className="mt-3 px-3 py-1 text-xs rounded-full 
-            bg-[#19b9f1]/20 text-[#19b9f1] border border-[#19b9f1]/30"
+            className="
+            mt-5
+            px-4
+            py-1
+            text-xs
+            rounded-full
+            bg-[#19b9f1]/20
+            text-[#19b9f1]
+            border
+            border-[#19b9f1]/30
+          "
           >
             📍 {state}
           </span>

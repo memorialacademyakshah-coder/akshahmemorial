@@ -12,6 +12,7 @@ import {
   animate,
 } from "framer-motion";
 import { useFrame } from "@react-three/fiber";
+import Link from "next/link";
 
 /* ================= CANVAS ================= */
 const Canvas = dynamic(
@@ -228,9 +229,9 @@ export default function AuroraHero() {
              BNMI  is a leading educational institution dedicated to providing high-quality education and fostering a nurturing learning environment. This is the indias no. 1 franchise provider in the field of education. 
           </p>
 
-          <button className="mt-6 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center gap-2 hover:scale-105 transition">
+          <Link href="/franchise/signup" className="mt-6 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center gap-2 hover:scale-105 transition w-[150px]">
             Apply Now <FiArrowRight />
-          </button>
+          </Link>
         </div>
 
         {/* RIGHT */}

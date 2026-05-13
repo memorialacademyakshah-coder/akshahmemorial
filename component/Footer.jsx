@@ -11,6 +11,7 @@ import {
   faInstagram,
   faYoutube
 } from '@fortawesome/free-brands-svg-icons'
+import Link from 'next/link'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -150,23 +151,30 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="footer-anim">
-            <h4 className="font-bold text-lg mb-6">Newsletter</h4>
+          
+          
+<Link href="/verify/verification">
+  <button
+    className="
+      bg-[#19b9f1]
+      text-black
+      px-6
+      py-3
+      font-semibold
+      rounded-md
+      shadow-[0_0_15px_#19b9f1]
+      hover:shadow-[0_0_30px_#19b9f1]
+      hover:scale-105
+      transition-all
+      duration-300
+      animate-pulse
+    "
+  >
+    STUDENT VERIFICATION
+  </button>
 
-            <p className="text-gray-400 text-sm mb-6">
-              Sign up for our latest news & articles. We won't give you spam mails.
-            </p>
-
-            <input
-              type="email"
-              placeholder="Your Email"
-              className="w-full bg-transparent border border-gray-500 px-4 py-3 mb-4 text-sm"
-            />
-
-            <button className="bg-[#19b9f1] text-black px-6 py-3 font-semibold">
-              Send Now
-            </button>
-          </div>
+</Link>
+        
 
         </div>
       </div>

@@ -52,19 +52,20 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
 
           {/* LOGO */}
-          <div className="flex items-center gap-3">
-            {navbarData?.logoUrl ? (
-              <img
-                src={navbarData.logoUrl}
-                alt="Logo"
-                className="h-10 md:h-14 object-contain"
-              />
-            ) : (
-              <div className="text-white font-bold text-lg md:text-xl">
-                {navbarData?.siteName || 'LOGO'}
-              </div>
-            )}
-          </div>
+       {/* LOGO - HIDE IN MOBILE */}
+<div className="hidden lg:flex items-center gap-3">
+  {navbarData?.logoUrl ? (
+    <img
+      src={navbarData.logoUrl}
+      alt="Logo"
+      className="h-10 md:h-14 object-contain"
+    />
+  ) : (
+    <div className="text-white font-bold text-lg md:text-xl">
+      {navbarData?.siteName || 'LOGO'}
+    </div>
+  )}
+</div>
 
           {/* DESKTOP MENU */}
           <nav className="hidden lg:flex gap-8 text-white font-semibold">

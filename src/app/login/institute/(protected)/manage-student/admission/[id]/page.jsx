@@ -675,6 +675,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.studentName}
             onChange={handleChange}
             className="border p-2 w-full"
+            style={{ textTransform: 'uppercase' }}
           />
 
         </div>
@@ -690,6 +691,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.relationType}
             onChange={handleChange}
             className="border p-2 w-full"
+               style={{ textTransform: 'uppercase' }}
           >
 
             <option>S/O</option>
@@ -711,6 +713,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.fatherName}
             onChange={handleChange}
             className="border p-2 w-full"
+               style={{ textTransform: 'uppercase' }} 
           />
           <div className="flex items-center gap-2 mt-2">
   <input
@@ -742,6 +745,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.surname}
             onChange={handleChange}
             className="border p-2 w-full"
+            style={{ textTransform: 'uppercase' }}
           />
 
 
@@ -758,6 +762,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.motherName}
             onChange={handleChange}
             className="border p-2 w-full"
+            style={{ textTransform: 'uppercase' }}
           />
  <div className="flex items-center gap-2 mt-2">
   <input
@@ -969,6 +974,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
   value={form.address}
   onChange={handleChange}
   className="border p-2 w-full"
+  style={{ textTransform: 'uppercase' }}
 />
 </div>
         <div>
@@ -1027,6 +1033,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.qualification}
             onChange={handleChange}
             className="border p-2 w-full"
+            style={{ textTransform: 'uppercase' }}
           />
 
         </div>
@@ -1042,6 +1049,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.occupation}
             onChange={handleChange}
             className="border p-2 w-full"
+            style={{ textTransform: 'uppercase' }}
           />
 
         </div>
@@ -1180,6 +1188,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.batch}
             onChange={handleChange}
             className="border p-2 w-full"
+            style={{ textTransform: 'uppercase' }}
           />
 
         </div>
@@ -1195,6 +1204,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.remark}
             onChange={handleChange}
             className="border p-2 w-full"
+            style={{ textTransform: 'uppercase' }}
           />
 
         </div>

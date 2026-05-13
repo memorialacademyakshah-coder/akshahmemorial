@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { databases, storage } from "@/lib/appwrite";
 import { Query } from "appwrite";
 
@@ -10,7 +11,6 @@ const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 
 export default function TeamSlider() {
   const [team, setTeam] = useState([]);
-  const [current, setCurrent] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(3);
 
   const startX = useRef(0);
@@ -38,6 +38,7 @@ export default function TeamSlider() {
           COLLECTION_ID,
           [Query.orderAsc("order")]
         );
+
         setTeam(res.documents || []);
       } catch (err) {
         console.error("Fetch error:", err);
@@ -49,50 +50,6 @@ export default function TeamSlider() {
 
   /* ================= SAFE VALUES ================= */
   const safeTeam = Array.isArray(team) ? team : [];
-  const maxIndex = Math.max(0, safeTeam.length - itemsPerView);
-
-  /* ================= NAVIGATION ================= */
-  const next = () => {
-    setCurrent((prev) => (prev >= maxIndex ? 0 : prev + 1));
-  };
-
-  const prev = () => {
-    setCurrent((prev) => (prev <= 0 ? maxIndex : prev - 1));
-  };
-
-  /* ================= AUTO SLIDE ================= */
-  useEffect(() => {
-    if (!safeTeam.length) return;
-
-    const interval = setInterval(() => {
-      next();
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [safeTeam.length, itemsPerView]);
-
-  /* ================= DRAG ================= */
-  const handleStart = (e) => {
-    isDragging.current = true;
-    startX.current = e.touches
-      ? e.touches[0].clientX
-      : e.clientX;
-  };
-
-  const handleEnd = (e) => {
-    if (!isDragging.current) return;
-
-    const endX = e.changedTouches
-      ? e.changedTouches[0].clientX
-      : e.clientX;
-
-    const diff = startX.current - endX;
-
-    if (diff > 50) next();
-    else if (diff < -50) prev();
-
-    isDragging.current = false;
-  };
 
   /* ================= IMAGE ================= */
   const getImageUrl = (image) => {
@@ -109,6 +66,7 @@ export default function TeamSlider() {
 
       if (typeof image === "object") {
         const id = image.$id || image.fileId || image.id;
+
         if (id) {
           return storage.getFileView(BUCKET_ID, id).href;
         }
@@ -130,7 +88,7 @@ export default function TeamSlider() {
   }
 
   return (
-    <section className="py-16 bg-[#1e1e1e] text-white">
+    <section className="py-16 bg-[#1e1e1e] text-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 text-center">
 
         <h2 className="text-3xl font-bold mb-10">
@@ -139,58 +97,103 @@ export default function TeamSlider() {
 
         {/* SLIDER */}
         <div
-          className="overflow-hidden"
-          onMouseDown={handleStart}
-          onMouseUp={handleEnd}
-          onTouchStart={handleStart}
-          onTouchEnd={handleEnd}
+          className="relative overflow-hidden"
+          onMouseDown={(e) => {
+            isDragging.current = true;
+            startX.current = e.clientX;
+          }}
+          onMouseUp={(e) => {
+            if (!isDragging.current) return;
+
+            const diff = startX.current - e.clientX;
+
+            if (diff > 50) {
+              document
+                .getElementById("team-slider")
+                ?.scrollBy({ left: 300, behavior: "smooth" });
+            }
+
+            if (diff < -50) {
+              document
+                .getElementById("team-slider")
+                ?.scrollBy({ left: -300, behavior: "smooth" });
+            }
+
+            isDragging.current = false;
+          }}
         >
-          <div
-            className="flex transition-transform duration-500 ease-in-out"
-            style={{
-              transform: `translateX(-${current * (100 / itemsPerView)}%)`,
+
+          <motion.div
+            id="team-slider"
+            initial={{ x: 0 }}
+            animate={{ x: "-50%" }}
+            transition={{
+              repeat: Infinity,
+              duration: 50,
+              ease: "linear",
             }}
+            className="flex min-w-max gap-6"
           >
-            {safeTeam.map((member) => (
-              <div
-                key={member.$id}
-                className="px-3"
-                style={{ flex: `0 0 ${100 / itemsPerView}%` }}
+            {[...safeTeam, ...safeTeam].map((member, index) => (
+              <motion.div
+                key={index}
+                whileHover={{
+                  y: -8,
+                  scale: 1.03,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 15,
+                }}
+                className="
+                  min-w-[280px]
+                  md:min-w-[340px]
+                  bg-black
+                  rounded-2xl
+                  overflow-hidden
+                  border
+                  border-white/10
+                  shadow-lg
+                "
               >
-                <div className="bg-black rounded-lg overflow-hidden">
+                <div className="relative overflow-hidden">
                   <img
                     src={getImageUrl(member.imageUrl)}
                     alt={member.name}
-                    className="w-full h-[260px] md:h-[320px] object-contain"
+                    className="
+                      w-full
+                      h-[260px]
+                      md:h-[320px]
+                      object-contain
+                      transition-transform
+                      duration-500
+                      hover:scale-105
+                    "
                   />
+
+                  {/* GLOW */}
+                  <div className="absolute inset-0 bg-cyan-500/0 hover:bg-cyan-500/10 transition duration-500" />
                 </div>
 
-                <h4 className="mt-4 font-bold">{member.name}</h4>
-                <p className="text-cyan-400 text-sm">{member.role}</p>
-                <p className="text-gray-400 text-xs">
-                  {member.experience}
-                </p>
-              </div>
+                <div className="p-5 text-center">
+                  <h4 className="font-bold text-lg">
+                    {member.name}
+                  </h4>
+
+                  <p className="text-cyan-400 text-sm mt-1">
+                    {member.role}
+                  </p>
+
+                  <p className="text-gray-400 text-xs mt-2">
+                    {member.experience}
+                  </p>
+                </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
 
-        {/* BUTTONS */}
-        <div className="flex justify-center gap-4 mt-8">
-          <button
-            onClick={prev}
-            className="px-4 py-2 bg-gray-700 rounded"
-          >
-            ←
-          </button>
-          <button
-            onClick={next}
-            className="px-4 py-2 bg-cyan-500 rounded"
-          >
-            →
-          </button>
         </div>
-
       </div>
     </section>
   );
