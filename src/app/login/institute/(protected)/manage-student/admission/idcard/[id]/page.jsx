@@ -63,11 +63,11 @@ const fetchStudent = async () => {
 {franchise?.logo && (
   <img
     src={franchise.logo}
-    className="absolute top-[20px] left-[115px] w-[120px] h-[120px] object-contain"
+    className="absolute top-[5px] left-[115px] w-[120px] h-[120px] object-contain"
   />
 )}
 
-<div className="absolute top-[200px] left-[260px] text-lg">
+<div className="absolute top-[115px] text-center w-full text-lg">
                  {franchise?.instituteName || ""}
                 </div>
         {/* PHOTO */}
@@ -81,7 +81,7 @@ const fetchStudent = async () => {
           {student.studentName}
         </div>
 
-        <div className="absolute top-[372px] left-[140px] text-xs">
+        <div className="absolute top-[370px] left-[140px] text-xs">
           {student.courseName}
         </div>
 
@@ -110,7 +110,7 @@ const fetchStudent = async () => {
 {franchise?.signature && (
   <img
     src={franchise.signature}
-    className="absolute top-[450px] left-[40px] w-[100px] h-[40px] object-contain"
+    className="absolute bottom-[30px] left-[40px] w-[100px] h-[40px] object-contain"
   />
 )}
 
