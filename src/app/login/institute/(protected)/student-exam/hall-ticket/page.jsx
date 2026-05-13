@@ -161,44 +161,79 @@ export default function HallTicketPage() {
       {/* EXAM DETAILS */}
       <div className="bg-[#121212] border border-gray-800 p-6 rounded mb-6">
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
 
-          <input
-            type="date"
-            value={examDate}
-            onChange={(e) => setExamDate(e.target.value)}
-            className="border p-2 bg-black text-white"
-          />
+  {/* EXAM DATE */}
+  <div>
+    <label className="block mb-1 text-sm font-semibold text-orange-400">
+      Exam Date
+    </label>
 
-          <input
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className="border p-2 bg-black text-white"
-          />
+    <input
+      type="date"
+      value={examDate}
+      onChange={(e) => setExamDate(e.target.value)}
+      className="border p-2 bg-black text-white w-full"
+    />
+  </div>
 
-          <input
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className="border p-2 bg-black text-white"
-          />
+  {/* START TIME */}
+  <div>
+    <label className="block mb-1 text-sm font-semibold text-orange-400">
+      Start Time
+    </label>
 
-          <input
-            type="time"
-            value={reportingTime}
-            onChange={(e) => setReportingTime(e.target.value)}
-            className="border p-2 bg-black text-white"
-          />
+    <input
+      type="time"
+      value={startTime}
+      onChange={(e) => setStartTime(e.target.value)}
+      className="border p-2 bg-black text-white w-full"
+    />
+  </div>
 
-          <input
-            placeholder="Duration (e.g. 2 Hours)"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            className="border p-2 bg-black text-white"
-          />
+  {/* END TIME */}
+  <div>
+    <label className="block mb-1 text-sm font-semibold text-orange-400">
+      End Time
+    </label>
 
-        </div>
+    <input
+      type="time"
+      value={endTime}
+      onChange={(e) => setEndTime(e.target.value)}
+      className="border p-2 bg-black text-white w-full"
+    />
+  </div>
+
+  {/* REPORTING TIME */}
+  <div>
+    <label className="block mb-1 text-sm font-semibold text-orange-400">
+      Reporting Time
+    </label>
+
+    <input
+      type="time"
+      value={reportingTime}
+      onChange={(e) => setReportingTime(e.target.value)}
+      className="border p-2 bg-black text-white w-full"
+    />
+  </div>
+
+  {/* DURATION */}
+  <div>
+    <label className="block mb-1 text-sm font-semibold text-orange-400">
+      Exam Duration
+    </label>
+
+    <input
+      placeholder="e.g. 2 Hours"
+      value={duration}
+      onChange={(e) => setDuration(e.target.value)}
+      className="border p-2 bg-black text-white w-full"
+    />
+  </div>
+
+</div>
 
         <button
           onClick={generateHallTicket}

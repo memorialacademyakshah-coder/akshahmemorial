@@ -72,12 +72,12 @@ const franchiseSign = franchise?.signature || null; `${process.env.NEXT_PUBLIC_A
 {franchise?.logo && (
   <img
     src={franchise.logo}
-    className="absolute top-[40px] left-[320px] w-[150px] h-[150px] object-contain"
+    className="absolute top-[10px] left-[340px] w-[140px]"
   />
 )}
 
 {/* FRANCHISE NAME */}
-<div className="absolute top-[190px] w-full text-center text-2xl font-bold text-red-700">
+<div className="absolute top-[140px]  w-full text-center text-2xl font-bold text-red-700">
   {franchise?.instituteName || ""}
 </div>
 
@@ -181,18 +181,21 @@ const franchiseSign = franchise?.signature || null; `${process.env.NEXT_PUBLIC_A
 {franchiseSign && (
   <img
     src={franchiseSign}
-    className="absolute bottom-[400px] right-[500px] w-[160px] h-[60px] object-contain"
+    className="absolute bottom-[110px] right-[70px] w-[120px] h-[60px] object-contain"
   />
 )}
 
 {/* FRANCHISE OWNER NAME */}
-<div className="absolute bottom-[240px] right-[500px] text-sm font-semibold text-center">
+<div className="absolute bottom-[100px] right-[80px] text-sm font-semibold text-center">
   {franchise?.name || ""}
 </div>
 
 {/* FRANCHISE EMAIL */}
-<div className="absolute top-[230px] left-[250px] text-sm">
+<div className="absolute bottom-[70px]  w-full text-center text-sm text-sm">
   Email: {franchise?.email || ""}
+</div>
+        <div className="absolute bottom-[90px]  w-full text-center text-sm">
+  {franchise?.address || ""},  {franchise?.city || ""}, {franchise?.state || ""}
 </div>
           </div>
 

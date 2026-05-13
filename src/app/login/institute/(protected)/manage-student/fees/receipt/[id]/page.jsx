@@ -99,12 +99,12 @@ setReceiptNumber(generateReceiptNumber());
 {franchise?.logo && (
   <img
     src={franchise.logo}
-    className="absolute top-[40px] left-[70px] w-[120px] h-[120px] object-contain"
+    className="absolute top-[35px] left-[400px] w-[120px] h-[120px] object-contain"
   />
 )}
 
 {/* INSTITUTE NAME */}
-<div className="absolute top-[60px] left-0 w-full text-center text-3xl font-bold text-red-700">
+<div className="absolute top-[160px] left-0 w-full text-center text-3xl font-bold text-red-700">
   {franchise?.instituteName || ""}
 </div>
 
@@ -205,39 +205,39 @@ setReceiptNumber(generateReceiptNumber());
 
 
                     {/* OWNER NAME */}
-<div className="absolute bottom-[120px] right-[120px] text-center">
+<div className="absolute bottom-[-90px] right-[10px] text-center">
 
   <div className="font-semibold text-lg">
     {franchise?.name || ""}
   </div>
 
-
-
 </div>
+
 
                     {/* FRANCHISE SIGNATURE */}
 {franchise?.signature && (
   <img
     src={franchise.signature}
-    className="absolute bottom-[170px] right-[110px] w-[140px] h-[60px] object-contain"
+    className="absolute bottom-[-70px] right-[10px] w-[140px] h-[60px] object-contain"
   />
 )}
 
 
                     {/* FRANCHISE EMAIL */}
-<div className="absolute top-[110px] left-0 w-full text-center text-sm">
+<div className="absolute top-[90px] left-0 w-full text-center text-sm">
   {franchise?.email || ""}
 </div>
 
+
 {/* FRANCHISE ADDRESS */}
-<div className="absolute top-[135px] left-0 w-full text-center text-sm">
+<div className="absolute top-[117px] left-0 w-full text-center text-sm">
   {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
 </div>
+
 
                 </div>
 
                 {/* PRINT BUTTON */}
-
                 <div className="text-center mt-6">
 
                     <button

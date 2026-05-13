@@ -66,12 +66,12 @@ if (franchiseRes.documents.length > 0) {
 {franchise?.logo && (
   <img
     src={franchise.logo}
-   className="absolute top-[20px] left-[370px] w-[140px]"
+   className="absolute top-[20px] left-[390px] w-[140px]"
   />
 )}
                 {/* ADMISSION DATE */}
 
-                <div className="absolute top-[200px] left-[260px] text-lg">
+                <div className="absolute top-[160px] left-[350px] text-lg">
                  {franchise?.instituteName || ""}
                 </div>
                 <div className="absolute top-[320px] left-[260px] text-lg">
@@ -80,7 +80,7 @@ if (franchiseRes.documents.length > 0) {
 
                 {/* STUDENT NAME */}
 
-                <div className="absolute top-[365px] left-[210px] text-lg">
+                <div className="absolute top-[408px] left-[210px] text-lg">
                     {student.studentName || ""}
                 </div>
                  <div className="absolute top-[365px] left-[210px] text-lg">
@@ -89,13 +89,13 @@ if (franchiseRes.documents.length > 0) {
 
                 {/* FATHER NAME */}
 
-                <div className="absolute top-[408px] left-[210px] text-lg">
+                <div className="absolute top-[450px] left-[210px] text-lg">
                     {student.fatherName || ""}
                 </div>
 
                 {/* MOTHER NAME */}
 
-                <div className="absolute top-[450px] left-[210px] text-lg">
+                <div className="absolute top-[495px] left-[210px] text-lg">
                     {student.motherName || ""}
                 </div>
 
@@ -137,7 +137,7 @@ if (franchiseRes.documents.length > 0) {
 
                 {/* ADDRESS */}
 
-                <div className="absolute top-[674px] left-[250px] w-[600px] text-lg">
+                <div className="absolute top-[705px] left-[250px] w-[600px] text-lg">
                     {student.address || ""}
                 </div>
 
@@ -186,18 +186,18 @@ if (franchiseRes.documents.length > 0) {
                 {franchise?.signature && (
   <img
     src={franchise.signature}
-    className="absolute bottom-[80px] right-[80px] w-[120px]"
+    className="absolute bottom-[230px] right-[80px] w-[120px]"
   />
 )}
-                <div className="absolute top-[955px] left-[520px] text-lg">
-                   {franchise?.email || ""}
+                <div className="absolute bottom-[180px] left-[340px] text-lg">
+                  Email: {franchise?.email || ""}
                 </div>
 
-                <div className="absolute top-[995px] left-[520px] text-lg">
-                  {franchise?.address || ""}
+                <div className="absolute bottom-[150px] left-[337px] text-lg text-center ">
+                  Address: {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
                 </div>
 
-                <div className="absolute top-[975px] left-[520px] text-lg">
+                <div className="absolute bottom-[200px] right-[70px] text-lg">
                  {franchise?.name || ""}
                 </div>
 
