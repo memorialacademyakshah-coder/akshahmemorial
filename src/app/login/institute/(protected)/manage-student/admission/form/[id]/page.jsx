@@ -155,7 +155,7 @@ export default function AdmissionForm() {
 
                 {/* INSTITUTE NAME */}
 
-                <div className="absolute top-[160px] left-[350px] text-lg">
+                <div className="absolute top-[160px] text-center w-full text-2xl font-bold">
                     {franchise?.instituteName || ""}
                 </div>
 
@@ -278,25 +278,25 @@ export default function AdmissionForm() {
                 {franchise?.signature && (
                     <img
                         src={franchise.signature}
-                        className="absolute bottom-[230px] right-[80px] w-[120px]"
+                        className="absolute bottom-[150px] right-[80px] w-[120px]"
                     />
                 )}
 
                 {/* FRANCHISE EMAIL */}
 
-                <div className="absolute bottom-[180px] left-[340px] text-lg">
+                <div className="absolute bottom-[80px] text-center w-full text-lg">
                     Email: {franchise?.email || ""}
                 </div>
 
                 {/* FRANCHISE ADDRESS */}
 
-                <div className="absolute bottom-[150px] left-[337px] text-lg text-center">
+                <div className="absolute bottom-[105px]  text-lg text-center w-full">
                     Address: {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
                 </div>
 
                 {/* FRANCHISE OWNER */}
 
-                <div className="absolute bottom-[200px] right-[70px] text-lg">
+                <div className="absolute bottom-[120px] right-[70px] text-lg">
                     {franchise?.name || ""}
                 </div>
 
