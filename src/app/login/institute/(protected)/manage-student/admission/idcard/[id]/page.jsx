@@ -179,7 +179,7 @@ export default function IDCard() {
         />
 
         {/* STUDENT NAME */}
-        <div className="absolute top-[334px] left-[140px] text-lg">
+        <div className="absolute top-[334px] left-[145px] text-lg">
           {student.studentName}
         </div>
 
@@ -199,7 +199,7 @@ export default function IDCard() {
         </div>
 
         {/* OWNER NAME */}
-        <div className="absolute top-[455px] left-[40px] text-xs font-semibold">
+        <div className="absolute bottom-[65px] left-[40px] text-xs font-semibold">
           {franchise?.name || ""}
         </div>
 
