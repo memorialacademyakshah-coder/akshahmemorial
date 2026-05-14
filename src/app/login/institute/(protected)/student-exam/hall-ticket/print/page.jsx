@@ -202,6 +202,11 @@ export default function PrintHallTicket() {
               <div className="absolute top-[415px] left-[190px]">
                 {student.studentName}
               </div>
+              {/* ROLL NUMBER */}
+
+<div className="absolute top-[365px] right-[120px] text-lg font-semibold">
+    Roll No: {student.rollNumber || ""}
+</div>
 
               {/* FATHER NAME */}
               <div className="absolute top-[460px] left-[240px]">
@@ -220,7 +225,7 @@ export default function PrintHallTicket() {
 
               {/* USERNAME */}
               <div className="absolute top-[345px] left-[350px]">
-                {student.username}
+                                {student.studentName}
               </div>
 
               {/* PASSWORD */}
