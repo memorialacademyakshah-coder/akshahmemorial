@@ -213,6 +213,14 @@ const handleDownload = async () => {
       {/* 🔥 TOP ACTION BUTTONS */}
       <div className="flex flex-wrap justify-end gap-3">
 
+  <ActionButton
+          icon={<UserPlus size={18} />}
+          label="Make Payment"
+          color="bg-[#0f172a]"
+          onClick={() =>
+            router.push("/login/institute/manage-student/payment")
+          }
+        />
         <ActionButton
           icon={<UserPlus size={18} />}
           label="Direct Admission"

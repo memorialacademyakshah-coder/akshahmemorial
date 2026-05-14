@@ -170,10 +170,10 @@ const examFee = planRes.documents[0]?.amount || 0;
 
   const dynamicExamFee = await getExamFee(course)
 
-  if (!course.enteredCourseFees || !course.minimumFees) {
-    alert("Please enter Course Fee and Minimum Fee")
-    return
-  }
+if (!course.courseFees || !course.minimumFees) {
+  alert("Please enter Course Fee and Minimum Fee")
+  return
+}
         const existing = await databases.listDocuments(
                  DATABASE_ID,
                  SINGLE_COLLECTION,
