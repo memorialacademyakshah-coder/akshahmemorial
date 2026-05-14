@@ -204,7 +204,7 @@ export default function AdmissionForm() {
 
                 {/* MOBILE */}
 
-                <div className="absolute top-[496px] left-[220px] text-lg">
+                <div className="absolute top-[537px] w-[200px] left-[270px] text-lg">
                     {student.mobile || ""}
                 </div>
 
