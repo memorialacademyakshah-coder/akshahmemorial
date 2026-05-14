@@ -70,8 +70,8 @@ export default function Navbar() {
           {/* DESKTOP MENU */}
           <nav className="hidden lg:flex gap-8 text-white font-semibold">
             <Link href="/">HOME</Link>
-            <Link href="/about">ABOUT US</Link>
-            <Link href="/courses">COURSES</Link>
+            <Link href="/aboutus">ABOUT US</Link>
+<Link href="/#courses">COURSES</Link>
             <Link href="/certificate-demo">CERTIFICATION</Link>
             <Link href="/verify/verification">VERIFICATION</Link>
           </nav>
