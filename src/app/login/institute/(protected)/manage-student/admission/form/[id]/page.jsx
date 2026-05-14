@@ -157,9 +157,20 @@ export default function AdmissionForm() {
 
                 {/* INSTITUTE NAME */}
 
-                <div className="absolute top-[160px] text-center w-full text-2xl font-bold">
+                <div className="absolute top-[160px] text-center w-full text-3xl font-bold ">
                     {franchise?.instituteName || ""}
                 </div>
+
+                 <img
+          src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
+          className="absolute top-[250px] right-[120px] w-[100px] h-[100px] object-cover"
+        />
+
+         {/* ROLL NUMBER */}
+
+<div className="absolute top-[320px] right-[250px] text-lg font-semibold">
+    Roll No: {student.rollNumber || ""}
+</div>
 
                 {/* ADMISSION DATE */}
 
@@ -280,7 +291,7 @@ export default function AdmissionForm() {
                 {franchise?.signature && (
                     <img
                         src={franchise.signature}
-                        className="absolute bottom-[150px] right-[80px] w-[120px]"
+                        className="absolute bottom-[150px] right-[65px] w-[150px] h-[50px]"
                     />
                 )}
 

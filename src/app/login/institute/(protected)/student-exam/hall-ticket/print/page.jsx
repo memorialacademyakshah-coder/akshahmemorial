@@ -160,7 +160,7 @@ export default function PrintHallTicket() {
               />
 
               {/* QR CODE */}
-              <div className="absolute top-[140px] right-[60px] bg-white p-2">
+              <div className="absolute bottom-[160px] left-[100px] bg-white p-2">
                 <QRCode
                   value={`${window.location.origin}/verify-student/${student.$id}`}
                   size={90}
@@ -279,7 +279,7 @@ export default function PrintHallTicket() {
               {franchiseSign && (
                 <img
                   src={franchiseSign}
-                  className="absolute bottom-[110px] right-[70px] w-[120px] h-[60px] object-contain"
+                  className="absolute bottom-[110px] right-[70px] w-[150px] h-[60px] object-contain"
                 />
               )}
 
