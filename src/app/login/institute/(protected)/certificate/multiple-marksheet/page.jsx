@@ -293,8 +293,8 @@ if (!student) return <div className="p-10">Loading...</div>;
         <div className="absolute top-[346px] left-[330px]">{student.fatherName}</div>
         <div className="absolute top-[367px] left-[330px]">{student.surname}</div>
         <div className="absolute top-[388px] left-[330px]">{student.motherName}</div>
-        <div className="absolute top-[410px] left-[330px]">{student.course}</div>
-        <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
+        <div className="absolute top-[410px] left-[330px] font-bold">{student.course}</div>
+        <div className="absolute top-[450px] left-[330px] font-bold">{student.instituteName}</div>
 
         {/* ===============================
             RIGHT SIDE (FIXED)

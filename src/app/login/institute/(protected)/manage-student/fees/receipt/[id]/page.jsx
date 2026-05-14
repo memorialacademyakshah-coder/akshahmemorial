@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
+import * as htmlToImage from "html-to-image";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const PAYMENT_COLLECTION = "student_payments";
@@ -17,6 +18,8 @@ export default function ReceiptPage() {
     const [admission, setAdmission] = useState(null);
     const [receiptNumber, setReceiptNumber] = useState("");
     const [franchise, setFranchise] = useState(null);
+
+    const printRef = useRef();
 
     useEffect(() => {
         if (id) {
@@ -54,22 +57,90 @@ export default function ReceiptPage() {
             pay.admissionId
         );
 
+        setAdmission(adm);
 
+        // 🔥 FETCH FRANCHISE
+        const franchiseRes = await databases.listDocuments(
+            DATABASE_ID,
+            "franchise_approved",
+            [Query.equal("email", adm.franchiseEmail)]
+        );
 
-setAdmission(adm);
+        if (franchiseRes.documents.length > 0) {
+            setFranchise(franchiseRes.documents[0]);
+        }
 
-// 🔥 FETCH FRANCHISE
-const franchiseRes = await databases.listDocuments(
-  DATABASE_ID,
-  "franchise_approved",
-  [Query.equal("email", adm.franchiseEmail)]
-);
+        setReceiptNumber(generateReceiptNumber());
 
-if (franchiseRes.documents.length > 0) {
-  setFranchise(franchiseRes.documents[0]);
-}
+    };
 
-setReceiptNumber(generateReceiptNumber());
+    // ✅ CONVERT IMAGE
+    const toBase64 = async (url) => {
+
+        const res = await fetch(url);
+        const blob = await res.blob();
+
+        return new Promise((resolve) => {
+
+            const reader = new FileReader();
+
+            reader.onloadend = () => resolve(reader.result);
+
+            reader.readAsDataURL(blob);
+
+        });
+    };
+
+    // ✅ DOWNLOAD FUNCTION
+    const handleDownload = async () => {
+
+        try {
+
+            const node = printRef.current;
+
+            const images = node.querySelectorAll("img");
+
+            for (let img of images) {
+
+                const src = img.src;
+
+                if (!src.startsWith("data:")) {
+
+                    try {
+
+                        const base64 = await toBase64(src);
+
+                        img.src = base64;
+
+                    } catch (err) {
+                        console.log(err);
+                    }
+
+                }
+
+            }
+
+            const dataUrl = await htmlToImage.toPng(node, {
+                quality: 1,
+                pixelRatio: 3,
+                cacheBust: true,
+                width: node.scrollWidth,
+                height: node.scrollHeight,
+            });
+
+            const link = document.createElement("a");
+
+            link.download = `${payment.studentName}_receipt.png`;
+
+            link.href = dataUrl;
+
+            link.click();
+
+        } catch (err) {
+
+            console.log("DOWNLOAD ERROR:", err);
+
+        }
 
     };
 
@@ -85,7 +156,7 @@ setReceiptNumber(generateReceiptNumber());
 
         <div className="flex justify-center p-10 bg-gray-100">
 
-            <div className="relative w-[900px]">
+            <div className="relative w-[900px]" ref={printRef}>
 
                 {/* RECEIPT TEMPLATE BACKGROUND */}
 
@@ -237,17 +308,23 @@ setReceiptNumber(generateReceiptNumber());
 
                 </div>
 
-                {/* PRINT BUTTON */}
-                <div className="text-center mt-6">
+                   <div className="fixed top-20 right-20 flex gap-4">
 
-                    <button
-                        onClick={() => window.print()}
-                        className="bg-blue-600 text-white px-6 py-2 rounded"
-                    >
-                        Print Receipt
-                    </button>
+                <button
+                    onClick={() => window.print()}
+                    className="bg-blue-600 text-white px-6 py-2 rounded shadow-lg"
+                >
+                    Print Admission Form
+                </button>
 
-                </div>
+                <button
+                    onClick={handleDownload}
+                    className="bg-green-600 text-white px-6 py-2 rounded shadow-lg"
+                >
+                    Download Admission Form
+                </button>
+
+            </div>
 
             </div>
 

@@ -359,7 +359,7 @@ console.log("SHOW FATHER:", parsed.showFatherInCertificate);
         </div>
 
         {/* INSTITUTE */}
-        <div className="absolute bottom-[440px] left-[20px] w-full text-center text-3xl font-bold text-red-700">
+        <div className="absolute bottom-[440px] left-[20px] w-full text-center text-xl font-bold text-red-700">
 
           ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
         </div>
