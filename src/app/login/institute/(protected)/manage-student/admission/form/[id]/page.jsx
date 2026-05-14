@@ -136,6 +136,8 @@ export default function AdmissionForm() {
                 className="relative w-[900px] bg-white shadow"
             >
 
+           
+
                 {/* TEMPLATE */}
 
                 <img
@@ -304,7 +306,7 @@ export default function AdmissionForm() {
 
             {/* BUTTONS */}
 
-            <div className="fixed bottom-10 right-10 flex gap-4">
+            <div className="fixed top-20 right-20 flex gap-4">
 
                 <button
                     onClick={() => window.print()}
