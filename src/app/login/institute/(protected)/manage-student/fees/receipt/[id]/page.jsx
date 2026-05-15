@@ -299,13 +299,13 @@ export default function ReceiptPage() {
 
 
                     {/* FRANCHISE EMAIL */}
-<div className="absolute top-[90px] left-0 w-full text-center text-sm">
+<div className="absolute top-[90px] right-[50px] w-full text-center text-sm">
   {franchise?.email || ""}
 </div>
 
 
 {/* FRANCHISE ADDRESS */}
-<div className="absolute top-[117px] left-0 w-full text-center text-sm">
+<div className="absolute top-[117px] right-[50px] w-full text-center text-sm">
   {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
 </div>
 

@@ -192,17 +192,17 @@ export default function IDCard() {
         </div>
 
         {/* MOBILE */}
-        <div className="absolute top-[396px] left-[150px] text-sm">
+        <div className="absolute top-[400px] left-[150px] text-sm">
           {student.mobile || ""}
         </div>
 
         {/* ROLL NUMBER */}
-        <div className="absolute top-[426px] left-[150px] text-lg">
+        <div className="absolute top-[427px] left-[150px] text-lg">
           {student.rollNumber}
         </div>
 
         {/* OWNER NAME */}
-        <div className="absolute bottom-[68px] left-[46px] text-xs font-semibold">
+        <div className="absolute bottom-[30px] left-[46px] text-xs font-semibold">
           {franchise?.name || ""}
         </div>
 
@@ -218,7 +218,7 @@ export default function IDCard() {
         {franchise?.signature && (
           <img
             src={franchise.signature}
-            className="absolute bottom-[30px] left-[40px] w-[100px] h-[40px] object-contain"
+            className="absolute bottom-[50px] left-[40px] w-[100px] h-[40px] object-contain"
           />
         )}
 
