@@ -190,13 +190,15 @@ const rect = node.getBoundingClientRect();
         <img src="/beautymark.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
-        {student?.logo && (
-          <img
-            src={student.logo}
-            
-            className="absolute top-[50px] left-[380px] w-[150px]"
-          />
-        )}
+      {student.logo && (
+  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+    <img
+      src={student.logo}
+      className="w-full h-full object-cover rounded-full"
+    />
+  </div>
+
+)}
 
         {/* LEFT */}
         <div className="absolute top-[325px] left-[330px]">{student.studentName}</div>

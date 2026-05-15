@@ -237,14 +237,15 @@ saveCert();
 
        
         {/* LOGO */}
-        {student.logo && (
-           <div className="absolute top-[10px] left-[410px] w-[120px] text-center h-[120px] overflow-hidden bg-white">
-          <img
-            src={student.logo}  className="w-full h-full object-cover"
-           
-          />
-        </div>
-        )}
+     {student.logo && (
+  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+    <img
+      src={student.logo}
+      className="w-full h-full object-cover rounded-full"
+    />
+  </div>
+
+)}
 
         {/* PHOTO */}
         <div className="absolute top-[360px] left-[380px] w-[160px] h-[160px] overflow-hidden bg-white">
