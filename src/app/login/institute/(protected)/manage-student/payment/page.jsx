@@ -62,7 +62,7 @@ export default function PaymentPage() {
               height={260}
               className="rounded-xl"
             />
-
+ 
           </div>
 
           {/* Instructions */}

@@ -205,10 +205,12 @@ export default function PrintCertificate() {
 
         {/* LOGO */}
         {student.logo && (
+           <div className="absolute top-[10px] left-[385px] w-[160px] text-center h-[160px] overflow-hidden bg-white">
           <img
-            src={student.logo}
-            className="absolute top-[10px] left-[385px] w-[160px] text-center"
+            src={student.logo}  className="w-full h-full object-cover"
+           
           />
+        </div>
         )}
 
          {/* <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">
