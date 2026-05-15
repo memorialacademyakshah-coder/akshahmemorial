@@ -149,10 +149,12 @@ export default function AdmissionForm() {
                 {/* FRANCHISE LOGO */}
 
                 {franchise?.logo && (
-                    <img
-                        src={franchise.logo}
-                        className="absolute top-[20px] left-[390px] w-[140px]"
-                    />
+                  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+    <img
+      src={student.logo}
+      className="w-full h-full object-cover rounded-full"
+    />
+  </div>
                 )}
 
                 {/* INSTITUTE NAME */}

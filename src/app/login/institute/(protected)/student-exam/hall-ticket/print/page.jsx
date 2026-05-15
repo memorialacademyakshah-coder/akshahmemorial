@@ -168,12 +168,14 @@ export default function PrintHallTicket() {
               </div>
 
               {/* FRANCHISE LOGO */}
-              {franchise?.logo && (
-                <img
-                  src={franchise.logo}
-                  className="absolute top-[10px] left-[340px] w-[140px]"
-                />
-              )}
+             {franchise?.logo && (
+                  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+    <img
+      src={student.logo}
+      className="w-full h-full object-cover rounded-full"
+    />
+  </div>
+                )}
 
               {/* FRANCHISE NAME */}
               <div className="absolute top-[140px] w-full text-center text-2xl font-bold text-red-700">
