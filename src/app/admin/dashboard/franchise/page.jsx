@@ -980,8 +980,8 @@ const getExpiryDate = () => {
                     onChange={(e) => setLogoFile(e.target.files[0])}
                     className="w-full border p-2 rounded-lg"
                   />
-                </div>
-
+                </div>                                 
+              
                 <div>
                   <label className="text-sm">Signature</label>
                   <input
@@ -1072,29 +1072,30 @@ const getExpiryDate = () => {
               />
               <img
                 src={selectedFranchise?.qrCode}
-                className="absolute top-[550px] left-[130px] w-[100px]"
+                className="absolute top-[555px] left-[125px] w-[100px]"
               />
               {/* ----------- DYNAMIC TEXT ----------- */}
 
               {/* Institute Name (RED CENTER) */}
-              <div className="absolute top-[470px] w-full text-center">
-                <h1 className="text-red-600 text-2xl font-bold">
-                  {selectedFranchise?.instituteName}
-                </h1>
-              </div>
+             {/* Institute Name (RED CENTER) */}
+<div className="absolute top-[470px] left-0 w-full flex justify-center px-20">
+  <h1 className="text-red-600 text-2xl font-bold text-center break-words leading-tight max-w-[650px]">
+    {selectedFranchise?.instituteName}
+  </h1>
+</div>
 
               {/* ATC Code */}
-              <div className="absolute top-[580px] left-[304px] font-bold">
+              <div className="absolute top-[590px] left-[304px] font-bold">
                 ATC Code: {selectedFranchise?.atcCode}
               </div>
 
               {/* Owner Name */}
-              <div className="absolute top-[540px] w-full text-center font-semibold">
+              <div className="absolute top-[564px] w-full text-center font-semibold">
                 Applicant Name :  {selectedFranchise?.name}
               </div>
 
               {/* Address */}
-              <div className="absolute top-[520px] w-full text-center text-sm px-10">
+              <div className="absolute top-[540px] w-full text-center text-sm px-10">
                 {selectedFranchise?.address}{selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
               </div>
 
