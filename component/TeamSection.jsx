@@ -15,29 +15,29 @@ const BUCKET_ID =
 
 export default function TeamSlider() {
   const [team, setTeam] = useState([]);
+  const [isPaused, setIsPaused] =
+    useState(false);
+
+  const [currentIndex, setCurrentIndex] =
+    useState(0);
 
   const [itemsPerView, setItemsPerView] =
     useState(3);
 
-  const [isPaused, setIsPaused] =
-    useState(false);
-
-  const [currentX, setCurrentX] =
-    useState(0);
-
   const startX = useRef(0);
-
   const isDragging = useRef(false);
 
   /* ================= RESPONSIVE ================= */
 
   useEffect(() => {
     const updateView = () => {
-      if (window.innerWidth < 640)
+      if (window.innerWidth < 640) {
         setItemsPerView(1);
-      else if (window.innerWidth < 1024)
+      } else if (window.innerWidth < 1024) {
         setItemsPerView(2);
-      else setItemsPerView(3);
+      } else {
+        setItemsPerView(3);
+      }
     };
 
     updateView();
@@ -54,7 +54,7 @@ export default function TeamSlider() {
       );
   }, []);
 
-  /* ================= FETCH CMS ================= */
+  /* ================= FETCH TEAM ================= */
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -68,33 +68,28 @@ export default function TeamSlider() {
 
         setTeam(res.documents || []);
       } catch (err) {
-        console.error(
-          "Fetch error:",
-          err
-        );
+        console.error(err);
       }
     };
 
     fetchTeam();
   }, []);
 
-  /* ================= AUTO MOVE ================= */
+  /* ================= AUTO SLIDE ================= */
 
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || team.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentX((prev) => prev - 4);
-    }, 10);
+      setCurrentIndex((prev) =>
+        prev === team.length - 1
+          ? 0
+          : prev + 1
+      );
+    }, 2500);
 
     return () => clearInterval(interval);
-  }, [isPaused]);
-
-  /* ================= SAFE VALUES ================= */
-
-  const safeTeam = Array.isArray(team)
-    ? team
-    : [];
+  }, [isPaused, team]);
 
   /* ================= IMAGE ================= */
 
@@ -136,9 +131,18 @@ export default function TeamSlider() {
     }
   };
 
+  /* ================= WIDTH ================= */
+
+  const slideWidth =
+    itemsPerView === 1
+      ? 100
+      : itemsPerView === 2
+      ? 50
+      : 33.333;
+
   /* ================= UI ================= */
 
-  if (!safeTeam.length) {
+  if (!team.length) {
     return (
       <section className="py-16 text-center text-white bg-[#1e1e1e]">
         Loading team...
@@ -157,30 +161,42 @@ export default function TeamSlider() {
           </span>
         </h2>
 
-        {/* SLIDER */}
-
         <div
           className="relative overflow-hidden"
-          onMouseDown={(e) => {
+          onMouseEnter={() =>
+            setIsPaused(true)
+          }
+          onMouseLeave={() =>
+            setIsPaused(false)
+          }
+          onTouchStart={(e) => {
+            startX.current =
+              e.touches[0].clientX;
             isDragging.current = true;
-            startX.current = e.clientX;
           }}
-          onMouseUp={(e) => {
+          onTouchEnd={(e) => {
             if (!isDragging.current)
               return;
 
+            const endX =
+              e.changedTouches[0].clientX;
+
             const diff =
-              startX.current - e.clientX;
+              startX.current - endX;
 
             if (diff > 50) {
-              setCurrentX(
-                (prev) => prev - 300
+              setCurrentIndex((prev) =>
+                prev === team.length - 1
+                  ? 0
+                  : prev + 1
               );
             }
 
             if (diff < -50) {
-              setCurrentX(
-                (prev) => prev + 300
+              setCurrentIndex((prev) =>
+                prev === 0
+                  ? team.length - 1
+                  : prev - 1
               );
             }
 
@@ -188,12 +204,14 @@ export default function TeamSlider() {
           }}
         >
 
-          {/* LEFT ARROW */}
+          {/* LEFT BUTTON */}
 
           <button
             onClick={() =>
-              setCurrentX(
-                (prev) => prev + 300
+              setCurrentIndex((prev) =>
+                prev === 0
+                  ? team.length - 1
+                  : prev - 1
               )
             }
             className="
@@ -202,14 +220,16 @@ export default function TeamSlider() {
               top-1/2
               -translate-y-1/2
               z-30
-              w-12
-              h-12
+              w-10
+              h-10
+              md:w-12
+              md:h-12
               rounded-full
               bg-black/60
               border
               border-white/20
               text-white
-              text-2xl
+              text-xl
               hover:bg-cyan-500
               transition
             "
@@ -217,12 +237,14 @@ export default function TeamSlider() {
             ←
           </button>
 
-          {/* RIGHT ARROW */}
+          {/* RIGHT BUTTON */}
 
           <button
             onClick={() =>
-              setCurrentX(
-                (prev) => prev - 300
+              setCurrentIndex((prev) =>
+                prev === team.length - 1
+                  ? 0
+                  : prev + 1
               )
             }
             className="
@@ -231,14 +253,16 @@ export default function TeamSlider() {
               top-1/2
               -translate-y-1/2
               z-30
-              w-12
-              h-12
+              w-10
+              h-10
+              md:w-12
+              md:h-12
               rounded-full
               bg-black/60
               border
               border-white/20
               text-white
-              text-2xl
+              text-xl
               hover:bg-cyan-500
               transition
             "
@@ -246,88 +270,79 @@ export default function TeamSlider() {
             →
           </button>
 
-          {/* SLIDER CONTENT */}
+          {/* SLIDER */}
 
           <motion.div
-            animate={{ x: currentX }}
-            transition={{
-              ease: "linear",
-              duration: 0,
+            animate={{
+              x: `-${currentIndex * slideWidth}%`,
             }}
-            onMouseEnter={() =>
-              setIsPaused(true)
-            }
-            onMouseLeave={() =>
-              setIsPaused(false)
-            }
-            className="flex min-w-max gap-8"
+            transition={{
+              duration: 0.7,
+              ease: "easeInOut",
+            }}
+            className="flex"
           >
-            {[
-              ...safeTeam,
-              ...safeTeam,
-            ].map((member, index) => (
-              <motion.div
+            {team.map((member, index) => (
+              <div
                 key={index}
-                whileHover={{
-                  y: -8,
-                  scale: 1.03,
+                style={{
+                  minWidth: `${slideWidth}%`,
                 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 15,
-                }}
-                className="
-                  min-w-[85vw]
-                  sm:min-w-[320px]
-                  md:min-w-[340px]
-                  bg-black
-                  rounded-2xl
-                  overflow-hidden
-                  border
-                  border-white/10
-                  shadow-lg
-                "
+                className="p-3"
               >
-                <div className="relative overflow-hidden">
+                <motion.div
+                  whileHover={{
+                    y: -8,
+                    scale: 1.03,
+                  }}
+                  className="
+                    bg-black
+                    rounded-2xl
+                    overflow-hidden
+                    border
+                    border-white/10
+                    shadow-lg
+                  "
+                >
 
-                  <img
-                    src={getImageUrl(
-                      member.imageUrl
-                    )}
-                    alt={member.name}
-                    className="
-                      w-full
-                      h-[260px]
-                      md:h-[320px]
-                      object-contain
-                      transition-transform
-                      duration-500
-                      hover:scale-105
-                    "
-                  />
+                  <div className="relative overflow-hidden">
 
-                  {/* GLOW */}
+                    <img
+                      src={getImageUrl(
+                        member.imageUrl
+                      )}
+                      alt={member.name}
+                      className="
+                        w-full
+                        h-[260px]
+                        md:h-[320px]
+                        object-contain
+                        transition-transform
+                        duration-500
+                        hover:scale-105
+                      "
+                    />
 
-                  <div className="absolute inset-0 bg-cyan-500/0 hover:bg-cyan-500/10 transition duration-500" />
-                </div>
+                    <div className="absolute inset-0 bg-cyan-500/0 hover:bg-cyan-500/10 transition duration-500" />
+                  </div>
 
-                <div className="p-5 text-center">
+                  <div className="p-5 text-center">
 
-                  <h4 className="font-bold text-lg">
-                    {member.name}
-                  </h4>
+                    <h4 className="font-bold text-lg">
+                      {member.name}
+                    </h4>
 
-                  <p className="text-cyan-400 text-sm mt-1">
-                    {member.role}
-                  </p>
+                    <p className="text-cyan-400 text-sm mt-1">
+                      {member.role}
+                    </p>
 
-                  <p className="text-gray-400 text-xs mt-2">
-                    {member.experience}
-                  </p>
+                    <p className="text-gray-400 text-xs mt-2">
+                      {member.experience}
+                    </p>
 
-                </div>
-              </motion.div>
+                  </div>
+                </motion.div>
+              </div>
             ))}
           </motion.div>
         </div>
