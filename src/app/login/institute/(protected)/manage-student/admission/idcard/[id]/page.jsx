@@ -161,16 +161,17 @@ export default function IDCard() {
 
         {/* FRANCHISE LOGO */}
       {franchise?.logo && (
-                  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+  <div className="absolute top-[5px] left-[130px] w-[95px] h-[95px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
     <img
-      src={student.logo}
+      src={franchise.logo}
       className="w-full h-full object-cover rounded-full"
+      alt="Institute Logo"
     />
   </div>
-                )}
+)}
 
         {/* INSTITUTE NAME */}
-        <div className="absolute top-[115px] text-center w-full text-lg font-semibold">
+        <div className="absolute top-[95px] left-[5px] text-center w-full text-lg font-semibold">
           {franchise?.instituteName || ""}
         </div>
 
@@ -201,7 +202,7 @@ export default function IDCard() {
         </div>
 
         {/* OWNER NAME */}
-        <div className="absolute bottom-[65px] left-[40px] text-xs font-semibold">
+        <div className="absolute bottom-[68px] left-[46px] text-xs font-semibold">
           {franchise?.name || ""}
         </div>
 

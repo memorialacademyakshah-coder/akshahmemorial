@@ -42,6 +42,7 @@ export default function Dashboard() {
 
   const [logoFile, setLogoFile] = useState(null)
   const [photoFile, setPhotoFile] = useState(null)
+  const [certificateLogoFile, setCertificateLogoFile] = useState(null)
   const [signatureFile, setSignatureFile] = useState(null)
   const [plans, setPlans] = useState([]);
 
@@ -363,6 +364,21 @@ const rejectFranchise = async (req) => {
         updatedData.logo = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
       }
 
+
+      // -------- CERTIFICATE LOGO --------
+if (certificateLogoFile) {
+
+  const res = await storage.createFile(
+    BUCKET_ID,
+    ID.unique(),
+    certificateLogoFile
+  )
+
+  updatedData.certificateLogo =
+    `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+}
+
+
       // -------- OWNER PHOTO --------
       if (photoFile) {
         const res = await storage.createFile(
@@ -405,6 +421,8 @@ delete updatedData.newPlanName;
 delete updatedData.newPlanAmount;
       // ✅ VERY IMPORTANT → REMOVE FILE OBJECTS
       delete updatedData.logoFile
+      delete updatedData.certificateLogoFile
+
       delete updatedData.photoFile
       delete updatedData.signatureFile
 
@@ -980,7 +998,20 @@ const getExpiryDate = () => {
                     onChange={(e) => setLogoFile(e.target.files[0])}
                     className="w-full border p-2 rounded-lg"
                   />
-                </div>                                 
+                </div>             
+
+                <div>
+  <label className="text-sm">Certificate Logo</label>
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) =>
+      setCertificateLogoFile(e.target.files[0])
+    }
+    className="w-full border p-2 rounded-lg"
+  />
+</div>                    
               
                 <div>
                   <label className="text-sm">Signature</label>

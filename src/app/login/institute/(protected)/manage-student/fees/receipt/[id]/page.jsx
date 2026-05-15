@@ -170,7 +170,7 @@ export default function ReceiptPage() {
 {franchise?.logo && (
                   <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
     <img
-      src={student.logo}
+        src={franchise.logo}
       className="w-full h-full object-cover rounded-full"
     />
   </div>
@@ -278,7 +278,7 @@ export default function ReceiptPage() {
 
 
                     {/* OWNER NAME */}
-<div className="absolute bottom-[-90px] right-[10px] text-center">
+<div className="absolute bottom-[-90px] right-[30px] text-center">
 
   <div className="font-semibold text-lg">
     {franchise?.name || ""}
@@ -289,10 +289,12 @@ export default function ReceiptPage() {
 
                     {/* FRANCHISE SIGNATURE */}
 {franchise?.signature && (
+    <div className="absolute bottom-[-60px] right-[10px] w-[130px] h-[50px]  overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
   <img
     src={franchise.signature}
-    className="absolute bottom-[-70px] right-[10px] w-[140px] h-[60px] object-contain"
+   className="w-full h-full object-cover "
   />
+</div>
 )}
 
 
