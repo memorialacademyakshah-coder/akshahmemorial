@@ -203,15 +203,15 @@ export default function PrintCertificate() {
         {/* TEMPLATE */}
         <img src="/beautycerti.png" className="absolute w-full h-full" />
 
-        {/* LOGO */}
-        {student.logo && (
-           <div className="absolute top-[10px] left-[410px] w-[120px] text-center h-[120px] overflow-hidden bg-white">
-          <img
-            src={student.logo}  className="w-full h-full object-cover"
-           
-          />
-        </div>
-        )}
+    {/* LOGO */}
+{student.logo && (
+  <div className="absolute top-[10px] left-[410px] w-[120px] h-[120px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+    <img
+      src={student.logo}
+      className="w-full h-full object-cover rounded-full"
+    />
+  </div>
+)}
 
          {/* <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">
           {signatureUrl && (
