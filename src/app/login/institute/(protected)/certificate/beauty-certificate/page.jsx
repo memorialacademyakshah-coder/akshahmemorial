@@ -235,12 +235,15 @@ saveCert();
         {/* TEMPLATE */}
         <img src="/beautycerti.png" className="absolute w-full h-full" />
 
+       
         {/* LOGO */}
         {student.logo && (
+           <div className="absolute top-[10px] left-[410px] w-[120px] text-center h-[120px] overflow-hidden bg-white">
           <img
-            src={student.logo}
-            className="absolute top-[40px] left-[370px] w-[140px]"
+            src={student.logo}  className="w-full h-full object-cover"
+           
           />
+        </div>
         )}
 
         {/* PHOTO */}
