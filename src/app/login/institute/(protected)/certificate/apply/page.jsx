@@ -25,9 +25,9 @@ export default function CertificatePage() {
     }, []);
 
     const loadResults = async () => {
-
         try {
 
+            // ✅ LOAD RESULTS
             const res = await databases.listDocuments(
                 DATABASE_ID,
                 RESULT_COLLECTION
@@ -37,16 +37,33 @@ export default function CertificatePage() {
                 r => r.grade !== "F"
             );
 
-            setResults(passedStudents);
+            // ✅ LOAD EXISTING CERTIFICATES
+            const certRes = await databases.listDocuments(
+                DATABASE_ID,
+                CERT_COLLECTION
+            );
+
+            // ✅ GET APPLIED RESULT IDS
+            const alreadyApplied = certRes.documents.map(
+                c => `${c.studentId}-${c.semesterNumber}`
+            );
+
+            // ✅ ADD APPLIED FLAG
+            const finalResults = passedStudents.map(r => ({
+                ...r,
+                alreadyApplied: alreadyApplied.includes(
+                    `${r.studentId}-${Number(r.semesterNumber)}`
+                )
+            }));
+
+            setResults(finalResults);
 
         } catch (err) {
 
             console.log(err);
 
         }
-
     };
-
     const toggleSelect = (id) => {
 
         if (selected.includes(id)) {
@@ -61,74 +78,74 @@ export default function CertificatePage() {
 
     };
 
-const applyCertificate = async () => {
-  try {
+    const applyCertificate = async () => {
+        try {
 
-    const selectedResults = selected.map(id =>
-      results.find(r => r.$id === id)
-    );
+            const selectedResults = selected.map(id =>
+                results.find(r => r.$id === id)
+            );
 
-    for (const item of selectedResults) {
+            for (const item of selectedResults) {
 
-      const fullResult = await databases.getDocument(
-        DATABASE_ID,
-        RESULT_COLLECTION,
-        item.$id
-      );
+                const fullResult = await databases.getDocument(
+                    DATABASE_ID,
+                    RESULT_COLLECTION,
+                    item.$id
+                );
 
-      const sem = Number(fullResult.semesterNumber);
+                const sem = Number(fullResult.semesterNumber);
 
-      if (!sem) {
-        alert("Semester missing in result");
-        continue;
-      }
+                if (!sem) {
+                    alert("Semester missing in result");
+                    continue;
+                }
 
-      const existing = await databases.listDocuments(
-        DATABASE_ID,
-        CERT_COLLECTION,
-        [
-          Query.equal("studentId", fullResult.studentId),
-          Query.equal("semesterNumber", sem)
-        ]
-      );
+                const existing = await databases.listDocuments(
+                    DATABASE_ID,
+                    CERT_COLLECTION,
+                    [
+                        Query.equal("studentId", fullResult.studentId),
+                        Query.equal("semesterNumber", sem)
+                    ]
+                );
 
-      if (existing.documents.length > 0) continue;
+                if (existing.documents.length > 0) continue;
 
-      await databases.createDocument(
-        DATABASE_ID,
-        CERT_COLLECTION,
-        ID.unique(),
-        {
-          studentId: fullResult.studentId,
-          studentName: fullResult.studentName,
-          course: fullResult.course,
-          photoId: fullResult.photoId,
-          marks: fullResult.totalMarks,
-          grade: fullResult.grade,
-          semesterNumber: sem,
-          marksArray: fullResult.marksArray,
-          courseType: fullResult.courseType,
-          certificateNo: "BNMI-" + Date.now(),
-          status: "pending",
-          createdAt: new Date().toISOString()
+                await databases.createDocument(
+                    DATABASE_ID,
+                    CERT_COLLECTION,
+                    ID.unique(),
+                    {
+                        studentId: fullResult.studentId,
+                        studentName: fullResult.studentName,
+                        course: fullResult.course,
+                        photoId: fullResult.photoId,
+                        marks: fullResult.totalMarks,
+                        grade: fullResult.grade,
+                        semesterNumber: sem,
+                        marksArray: fullResult.marksArray,
+                        courseType: fullResult.courseType,
+                        certificateNo: "BNMI-" + Date.now(),
+                        status: "pending",
+                        createdAt: new Date().toISOString()
+                    }
+                );
+            }
+
+            // ✅ IMPORTANT: store applied IDs
+            setAppliedIds(prev => [...prev, ...selected]);
+
+            alert("Certificate request sent to admin");
+            setSelected([]);
+
+        } catch (err) {
+            console.log("Certificate Error:", err);
+            alert(err.message);
         }
-      );
-    }
-
-    // ✅ IMPORTANT: store applied IDs
-    setAppliedIds(prev => [...prev, ...selected]);
-
-    alert("Certificate request sent to admin");
-    setSelected([]);
-
-  } catch (err) {
-    console.log("Certificate Error:", err);
-    alert(err.message);
-  }
-};
+    };
     // 🔥 GET ALL SEMESTER RESULTS
 
-   
+
     const getPhoto = (photoId) => {
 
         if (!photoId) return null;
@@ -194,10 +211,10 @@ const applyCertificate = async () => {
 
                                 const marks = JSON.parse(r.marksArray || "[]");
 
-                              marks.forEach(m => {
-    objective += Number(m.objective || 0);
-    practical += Number(m.practical || 0);
-});
+                                marks.forEach(m => {
+                                    objective += Number(m.objective || 0);
+                                    practical += Number(m.practical || 0);
+                                });
 
                             } catch { }
 
@@ -205,16 +222,25 @@ const applyCertificate = async () => {
 
                                 <tr key={r.$id}>
 
-                                    <td className="border p-2">
+                                  <td className="border p-2 text-center">
 
-                                      <input
-  type="checkbox"
-  checked={selected.includes(r.$id)}
-  disabled={appliedIds.includes(r.$id)} // ✅ disable after apply
-  onChange={() => toggleSelect(r.$id)}
-/>
+  {r.alreadyApplied ? (
 
-                                    </td>
+    <span className="text-red-600 font-semibold text-sm">
+      Applied
+    </span>
+
+  ) : (
+
+    <input
+      type="checkbox"
+      checked={selected.includes(r.$id)}
+      onChange={() => toggleSelect(r.$id)}
+    />
+
+  )}
+
+</td>
 
                                     <td className="border p-2">
                                         {index + 1}
@@ -238,10 +264,10 @@ const applyCertificate = async () => {
                                     </td>
 
                                     <td className="border p-2">
-  {r.courseType === "semester" && r.course?.length > 20
-    ? "Semester Course"
-    : r.course}
-</td>
+                                        {r.courseType === "semester" && r.course?.length > 20
+                                            ? "Semester Course"
+                                            : r.course}
+                                    </td>
 
                                     <td className="border p-2">
                                         OFFLINE

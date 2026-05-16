@@ -232,7 +232,7 @@ export default function PrintCertificate() {
 
 
 {/* NAME */}
-<div className="absolute top-[660px] left-[10px] w-full text-center">
+<div className="absolute top-[650px] left-[10px] w-full text-center">
 
   <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
 
@@ -303,7 +303,7 @@ export default function PrintCertificate() {
         </div>
 
         {/* INSTITUTE */}
-        <div className="absolute bottom-[440px] left-[20px] w-full text-center text-3xl font-bold text-red-700">
+        <div className="absolute bottom-[440px] left-[20px] w-full text-center text-2xl font-bold text-red-700">
 
           ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
         </div>

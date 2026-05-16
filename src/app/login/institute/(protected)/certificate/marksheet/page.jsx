@@ -269,14 +269,17 @@ if (marksDocs.length === 0) {
 >
 
         <img src="/beautymark.png" className="absolute w-full h-full" />
+{student.logo && (
+  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+    <img
+      src={student.logo}
+      className="w-full h-full object-cover rounded-full"
+    />
+  </div>
 
-        {student?.logo && (
-  <img
-    src={student.logo + "&mode=admin"}
-    crossOrigin="anonymous"
-    className="absolute top-[10px] left-[380px] w-[130px] h-[130px]"
-  />
 )}
+
+
 {qrCode ? (
   <img
     src={qrCode}
