@@ -302,7 +302,7 @@ if (!student) return <div className="p-10">Loading...</div>;
     
 {/* RIGHT */}
 <div className="absolute top-[325px] left-[680px]">
-  {student.coursePeriod || student.duration || "1 Year"}
+1 Year
 </div>
 
 <div className="absolute top-[348px] left-[680px]">
@@ -314,7 +314,8 @@ if (!student) return <div className="p-10">Loading...</div>;
 </div>
 
 <div className="absolute top-[390px] left-[680px]">
-  {student.coursePeriod || student.duration || "1 Year"}
+  1 Year
+
 </div>
 
 {qrCode && (

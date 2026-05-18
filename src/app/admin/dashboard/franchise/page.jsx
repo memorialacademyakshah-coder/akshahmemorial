@@ -1103,7 +1103,7 @@ const getExpiryDate = () => {
               />
               <img
                 src={selectedFranchise?.qrCode}
-                className="absolute top-[555px] left-[125px] w-[100px]"
+                className="absolute top-[575px] left-[125px] w-[100px]"
               />
               {/* ----------- DYNAMIC TEXT ----------- */}
 
