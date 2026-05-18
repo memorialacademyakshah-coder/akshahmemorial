@@ -302,11 +302,20 @@ export default function PrintCertificate() {
 
         </div>
 
-        {/* INSTITUTE */}
-        <div className="absolute bottom-[440px] left-[20px] w-full text-center text-2xl font-bold text-red-700">
-
-          ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
-        </div>
+     {/* INSTITUTE */}
+<div
+  className="absolute bottom-[445px] left-[75px] w-[750px] text-center font-bold text-red-700"
+  style={{
+    fontSize: "25px",
+    lineHeight: "32px",
+    wordBreak: "break-word",
+    overflowWrap: "break-word",
+    whiteSpace: "normal",
+  }}
+>
+  ATC: {student.instituteName} |{" "}
+  {[student.city].filter(Boolean).join(", ")}
+</div>
 
         {/* SIGNATURE */}
         <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">

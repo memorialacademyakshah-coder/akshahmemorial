@@ -47,10 +47,10 @@ export default function StudentLayout({ children }) {
 
           <SidebarItem label="Dashboard" onClick={() => router.push("/student/dashboard")} />
           <SidebarItem label="My Courses" />
-          <SidebarItem label="Practice MCQ" onClick={() => router.push("/student/quiz")} />
+          <SidebarItem label="Practice MCQ" onClick={() => router.push("/student/question")} />
           <SidebarItem label="Results" />
           <SidebarItem label="Attendance" />
-          <SidebarItem label="Wallet" />
+          <SidebarItem label="Online Exams" onClick={()=> router.push("/student/exam")}/>
           <SidebarItem label="Support" />
 
         </nav>

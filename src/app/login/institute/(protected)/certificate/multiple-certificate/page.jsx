@@ -273,8 +273,9 @@ console.log("SHOW FATHER:", parsed.showFatherInCertificate);
         </div>
 
 
+
 {/* NAME */}
-<div className="absolute top-[660px] left-[10px] w-full text-center">
+<div className="absolute top-[650px] left-[10px] w-full text-center">
 
   <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
 
@@ -300,6 +301,7 @@ console.log("SHOW FATHER:", parsed.showFatherInCertificate);
   </div>
 
 </div>
+
 
 
        {/* COURSE */}
@@ -359,11 +361,19 @@ console.log("SHOW FATHER:", parsed.showFatherInCertificate);
 
         </div>
 
-        {/* INSTITUTE */}
-        <div className="absolute bottom-[440px] left-[20px] w-full text-center text-xl font-bold text-red-700">
-
-          ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
-        </div>
+       <div
+  className="absolute bottom-[445px] left-[75px] w-[750px] text-center font-bold text-red-700"
+  style={{
+    fontSize: "25px",
+    lineHeight: "32px",
+    wordBreak: "break-word",
+    overflowWrap: "break-word",
+    whiteSpace: "normal",
+  }}
+>
+  ATC: {student.instituteName} |{" "}
+  {[student.city].filter(Boolean).join(", ")}
+</div>
 
         {/* SIGNATURE */}
         <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">

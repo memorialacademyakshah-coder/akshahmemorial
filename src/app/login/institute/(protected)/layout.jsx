@@ -82,7 +82,7 @@ useEffect(() => {
 <DropdownMenu label="Student Exams">
         <NavItem href="/login/institute/student-exam/reset-exam" label="Reset Exam " />
         <NavItem href="/login/institute/student-exam/exam-code" label="Exam Code" />
-        <NavItem href="/login/institute/student-exam/offline" label="Offline Exam Marks Update" />
+        <NavItem href="/login/institute/student-exam/offline" label=" Exam Marks Update" />
         <NavItem href="/login/institute/student-exam/result" label="All Exam Results" />
         <NavItem href="/login/institute/student-exam/hall-ticket" label="Hall Ticket" />
         </DropdownMenu>

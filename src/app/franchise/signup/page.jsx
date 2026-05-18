@@ -327,31 +327,27 @@ export default function FranchiseSignup() {
           />
 
           {/* DESIGNATION */}
-          <select
-            className="input text-black border border-gray-300"
-            value={form.designation}
-            style={{
-              textTransform: 'uppercase',
-            }}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                designation:
-                  e.target.value.toUpperCase(),
-              })
-            }
-          >
-            <option value="">
-              Select Designation
-            </option>
+<select
+  className="input text-black border border-gray-300"
+  value={form.designation}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      designation: e.target.value,
+    })
+  }
+>
+  <option value="">
+    Select Designation
+  </option>
 
-            <option>Director</option>
-            <option>Employee</option>
-            <option>Partner</option>
-            <option>Proprietor</option>
-            <option>Trustee</option>
-            <option>Other</option>
-          </select>
+  <option value="DIRECTOR">Director</option>
+  <option value="EMPLOYEE">Employee</option>
+  <option value="PARTNER">Partner</option>
+  <option value="PROPRIETOR">Proprietor</option>
+  <option value="TRUSTEE">Trustee</option>
+  <option value="OTHER">Other</option>
+</select>
 
           {/* DOB */}
           <input

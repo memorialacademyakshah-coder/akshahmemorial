@@ -105,6 +105,7 @@ export default function AdminSidebar() {
           <MenuItem icon={<Image size={18} />} label="Beauty Course Section" href="/admin/dashboard/beauty-course" pathname={pathname} />
 
           <MenuItem icon={<FileText size={18} />} label="Upload Question Bank" href="/admin/dashboard/upload-questions" pathname={pathname} />
+          <MenuItem icon={<FileText size={18} />} label="Upload Online Exam Questions" href="/admin/dashboard/upload-online-exam" pathname={pathname} />
 
           <MenuItem icon={<Wallet size={18} />} label="Wallet Recharge" href="/admin/dashboard/wallet" pathname={pathname} />
 
