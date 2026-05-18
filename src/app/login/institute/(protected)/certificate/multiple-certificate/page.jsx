@@ -19,6 +19,7 @@ export default function PrintCertificate() {
   const [certificateNo, setCertificateNo] = useState("");
   const [issueDate, setIssueDate] = useState("");
 const [percentage, setPercentage] = useState(0);
+const [editMode, setEditMode] = useState(false);
 
   const printRef = useRef();
   useEffect(() => {
