@@ -343,7 +343,12 @@ const handleChange = (e) => {
 
 const handleSubmit = async (e) => {
 
-  e.preventDefault()
+  e.preventDefault();
+
+  // ✅ prevent multiple clicks
+  if (loading) return;
+
+  setLoading(true);
 
   try {
 
@@ -526,12 +531,17 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
 
     router.push("/login/institute/manage-student/admission")
 
-  } catch (err) {
+} catch (err) {
 
-    console.error("ADMISSION ERROR:", err)
-    alert(err?.message || "Admission failed")
+  console.error("ADMISSION ERROR:", err);
+  alert(err?.message || "Admission failed");
 
-  }
+} finally {
+
+  // ✅ enable button again after success/fail
+  setLoading(false);
+
+}
 }
  
   return (
@@ -1213,12 +1223,17 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
 
       <div className="flex gap-4">
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded"
-        >
-          Register Admission
-        </button>
+     <button
+  type="submit"
+  disabled={loading}
+  className={`px-6 py-2 rounded text-white transition-all duration-300 ${
+    loading
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-700"
+  }`}
+>
+  {loading ? "Processing Admission..." : "Register Admission"}
+</button>
 
         <button
           type="button"
