@@ -366,10 +366,7 @@ export default function VerifyCertificate() {
   };
 const finalIssueDate =
 
-  // ✅ ALWAYS PRIORITIZE EDITED DATE
-  (typeof window !== "undefined"
-    ? localStorage.getItem("savedIssueDate")
-    : null) ||
+  student?.issueDate ||
 
   certStudent?.issueDate ||
 
@@ -378,7 +375,6 @@ const finalIssueDate =
   certificate?.issueDate ||
 
   "";
-
   const finalDuration =
     certStudent?.duration ||
     certMeta?.duration ||

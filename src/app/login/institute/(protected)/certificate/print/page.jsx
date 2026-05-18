@@ -91,6 +91,8 @@ localStorage.setItem(
   JSON.stringify(parsed)
 );
 
+
+
 // ✅ KEEP OLD SAVED DATE IF EXISTS
 const finalIssueDate =
   localStorage.getItem("savedIssueDate") ||
@@ -421,16 +423,18 @@ const handleChange = (field, value) => {
 
     setStudent((prev) => {
 
-      const updated = {
-        ...prev,
-        issueDate: value,
-      };
+    const updated = {
+  ...prev,
+  issueDate: value,
+};
 
-      localStorage.setItem(
-        "certificateStudent",
-        JSON.stringify(updated)
-      );
+localStorage.setItem(
+  "certificateStudent",
+  JSON.stringify(updated)
+);
 
+// ✅ IMPORTANT FOR QR PAGE
+student.issueDate = value;
       // ✅ UPDATE QR VERIFY DATA
       localStorage.setItem(
         "certificateMeta",
