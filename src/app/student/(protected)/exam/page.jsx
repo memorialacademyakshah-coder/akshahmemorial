@@ -109,6 +109,8 @@ export default function StudentExamDashboard() {
 
   const examStarted =
     student.onlineExamStarted === true;
+    const examSubmitted =
+  student.examSubmitted === true;
 
   return (
 
@@ -251,7 +253,8 @@ export default function StudentExamDashboard() {
         )}
 
         {/* ONLINE STARTED */}
-        {isOnline && examStarted && (
+
+{isOnline && examStarted && !examSubmitted && (
 
           <div className="text-center">
 
@@ -291,6 +294,44 @@ export default function StudentExamDashboard() {
 
         )}
 
+
+{/* EXAM SUBMITTED */}
+{isOnline && examSubmitted && (
+
+  <div className="text-center">
+
+    <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+
+      <span className="text-5xl">
+        ✅
+      </span>
+
+    </div>
+
+    <h2 className="text-3xl font-bold mb-3 text-green-400">
+
+      Exam Already Submitted
+
+    </h2>
+
+    <p className="text-gray-400 mb-6">
+
+      Your online examination has already been submitted successfully.
+
+    </p>
+
+    <button
+      disabled
+      className="bg-gray-700 text-gray-400 px-8 py-3 rounded-2xl cursor-not-allowed"
+    >
+
+      Submission Completed
+
+    </button>
+
+  </div>
+
+)}
         {/* NO MODE */}
         {!student.examMode && (
 

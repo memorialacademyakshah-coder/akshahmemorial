@@ -100,40 +100,45 @@ saveCert();
   const franchiseSign = student.franchiseSignature || null;
 
   // ✅ COURSE DURATION FUNCTION (UNCHANGED)
-  const getCourseDuration = (durationText) => {
+  // ✅ NEW COURSE DURATION FUNCTION
+const getCourseDuration = (durationText) => {
 
-    if (!durationText) return "N/A";
+  if (!durationText) return "N/A";
 
-    const today = new Date();
+  const today = new Date();
 
-    const start = new Date(today);
-    start.setDate(start.getDate() + 1);
+  // ✅ END DATE = TODAY
+  const end = new Date(today);
 
-    const end = new Date(start);
+  // ✅ START DATE = TODAY
+  const start = new Date(today);
 
-    const text = durationText.toLowerCase();
+  const text = durationText.toLowerCase();
 
-    if (text.includes("year")) {
-      const years = parseInt(text) || 1;
-      end.setFullYear(end.getFullYear() + years);
-    }
+  // ✅ YEAR
+  if (text.includes("year")) {
+    const years = parseInt(text) || 1;
+    start.setFullYear(start.getFullYear() - years);
+  }
 
-    if (text.includes("month")) {
-      const months = parseInt(text) || 1;
-      end.setMonth(end.getMonth() + months);
-    }
+  // ✅ MONTH
+  if (text.includes("month")) {
+    const months = parseInt(text) || 1;
+    start.setMonth(start.getMonth() - months);
+  }
 
-    end.setDate(end.getDate() - 1);
+  // ✅ ONE DAY FOR PERFECT RANGE
+  start.setDate(start.getDate() + 1);
 
-    const format = (date) =>
-      date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+  const format = (date) =>
+    date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
-    return `${format(start)} To ${format(end)}`;
-  };
+  return `${format(start)} To ${format(end)}`;
+};
 
 
   const toBase64 = async (url) => {
