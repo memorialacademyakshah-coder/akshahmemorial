@@ -17,6 +17,7 @@ export default function PrintCertificate() {
   const [student, setStudent] = useState(null);
   const [certificateNo, setCertificateNo] = useState("");
   const [issueDate, setIssueDate] = useState("");
+  const [editMode, setEditMode] = useState(false);
 
   const printRef = useRef();
   useEffect(() => {
@@ -66,6 +67,13 @@ export default function PrintCertificate() {
 
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
+
+  const handleChange = (field, value) => {
+  setStudent((prev) => ({
+    ...prev,
+    [field]: value,
+  }));
+};
 
   // ✅ PHOTO
   const photoUrl = student.photoId
@@ -193,6 +201,125 @@ export default function PrintCertificate() {
       >
         Download Certificate
       </button>
+
+      {/* EDIT BUTTON */}
+<div className="mb-6 flex gap-4">
+
+  <button
+    onClick={() => setEditMode(!editMode)}
+    className="bg-blue-600 text-white px-5 py-2 rounded"
+  >
+    {editMode ? "Close Edit" : "Edit Certificate"}
+  </button>
+
+</div>
+
+{/* EDIT PANEL */}
+{editMode && (
+
+  <div className="bg-white shadow-lg rounded-xl p-6 mb-8 grid grid-cols-2 gap-4">
+
+    <input
+      type="text"
+      value={student.studentName || ""}
+      onChange={(e) =>
+        handleChange("studentName", e.target.value)
+      }
+      placeholder="Student Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.fatherName || ""}
+      onChange={(e) =>
+        handleChange("fatherName", e.target.value)
+      }
+      placeholder="Father Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.motherName || ""}
+      onChange={(e) =>
+        handleChange("motherName", e.target.value)
+      }
+      placeholder="Mother Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.course || ""}
+      onChange={(e) =>
+        handleChange("course", e.target.value)
+      }
+      placeholder="Course Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.duration || ""}
+      onChange={(e) =>
+        handleChange("duration", e.target.value)
+      }
+      placeholder="Course Duration"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.grade || ""}
+      onChange={(e) =>
+        handleChange("grade", e.target.value)
+      }
+      placeholder="Grade"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.marks || ""}
+      onChange={(e) =>
+        handleChange("marks", e.target.value)
+      }
+      placeholder="Marks"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.instituteName || ""}
+      onChange={(e) =>
+        handleChange("instituteName", e.target.value)
+      }
+      placeholder="Institute Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.city || ""}
+      onChange={(e) =>
+        handleChange("city", e.target.value)
+      }
+      placeholder="City"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={issueDate}
+      onChange={(e) => setIssueDate(e.target.value)}
+      placeholder="Issue Date"
+      className="border p-3 rounded"
+    />
+
+  </div>
+
+)}
 
 
       <div
