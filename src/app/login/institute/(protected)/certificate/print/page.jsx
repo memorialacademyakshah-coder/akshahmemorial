@@ -44,11 +44,51 @@ const [loadingUser, setLoadingUser] = useState(true);
       localStorage.setItem("certificateNo", certNo);
     }
 
-    setCertificateNo(certNo);
+  // ✅ CERTIFICATE NUMBER
+setCertificateNo(
+  parsed.certificateNo || certNo
+);
 
-    // ✅ DATE OF ISSUE
-    const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
-    setIssueDate(today);
+parsed.certificateNo =
+  parsed.certificateNo || certNo;
+
+
+// ✅ ISSUE DATE
+let savedIssueDate = "";
+
+if (parsed.issueDate) {
+
+  // ✅ IF ALREADY FORMATTED
+  if (parsed.issueDate.includes("-") &&
+      !parsed.issueDate.includes("T")) {
+
+    savedIssueDate = parsed.issueDate;
+
+  } else {
+
+    // ✅ ISO DATE CONVERT
+    savedIssueDate = new Date(parsed.issueDate)
+      .toLocaleDateString("en-GB")
+      .replace(/\//g, "-");
+  }
+
+} else {
+
+  savedIssueDate = new Date()
+    .toLocaleDateString("en-GB")
+    .replace(/\//g, "-");
+}
+
+setIssueDate(savedIssueDate);
+
+parsed.issueDate = savedIssueDate;
+
+
+// ✅ SAVE FINAL DATA
+localStorage.setItem(
+  "certificateStudent",
+  JSON.stringify(parsed)
+);
 
     // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
     // ✅ SAVE FINAL CERT DATA FOR VERIFICATION
@@ -56,7 +96,7 @@ const [loadingUser, setLoadingUser] = useState(true);
       "certificateMeta",
       JSON.stringify({
         certificateNo: certNo,
-        issueDate: today,
+        issueDate: savedIssueDate,
         duration: parsed.duration || parsed.courseDuration || ""
       })
     );
@@ -98,11 +138,23 @@ const [loadingUser, setLoadingUser] = useState(true);
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
-  const handleChange = (field, value) => {
-  setStudent((prev) => ({
-    ...prev,
-    [field]: value,
-  }));
+const handleChange = (field, value) => {
+
+  setStudent((prev) => {
+
+    const updated = {
+      ...prev,
+      [field]: value,
+    };
+
+    // ✅ SAVE IN LOCALSTORAGE
+    localStorage.setItem(
+      "certificateStudent",
+      JSON.stringify(updated)
+    );
+
+    return updated;
+  });
 };
 
   // ✅ PHOTO
@@ -343,14 +395,39 @@ const [loadingUser, setLoadingUser] = useState(true);
       className="border p-3 rounded"
     />
 
-    <input
-      type="text"
-      value={issueDate}
-      onChange={(e) => setIssueDate(e.target.value)}
-      placeholder="Issue Date"
-      className="border p-3 rounded"
-    />
+  <input
+  type="text"
+  value={issueDate}
+  onChange={(e) => {
 
+    const value = e.target.value;
+
+    setIssueDate(value);
+
+    setStudent((prev) => {
+
+      const updated = {
+        ...prev,
+        issueDate: value,
+      };
+
+      localStorage.setItem(
+        "certificateStudent",
+        JSON.stringify(updated)
+      );
+
+      // ✅ ADD THIS
+      localStorage.setItem(
+        "savedIssueDate",
+        value
+      );
+
+      return updated;
+    });
+  }}
+  placeholder="Issue Date"
+  className="border p-3 rounded"
+/>
   </div>
 
 )}

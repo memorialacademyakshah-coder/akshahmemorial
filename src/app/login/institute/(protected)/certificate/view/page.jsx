@@ -167,9 +167,15 @@ export default function FranchiseCertificateView() {
           cert.certificateNo ||
           `CERT-${Date.now()}`,
 
-        issueDate:
-          cert.issueDate ||
-          new Date().toISOString(),
+  issueDate:
+  localStorage.getItem("savedIssueDate") ||
+  (
+    cert.issueDate
+      ? new Date(cert.issueDate)
+          .toLocaleDateString("en-GB")
+          .replace(/\//g, "-")
+      : ""
+  ),
 
         semesterNumber:
           studentData.courseType === "semester"

@@ -1,411 +1,233 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { databases, account } from '@/lib/appwrite'
-import { Query } from 'appwrite'
+import { useEffect, useState } from "react";
+import { databases, account } from "@/lib/appwrite";
+import { Query } from "appwrite";
+import Link from "next/link";
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-const COURSE_COLLECTION = 'beauty_courses_single'
-const SUBJECT_COLLECTION = 'beauty_courses_subjects'
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
-export default function ListBeautyCourses() {
 
-  const [courses, setCourses] = useState([])
-  const [editCourse, setEditCourse] = useState(null)
-  const [selectedCourse, setSelectedCourse] = useState(null)
+export default function AddMultipleCourse() {
 
-  const [courseFees, setCourseFees] = useState('')
-  const [minimumFees, setMinimumFees] = useState('')
-  const [subject, setSubject] = useState('')
-  const [search, setSearch] = useState('')
+  const [courses, setCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [examFee, setExamFee] = useState(0);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [addedCourses, setAddedCourses] = useState([]);
 
-  // FETCH COURSES
-  const fetchCourses = async () => {
-
-    try {
-
-      const user = await account.get()
-
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        COURSE_COLLECTION,
-        [
-          Query.equal("franchiseEmail", user.email)
-        ]
-      )
-
-      setCourses(res.documents)
-
-    } catch (error) {
-      console.log("Fetch Error:", error)
-    }
-  }
+  const LIMIT = 20;
 
   useEffect(() => {
-    fetchCourses()
-  }, [])
+    fetchCourses();
+    fetchPlan();
+    fetchAddedCourses();
+  }, []);
 
-  // DELETE
-  const deleteCourse = async (id) => {
+  // ✅ FETCH MASTER COURSES (PAGINATION)
+  const fetchCourses = async (pageNumber = 0) => {
 
-    if (!id) return
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "courses_master_multiple",
+      [
+        Query.limit(LIMIT),
+        Query.offset(pageNumber * LIMIT),
+      ]
+    );
 
-    try {
+    // 🔥 Natural sorting
+    const sorted = res.documents.sort((a, b) => {
+      const numA = parseInt(a.courseCode.replace(/\D/g, "")) || 0;
+      const numB = parseInt(b.courseCode.replace(/\D/g, "")) || 0;
+      return numA - numB;
+    });
 
-      await databases.deleteDocument(
-        DATABASE_ID,
-        COURSE_COLLECTION,
-        id
-      )
+    setCourses(sorted);
+    setFilteredCourses(sorted);
+  };
 
-      fetchCourses()
+  // ✅ FETCH USER PLAN
+  const fetchPlan = async () => {
+    const user = await account.get();
 
-    } catch (error) {
-      console.log("Delete Error:", error)
-    }
-  }
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", user.email)]
+    );
 
-  // EDIT OPEN
-  const openEdit = (course) => {
+    const plan = res.documents[0]?.plan;
 
-    setEditCourse(course)
-    setCourseFees(course.courseFees)
-    setMinimumFees(course.minimumFees)
-  }
+    // ✅ GET PLAN AMOUNT FROM DB
+    const planRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_plans",
+      [Query.equal("name", plan)]
+    );
 
-  // UPDATE
-  const updateFees = async () => {
+    const fee = planRes.documents[0]?.amount || 0;
 
-    if (!editCourse) return
+    // ✅ SET EXAM FEE (THIS WAS MISSING)
+    setExamFee(fee);
+  };
 
-    try {
+  // ✅ FETCH ALREADY ADDED COURSES
+  const fetchAddedCourses = async () => {
+    const user = await account.get();
 
-      await databases.updateDocument(
-        DATABASE_ID,
-        COURSE_COLLECTION,
-        editCourse.$id,
-        {
-          courseFees: Number(courseFees),
-          minimumFees: Number(minimumFees)
-        }
-      )
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "courses_multiple",
+      [Query.equal("franchiseEmail", user.email)]
+    );
 
-      setEditCourse(null)
+    const ids = res.documents.map(c => c.courseId);
+    setAddedCourses(ids);
+  };
 
-      fetchCourses()
+  // ✅ SEARCH
+  useEffect(() => {
+    const filtered = courses.filter(course =>
+      course.courseName.toLowerCase().includes(search.toLowerCase()) ||
+      course.courseCode.toLowerCase().includes(search.toLowerCase())
+    );
+    setFilteredCourses(filtered);
+  }, [search, courses]);
 
-    } catch (error) {
-      console.log("Update Error:", error)
-    }
-  }
+  // ✅ PAGINATION HANDLERS
+  const nextPage = () => {
+    const newPage = page + 1;
+    setPage(newPage);
+    fetchCourses(newPage);
+  };
 
-  // ADD SUBJECT
-  const saveSubject = async () => {
-
-    if (!selectedCourse) return
-
-    if (!subject.trim()) {
-      alert("Enter subject name")
-      return
-    }
-
-    try {
-
-      const user = await account.get()
-
-      await databases.createDocument(
-        DATABASE_ID,
-        SUBJECT_COLLECTION,
-        'unique()',
-        {
-          courseId: String(selectedCourse.$id),
-          subjectName: String(subject),
-          franchiseEmail: user.email
-        }
-      )
-
-      alert("Subject Saved Successfully")
-
-      setSubject('')
-
-      const textarea = document.querySelector('textarea')
-
-      if (textarea) textarea.style.height = "auto"
-
-      setSelectedCourse(null)
-
-    } catch (error) {
-
-      console.error("Appwrite Error:", error)
-      alert(error.message)
-
-    }
-  }
-
-  const handleInput = (e) => {
-
-    setSubject(e.target.value)
-
-    e.target.style.height = "auto"
-    e.target.style.height = e.target.scrollHeight + "px"
-  }
+  const prevPage = () => {
+    if (page === 0) return;
+    const newPage = page - 1;
+    setPage(newPage);
+    fetchCourses(newPage);
+  };
 
   return (
 
-    <div className="min-h-screen bg-black text-white p-3 sm:p-5 lg:p-10">
+    <div className="p-10 bg-gradient-to-br from-black to-gray-900 min-h-screen text-white">
 
-      <div className="bg-[#121212] rounded-xl p-3 sm:p-5 lg:p-6 shadow-lg border border-gray-800">
+      {/* HEADER */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-wide">
+          Multiple Course Selection
+        </h1>
+        <p className="text-gray-400 mt-1">
+          Select a course and assign subjects easily
+        </p>
+      </div>
 
-        {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      {/* 🔍 SEARCH BAR */}
+      <input
+        type="text"
+        placeholder="Search by course name or code..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="mb-6 w-full p-3 bg-[#121212] border border-gray-700 rounded-lg"
+      />
 
-          <h2 className="text-lg sm:text-xl font-bold">
-            Course List
-          </h2>
+      {/* CARD */}
+      <div className="bg-[#121212] border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
 
-        </div>
+        <table className="w-full">
 
-        {/* SEARCH */}
-        <input
-          type="text"
-          placeholder="Search Course..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="mb-4 p-3 w-full bg-black border border-gray-700 rounded-lg outline-none focus:border-orange-500 text-sm sm:text-base"
-        />
+          <thead className="bg-orange-500 text-black text-sm uppercase tracking-wide">
+            <tr>
+              <th className="p-4 text-left">Code</th>
+              <th className="p-4 text-left">Course Name</th>
+              <th className="p-4 text-left">Duration</th>
+              <th className="p-4 text-left">Exam Fee</th>
+              <th className="p-4 text-left">Action</th>
+            </tr>
+          </thead>
 
-        {/* TABLE */}
-        <div className="overflow-x-auto rounded-lg border border-gray-800">
+          <tbody>
 
-          <table className="w-full min-w-[1000px] border-collapse text-xs sm:text-sm">
+            {filteredCourses.map(course => {
 
-            <thead className="bg-orange-500 text-black">
+              const isAdded = addedCourses.includes(course.$id);
 
-              <tr>
+              return (
+                <tr
+                  key={course.$id}
+                  className="border-t border-gray-800 hover:bg-[#1a1a1a] transition"
+                >
 
-                <th className="border border-gray-800 p-2 whitespace-nowrap">
-                  Sr
-                </th>
+                  <td className="p-4 font-mono text-gray-300">
+                    {course.courseCode}
+                  </td>
 
-                <th className="border border-gray-800 p-2 whitespace-nowrap">
-                  Course Name
-                </th>
+                  <td className="p-4 font-semibold text-white">
+                    {course.courseName}
+                  </td>
 
-                <th className="border border-gray-800 p-2 whitespace-nowrap">
-                  Exam Fees
-                </th>
+                  <td className="p-4 text-gray-400">
+                    {course.duration}
+                  </td>
 
-                <th className="border border-gray-800 p-2 whitespace-nowrap">
-                  Course Fees
-                </th>
+                  <td className="p-4 text-green-400 font-semibold">
+                    ₹{examFee}
+                  </td>
 
-                <th className="border border-gray-800 p-2 whitespace-nowrap">
-                  Minimum Fees
-                </th>
+                  <td className="p-4">
 
-                <th className="border border-gray-800 p-2 whitespace-nowrap">
-                  Duration
-                </th>
+                    {isAdded ? (
+                      <span className="bg-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm">
+                        Already Added
+                      </span>
+                    ) : (
+                      <Link
 
-                <th className="border border-gray-800 p-2 whitespace-nowrap">
-                  Status
-                </th>
+                        href={`/login/institute/add-course/multiple/subjects/${course.$id}?name=${course.courseName}&code=${course.courseCode}&duration=${course.duration}`}
+                        className="bg-orange-500 hover:bg-orange-600 transition px-4 py-2 rounded-lg text-black font-semibold shadow"
+                      >
+                        Add Subjects
+                      </Link>
+                    )}
 
-                <th className="border border-gray-800 p-2 whitespace-nowrap">
-                  Action
-                </th>
+                  </td>
 
-              </tr>
+                </tr>
+              );
+            })}
 
-            </thead>
+          </tbody>
 
-            <tbody>
-
-              {courses
-                .filter(course =>
-                  course.courseName
-                    .toLowerCase()
-                    .includes(search.toLowerCase())
-                )
-                .map((course, index) => (
-
-                  <tr
-                    key={course.$id}
-                    className="hover:bg-[#1a1a1a]"
-                  >
-
-                    <td className="border border-gray-800 p-2">
-                      {index + 1}
-                    </td>
-
-                    <td className="border border-gray-800 p-2 min-w-[220px]">
-                      {course.courseName}
-                    </td>
-
-                    <td className="border border-gray-800 p-2 whitespace-nowrap">
-                      {course.examFees}
-                    </td>
-
-                    <td className="border border-gray-800 p-2 whitespace-nowrap">
-                      {course.courseFees}
-                    </td>
-
-                    <td className="border border-gray-800 p-2 whitespace-nowrap">
-                      {course.minimumFees}
-                    </td>
-
-                    <td className="border border-gray-800 p-2 whitespace-nowrap">
-                      {course.duration}
-                    </td>
-
-                    <td className="border border-gray-800 p-2 text-green-400 whitespace-nowrap">
-                      {course.status}
-                    </td>
-
-                    <td className="border border-gray-800 p-2">
-
-                      <div className="flex flex-wrap gap-2 min-w-[260px]">
-
-                        <button
-                          onClick={() => openEdit(course)}
-                          className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded text-xs sm:text-sm font-medium"
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          onClick={() => setSelectedCourse(course)}
-                          className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs sm:text-sm font-medium"
-                        >
-                          Add Subject
-                        </button>
-
-                        <button
-                          onClick={() => deleteCourse(course.$id)}
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs sm:text-sm font-medium"
-                        >
-                          Delete
-                        </button>
-
-                      </div>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
+        </table>
 
       </div>
 
-      {/* EDIT MODAL */}
-      {editCourse && (
+      {/* 🔁 PAGINATION */}
+      <div className="flex justify-between mt-6">
 
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
+        <button
+          onClick={prevPage}
+          disabled={page === 0}
+          className="bg-gray-700 px-4 py-2 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
 
-          <div className="bg-[#121212] border border-gray-700 p-4 sm:p-6 rounded-xl w-full max-w-md text-white">
+        <span className="text-gray-400">
+          Page {page + 1}
+        </span>
 
-            <h3 className="text-lg font-bold mb-4">
-              Edit Course Fees
-            </h3>
+        <button
+          onClick={nextPage}
+          className="bg-orange-500 px-4 py-2 rounded text-black"
+        >
+          Next
+        </button>
 
-            <input
-              type="number"
-              value={courseFees}
-              onChange={(e) => setCourseFees(e.target.value)}
-              className="border border-gray-700 bg-black text-white p-3 w-full mb-4 rounded outline-none"
-              placeholder="Course Fee"
-            />
-
-            <input
-              type="number"
-              value={minimumFees}
-              onChange={(e) => setMinimumFees(e.target.value)}
-              className="border border-gray-700 bg-black text-white p-3 w-full mb-4 rounded outline-none"
-              placeholder="Minimum Fee"
-            />
-
-            <div className="flex flex-col sm:flex-row justify-end gap-2">
-
-              <button
-                onClick={() => setEditCourse(null)}
-                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded w-full sm:w-auto"
-              >
-                Close
-              </button>
-
-              <button
-                onClick={updateFees}
-                className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded w-full sm:w-auto"
-              >
-                Save
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
-      {/* SUBJECT MODAL */}
-      {selectedCourse && (
-
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
-
-          <div className="bg-[#121212] border border-gray-700 p-4 sm:p-6 rounded-xl w-full max-w-md text-white">
-
-            <h3 className="text-lg font-bold mb-4">
-              Add Course Subject
-            </h3>
-
-            <div className="flex flex-col gap-4">
-
-              <textarea
-                value={subject}
-                onChange={(e) => {
-                  setSubject(e.target.value)
-
-                  e.target.style.height = "auto"
-                  e.target.style.height = e.target.scrollHeight + "px"
-                }}
-                placeholder="Enter subjects"
-                rows={1}
-                className="border border-gray-700 bg-black text-white p-3 w-full rounded resize-none overflow-hidden uppercase outline-none"
-              />
-
-              <div className="flex flex-col sm:flex-row justify-end gap-2">
-
-                <button
-                  onClick={() => setSelectedCourse(null)}
-                  className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded w-full sm:w-auto"
-                >
-                  Close
-                </button>
-
-                <button
-                  onClick={saveSubject}
-                  className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded w-full sm:w-auto"
-                >
-                  Save
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
+      </div>
 
     </div>
-  )
+  );
 }
