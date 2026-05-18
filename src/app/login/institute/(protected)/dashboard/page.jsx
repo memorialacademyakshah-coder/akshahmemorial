@@ -208,8 +208,7 @@ const handleDownload = async () => {
 };
 
   return (
-    <div className="p-6 space-y-6">
-
+<div className="p-3 sm:p-6 space-y-6">
       {/* 🔥 TOP ACTION BUTTONS */}
       <div className="flex flex-wrap justify-end gap-3">
 
@@ -270,8 +269,8 @@ const handleDownload = async () => {
       </div>
 
       {/* CARDS */}
-      <div className="grid grid-cols-4 gap-6">
-        <Card title="Students" value={stats.students} />
+<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+          <Card title="Students" value={stats.students} />
         <Card title="Certificates" value={stats.certificates} />
         <Card title="Attendance Today" value={stats.attendance} />
         <Card title="Wallet" value={`₹ ${stats.wallet}`} />
@@ -279,8 +278,8 @@ const handleDownload = async () => {
       </div>
 
       {/* GRAPH */}
-      <div className="bg-white p-6 rounded-xl shadow">
-        <h2 className="font-semibold mb-4">
+<div className="bg-white p-4 sm:p-6 rounded-xl shadow overflow-x-auto">
+          <h2 className="font-semibold mb-4">
           Admissions (Last Days)
         </h2>
 
@@ -332,8 +331,8 @@ const handleDownload = async () => {
       {showIdCard && franchiseData && (
 <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-start overflow-y-auto z-50 p-6">
 
-    <div className="bg-white p-4 relative rounded-lg shadow-xl max-h-[95vh] overflow-y-auto">
-<button
+<div className="bg-white p-2 sm:p-4 relative rounded-lg shadow-xl max-h-[95vh] overflow-auto w-full">
+  <button
   onClick={handleDownload}
   className="bg-green-600 text-white px-6 py-2 mt-4 rounded-lg shadow hover:scale-105"
 >
@@ -348,8 +347,10 @@ const handleDownload = async () => {
       </button>
 
       {/* CERTIFICATE */}
-<div id="print-area" style={{ width: "800px", position: "relative" }}>
-
+<div
+  id="print-area"
+  className="w-[800px] max-w-full relative"
+>
         {/* BACKGROUND */}
         <img src="/ATC.png" className="w-full" />
 

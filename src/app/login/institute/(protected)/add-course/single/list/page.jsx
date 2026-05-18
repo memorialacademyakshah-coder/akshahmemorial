@@ -17,7 +17,7 @@ export default function ListSingleCourses() {
   const [courseFees, setCourseFees] = useState('')
   const [minimumFees, setMinimumFees] = useState('')
   const [subject, setSubject] = useState('')
-   const [search, setSearch] = useState('')
+  const [search, setSearch] = useState('')
 
   const fetchCourses = async () => {
 
@@ -38,7 +38,6 @@ export default function ListSingleCourses() {
     } catch (error) {
       console.log("Fetch Error:", error)
     }
-
   }
 
   useEffect(() => {
@@ -62,7 +61,6 @@ export default function ListSingleCourses() {
     } catch (error) {
       console.log("Delete Error:", error)
     }
-
   }
 
   const openEdit = (course) => {
@@ -70,7 +68,6 @@ export default function ListSingleCourses() {
     setEditCourse(course)
     setCourseFees(course.courseFees)
     setMinimumFees(course.minimumFees)
-
   }
 
   const updateFees = async () => {
@@ -90,168 +87,198 @@ export default function ListSingleCourses() {
       )
 
       setEditCourse(null)
+
       fetchCourses()
 
     } catch (error) {
       console.log("Update Error:", error)
     }
-
   }
 
-const saveSubject = async () => {
+  const saveSubject = async () => {
 
-  if (!selectedCourse) return
+    if (!selectedCourse) return
 
-  if (!subject.trim()) {
-    alert("Enter subject name")
-    return
+    if (!subject.trim()) {
+      alert("Enter subject name")
+      return
+    }
+
+    try {
+
+      const user = await account.get()
+
+      const res = await databases.createDocument(
+        DATABASE_ID,
+        SUBJECT_COLLECTION,
+        ID.unique(),
+        {
+          courseId: String(selectedCourse.$id),
+          subjectName: String(subject).toUpperCase(),
+          franchiseEmail: user.email
+        }
+      )
+
+      console.log("Saved:", res)
+
+      alert("Subject Saved Successfully")
+
+      setSubject('')
+
+      const textarea = document.querySelector('textarea')
+
+      if (textarea) textarea.style.height = "auto"
+
+      setSelectedCourse(null)
+
+    } catch (error) {
+
+      console.error("Appwrite Error:", error)
+      alert(error.message)
+
+    }
   }
 
-  try {
+  const handleInput = (e) => {
 
-    const user = await account.get()
+    setSubject(e.target.value)
 
-    const res = await databases.createDocument(
-      DATABASE_ID,
-      SUBJECT_COLLECTION,
-      ID.unique(),
-      {
-        courseId: String(selectedCourse.$id),
-        subjectName: String(subject).toUpperCase(),
-        franchiseEmail: user.email
-      }
-    )
-
-    console.log("Saved:", res)
-
-    alert("Subject Saved Successfully")
-
-    setSubject('')
-    const textarea = document.querySelector('textarea')
-if (textarea) textarea.style.height = "auto"
-    setSelectedCourse(null)
-
-  } catch (error) {
-
-    console.error("Appwrite Error:", error)
-    alert(error.message)
-
+    e.target.style.height = "auto"
+    e.target.style.height = e.target.scrollHeight + "px"
   }
-
-}
-
-const handleInput = (e) => {
-  setSubject(e.target.value)
-
-  e.target.style.height = "auto"
-  e.target.style.height = e.target.scrollHeight + "px"
-}
 
   return (
 
-    <div className="p-10 bg-black min-h-screen text-white">
+    <div className="min-h-screen bg-black text-white p-3 sm:p-5 lg:p-10">
 
-      <div className="bg-[#121212] rounded-xl p-6 shadow-lg border border-gray-800">
+      <div className="bg-[#121212] rounded-xl p-3 sm:p-5 lg:p-6 shadow-lg border border-gray-800">
 
-        <h2 className="text-xl font-bold mb-6">
-          Course List
-        </h2>
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
 
-          {/* ✅ SEARCH BAR */}
+          <h2 className="text-lg sm:text-xl font-bold">
+            Course List
+          </h2>
+
+        </div>
+
+        {/* SEARCH */}
         <input
           type="text"
           placeholder="Search Course..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="mb-4 p-2 w-full bg-black border border-gray-700 rounded"
+          className="mb-4 p-3 w-full bg-black border border-gray-700 rounded outline-none focus:border-orange-500 text-sm sm:text-base"
         />
 
-        <table className="w-full border border-gray-800">
+        {/* TABLE */}
+        <div className="overflow-x-auto rounded-lg border border-gray-800">
 
-          <thead className="bg-orange-500 text-black">
+          <table className="w-full min-w-[1000px] border-collapse text-xs sm:text-sm">
 
-            <tr>
-              <th className="border border-gray-800 p-2">Sr</th>
-              <th className="border border-gray-800 p-2">Course Name</th>
-              <th className="border border-gray-800 p-2">Exam Fees</th>
-              <th className="border border-gray-800 p-2">Course Fees</th>
-              <th className="border border-gray-800 p-2">Minimum Fees</th>
-              <th className="border border-gray-800 p-2">Duration</th>
-              <th className="border border-gray-800 p-2">Status</th>
-              <th className="border border-gray-800 p-2">Action</th>
-            </tr>
+            <thead className="bg-orange-500 text-black">
 
-          </thead>
-
-          <tbody>
-
-              {courses
-              .filter(course =>
-                course.courseName.toLowerCase().includes(search.toLowerCase())
-              )
-              .map((course, index) => (
-
-              <tr key={course.$id} className="hover:bg-[#1a1a1a]">
-
-                <td className="border border-gray-800 p-2">{index + 1}</td>
-
-                <td className="border border-gray-800 p-2">{course.courseName}</td>
-
-                <td className="border border-gray-800 p-2">{course.examFees}</td>
-
-                <td className="border border-gray-800 p-2">{course.courseFees}</td>
-
-                <td className="border border-gray-800 p-2">{course.minimumFees}</td>
-
-                <td className="border border-gray-800 p-2">{course.duration}</td>
-
-                <td className="border border-gray-800 p-2 text-green-400">{course.status}</td>
-
-                <td className="border border-gray-800 p-2 space-x-2">
-
- <div className="flex flex-wrap gap-2">
-
-    <button
-      onClick={() => openEdit(course)}
-      className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded text-sm font-medium"
-    >
-      Edit
-    </button>
-
-    <button
-      onClick={() => setSelectedCourse(course)}
-      className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium"
-    >
-      Add Subject
-    </button>
-
-    <button
-      onClick={() => deleteCourse(course.$id)}
-      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium"
-    >
-      Delete
-    </button>
-
-  </div>
-
-                </td>
-
+              <tr>
+                <th className="border border-gray-800 p-2 whitespace-nowrap">Sr</th>
+                <th className="border border-gray-800 p-2 whitespace-nowrap">Course Name</th>
+                <th className="border border-gray-800 p-2 whitespace-nowrap">Exam Fees</th>
+                <th className="border border-gray-800 p-2 whitespace-nowrap">Course Fees</th>
+                <th className="border border-gray-800 p-2 whitespace-nowrap">Minimum Fees</th>
+                <th className="border border-gray-800 p-2 whitespace-nowrap">Duration</th>
+                <th className="border border-gray-800 p-2 whitespace-nowrap">Status</th>
+                <th className="border border-gray-800 p-2 whitespace-nowrap">Action</th>
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {courses
+                .filter(course =>
+                  course.courseName.toLowerCase().includes(search.toLowerCase())
+                )
+                .map((course, index) => (
+
+                  <tr
+                    key={course.$id}
+                    className="hover:bg-[#1a1a1a]"
+                  >
+
+                    <td className="border border-gray-800 p-2">
+                      {index + 1}
+                    </td>
+
+                    <td className="border border-gray-800 p-2 min-w-[220px]">
+                      {course.courseName}
+                    </td>
+
+                    <td className="border border-gray-800 p-2 whitespace-nowrap">
+                      {course.examFees}
+                    </td>
+
+                    <td className="border border-gray-800 p-2 whitespace-nowrap">
+                      {course.courseFees}
+                    </td>
+
+                    <td className="border border-gray-800 p-2 whitespace-nowrap">
+                      {course.minimumFees}
+                    </td>
+
+                    <td className="border border-gray-800 p-2 whitespace-nowrap">
+                      {course.duration}
+                    </td>
+
+                    <td className="border border-gray-800 p-2 text-green-400 whitespace-nowrap">
+                      {course.status}
+                    </td>
+
+                    <td className="border border-gray-800 p-2">
+
+                      <div className="flex flex-wrap gap-2 min-w-[260px]">
+
+                        <button
+                          onClick={() => openEdit(course)}
+                          className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded text-xs sm:text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => setSelectedCourse(course)}
+                          className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs sm:text-sm font-medium"
+                        >
+                          Add Subject
+                        </button>
+
+                        <button
+                          onClick={() => deleteCourse(course.$id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs sm:text-sm font-medium"
+                        >
+                          Delete
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
 
-
+      {/* EDIT MODAL */}
       {editCourse && (
 
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
 
-          <div className="bg-[#121212] border border-gray-700 p-6 rounded w-[400px] text-white">
+          <div className="bg-[#121212] border border-gray-700 p-4 sm:p-6 rounded-xl w-full max-w-md text-white">
 
             <h3 className="text-lg font-bold mb-4">
               Edit Course Fees
@@ -261,7 +288,7 @@ const handleInput = (e) => {
               type="number"
               value={courseFees}
               onChange={(e) => setCourseFees(e.target.value)}
-              className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded"
+              className="border border-gray-700 bg-black text-white p-3 w-full mb-4 rounded outline-none"
               placeholder="Course Fee"
             />
 
@@ -269,22 +296,22 @@ const handleInput = (e) => {
               type="number"
               value={minimumFees}
               onChange={(e) => setMinimumFees(e.target.value)}
-              className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded"
+              className="border border-gray-700 bg-black text-white p-3 w-full mb-4 rounded outline-none"
               placeholder="Minimum Fee"
             />
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
 
               <button
                 onClick={() => setEditCourse(null)}
-                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
+                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded w-full sm:w-auto"
               >
                 Close
               </button>
 
               <button
                 onClick={updateFees}
-                className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded"
+                className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded w-full sm:w-auto"
               >
                 Save
               </button>
@@ -297,12 +324,12 @@ const handleInput = (e) => {
 
       )}
 
-
+      {/* SUBJECT MODAL */}
       {selectedCourse && (
 
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
 
-          <div className="bg-[#121212] border border-gray-700 p-6 rounded w-[400px] text-white">
+          <div className="bg-[#121212] border border-gray-700 p-4 sm:p-6 rounded-xl w-full max-w-md text-white">
 
             <h3 className="text-lg font-bold mb-4">
               Add Course Subject
@@ -310,39 +337,38 @@ const handleInput = (e) => {
 
             <div className="flex flex-col gap-4">
 
-<textarea
-  value={subject}
-  onChange={(e) => {
-    setSubject(e.target.value)
+              <textarea
+                value={subject}
+                onChange={(e) => {
+                  setSubject(e.target.value)
 
-    // auto expand height
-    e.target.style.height = "auto"
-    e.target.style.height = e.target.scrollHeight + "px"
-  }}
-  placeholder="Enter subjects "
-  rows={1}
-  className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded resize-none overflow-hidden  ... uppercase"
-/>
+                  e.target.style.height = "auto"
+                  e.target.style.height = e.target.scrollHeight + "px"
+                }}
+                placeholder="Enter subjects"
+                rows={1}
+                className="border border-gray-700 bg-black text-white p-3 w-full rounded resize-none overflow-hidden uppercase outline-none"
+              />
 
+              <div className="flex flex-col sm:flex-row justify-end gap-2">
 
+                <button
+                  onClick={() => setSelectedCourse(null)}
+                  className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded w-full sm:w-auto"
+                >
+                  Close
+                </button>
 
-  <div className="flex justify-end gap-2">
-    <button
-      onClick={() => setSelectedCourse(null)}
-      className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
-    >
-      Close
-    </button>
+                <button
+                  onClick={saveSubject}
+                  className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded w-full sm:w-auto"
+                >
+                  Save
+                </button>
 
-    <button
-      onClick={saveSubject}
-      className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded"
-    >
-      Save
-    </button>
-  </div>
+              </div>
 
-</div>
+            </div>
 
           </div>
 
@@ -352,5 +378,4 @@ const handleInput = (e) => {
 
     </div>
   )
-
 }

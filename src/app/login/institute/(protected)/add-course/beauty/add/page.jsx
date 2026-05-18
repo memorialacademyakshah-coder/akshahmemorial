@@ -18,26 +18,30 @@ export default function addBeautycourse() {
   const [selectedCourses, setSelectedCourses] = useState({})
   const [search, setSearch] = useState('')
 
-
-  // ✅ Fetch Master Courses
+  // FETCH MASTER COURSES
   const fetchCourses = async () => {
+
     try {
-     const res = await databases.listDocuments(
-  DATABASE_ID,
-  MASTER_COLLECTION,
-  [
-    Query.orderDesc('courseCode'),
-    Query.limit(300) // 🔥 increase limit
-  ]
-)
+
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        MASTER_COLLECTION,
+        [
+          Query.orderDesc('courseCode'),
+          Query.limit(300)
+        ]
+      )
+
       setCourses(res.documents)
+
     } catch (error) {
       console.log(error)
     }
   }
 
-  // ✅ Fetch Plan → Set Exam Fee
+  // FETCH PLAN
   useEffect(() => {
+
     const fetchPlan = async () => {
 
       const user = await account.get()
@@ -49,34 +53,36 @@ export default function addBeautycourse() {
       )
 
       const plan = res.documents[0]?.plan
-      
-  const planRes = await databases.listDocuments(
-  DATABASE_ID,
-  "franchise_plans",
-  [Query.equal("name", plan)]
-)
 
-const fee = planRes.documents[0]?.amount || 0
+      const planRes = await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_plans",
+        [Query.equal("name", plan)]
+      )
+
+      const fee = planRes.documents[0]?.amount || 0
 
       setExamFee(fee)
     }
 
     fetchPlan()
+
   }, [])
 
   useEffect(() => {
     fetchCourses()
   }, [])
 
-  
-  // ✅ Checkbox Select
+  // CHECKBOX SELECT
   const handleCheck = (course) => {
 
     setSelectedCourses(prev => {
 
       if (prev[course.$id]) {
+
         const updated = { ...prev }
         delete updated[course.$id]
+
         return updated
       }
 
@@ -88,12 +94,10 @@ const fee = planRes.documents[0]?.amount || 0
           minimumFees: ''
         }
       }
-
     })
-
   }
 
-  // ✅ Input Handling
+  // INPUT HANDLING
   const handleInput = (id, field, value) => {
 
     setSelectedCourses(prev => ({
@@ -103,10 +107,9 @@ const fee = planRes.documents[0]?.amount || 0
         [field]: value
       }
     }))
-
   }
 
-  // ✅ ADD / UPDATE COURSE
+  // ADD / UPDATE COURSE
   const addCourse = async () => {
 
     const selected = Object.values(selectedCourses)
@@ -127,9 +130,10 @@ const fee = planRes.documents[0]?.amount || 0
       )
 
       const franchise = res.documents[0]
-const userPlan = franchise?.plan
-// use already fetched state
-const finalExamFee = examFee
+
+      const userPlan = franchise?.plan
+
+      const finalExamFee = examFee
 
       for (const course of selected) {
 
@@ -138,7 +142,7 @@ const finalExamFee = examFee
           return
         }
 
-        // ✅ CHECK EXISTING COURSE
+        // CHECK EXISTING COURSE
         const existing = await databases.listDocuments(
           DATABASE_ID,
           BEAUTY_COLLECTION,
@@ -150,7 +154,7 @@ const finalExamFee = examFee
 
         if (existing.documents.length > 0) {
 
-          // 🔁 UPDATE (overwrite)
+          // UPDATE
           await databases.updateDocument(
             DATABASE_ID,
             BEAUTY_COLLECTION,
@@ -165,7 +169,7 @@ const finalExamFee = examFee
 
         } else {
 
-          // ➕ CREATE
+          // CREATE
           await databases.createDocument(
             DATABASE_ID,
             BEAUTY_COLLECTION,
@@ -182,71 +186,88 @@ const finalExamFee = examFee
               franchiseEmail: user.email
             }
           )
-
         }
-
       }
 
       alert("Course Saved Successfully")
 
       setSelectedCourses({})
 
-      // ✅ REDIRECT
-      router.push('/login/institute/add-course/beauty/list') // change if your route is different
+      router.push('/login/institute/add-course/beauty/list')
 
     } catch (error) {
 
       console.log("Add Course Error:", error)
       alert(error.message)
-
     }
-
   }
 
   return (
 
-    <div className="p-10 bg-black min-h-screen text-white">
+    <div className="min-h-screen bg-black text-white p-3 sm:p-5 lg:p-10">
 
-      <div className="bg-[#121212] rounded-xl p-6 shadow-lg border border-gray-800">
+      <div className="bg-[#121212] rounded-xl p-3 sm:p-5 lg:p-6 shadow-lg border border-gray-800">
 
-        <div className="flex justify-between mb-6">
+        {/* HEADER */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
 
-          <h2 className="text-xl font-bold">
+          <h2 className="text-lg sm:text-xl font-bold leading-tight">
             ADD COURSE WITH SINGLE SUBJECT
           </h2>
 
           <button
             onClick={addCourse}
-            className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-6 py-2 rounded"
+            className="bg-orange-500 hover:bg-orange-600 text-black font-semibold px-5 py-2 rounded w-full sm:w-auto"
           >
             Add Course
           </button>
 
         </div>
 
-        {/* ✅ SEARCH BAR */}
+        {/* SEARCH */}
         <input
           type="text"
           placeholder="Search Course..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="mb-4 p-2 w-full bg-black border border-gray-700 rounded"
+          className="mb-4 p-3 w-full bg-black border border-gray-700 rounded-lg outline-none focus:border-orange-500 text-sm sm:text-base"
         />
 
-        <div className="overflow-x-auto">
+        {/* TABLE */}
+        <div className="overflow-x-auto rounded-lg border border-gray-800">
 
-          <table className="w-full border border-gray-800 text-sm">
+          <table className="w-full min-w-[900px] border-collapse text-xs sm:text-sm">
 
             <thead className="bg-orange-500 text-black">
 
               <tr>
+
                 <th className="border border-gray-800 p-2"></th>
-                <th className="border border-gray-800 p-2">Course Code</th>
-                <th className="border border-gray-800 p-2">Course Name</th>
-                <th className="border border-gray-800 p-2">Course Duration</th>
-                <th className="border border-gray-800 p-2">Exam Fees</th>
-                <th className="border border-gray-800 p-2">Course Fee</th>
-                <th className="border border-gray-800 p-2">Minimum Fee</th>
+
+                <th className="border border-gray-800 p-2 whitespace-nowrap">
+                  Course Code
+                </th>
+
+                <th className="border border-gray-800 p-2 whitespace-nowrap">
+                  Course Name
+                </th>
+
+                <th className="border border-gray-800 p-2 whitespace-nowrap">
+                  Course Duration
+                </th>
+
+                <th className="border border-gray-800 p-2 whitespace-nowrap">
+                  Exam Fees
+                </th>
+
+                <th className="border border-gray-800 p-2 whitespace-nowrap">
+                  Course Fee
+                </th>
+
+                <th className="border border-gray-800 p-2 whitespace-nowrap">
+                  Minimum Fee
+                </th>
+
               </tr>
 
             </thead>
@@ -255,11 +276,16 @@ const finalExamFee = examFee
 
               {courses
                 .filter(course =>
-                  course.courseName.toLowerCase().includes(search.toLowerCase())
+                  course.courseName
+                    .toLowerCase()
+                    .includes(search.toLowerCase())
                 )
                 .map(course => (
 
-                  <tr key={course.$id} className="border border-gray-800 hover:bg-[#1a1a1a]">
+                  <tr
+                    key={course.$id}
+                    className="border border-gray-800 hover:bg-[#1a1a1a]"
+                  >
 
                     <td className="border border-gray-800 p-2 text-center">
 
@@ -267,24 +293,24 @@ const finalExamFee = examFee
                         type="checkbox"
                         checked={!!selectedCourses[course.$id]}
                         onChange={() => handleCheck(course)}
-                        className="accent-orange-500"
+                        className="accent-orange-500 w-4 h-4"
                       />
 
                     </td>
 
-                    <td className="border border-gray-800 p-2">
+                    <td className="border border-gray-800 p-2 whitespace-nowrap">
                       {course.courseCode}
                     </td>
 
-                    <td className="border border-gray-800 p-2">
+                    <td className="border border-gray-800 p-2 min-w-[220px]">
                       {course.courseName}
                     </td>
 
-                    <td className="border border-gray-800 p-2">
+                    <td className="border border-gray-800 p-2 whitespace-nowrap">
                       {course.duration}
                     </td>
 
-                    <td className="border border-gray-800 p-2">
+                    <td className="border border-gray-800 p-2 whitespace-nowrap">
                       ₹{examFee}
                     </td>
 
@@ -293,7 +319,7 @@ const finalExamFee = examFee
                       <input
                         type="number"
                         placeholder="Course Fee"
-                        className="border border-white bg-black text-white p-1 w-28 rounded"
+                        className="border border-white bg-black text-white p-2 w-full min-w-[120px] rounded outline-none"
                         disabled={!selectedCourses[course.$id]}
                         onChange={(e) =>
                           handleInput(course.$id, 'courseFees', e.target.value)
@@ -307,7 +333,7 @@ const finalExamFee = examFee
                       <input
                         type="number"
                         placeholder="Minimum Fee"
-                        className="border border-white bg-black text-white p-1 w-28 rounded"
+                        className="border border-white bg-black text-white p-2 w-full min-w-[120px] rounded outline-none"
                         disabled={!selectedCourses[course.$id]}
                         onChange={(e) =>
                           handleInput(course.$id, 'minimumFees', e.target.value)
@@ -329,6 +355,5 @@ const finalExamFee = examFee
       </div>
 
     </div>
-
   )
 }
