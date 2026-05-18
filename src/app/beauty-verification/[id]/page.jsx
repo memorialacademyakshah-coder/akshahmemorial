@@ -172,13 +172,18 @@ if (!courseDuration) {
   const logoUrl = franchise?.logo || localCert?.logo || null;
 
   // ✅ CERT META (NO CHANGE)
-  let certMeta = null;
-  if (typeof window !== "undefined") {
-    const storedMeta = localStorage.getItem("certificateMeta");
-    if (storedMeta) {
-      certMeta = JSON.parse(storedMeta);
-    }
+// ✅ CERTIFICATE STUDENT
+let certStudent = null;
+
+if (typeof window !== "undefined") {
+
+  const storedStudent =
+    localStorage.getItem("certificateStudent");
+
+  if (storedStudent) {
+    certStudent = JSON.parse(storedStudent);
   }
+}
 
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center p-4">
@@ -214,16 +219,50 @@ if (!courseDuration) {
             </p>
 
             {/* ✅ FINAL DURATION FIX */}
-            <p>
-              Duration : {courseDuration || certificate?.duration || student.duration || "N/A"}
-            </p>
+          
 
-            <p>
-              Issue Date :{" "}
-              {certificate?.issueDate
-                ? new Date(certificate.issueDate).toLocaleDateString("en-GB")
-                : certMeta?.issueDate || "N/A"}
-            </p>
+<p>
+  Duration : {
+
+    certStudent?.duration ||
+
+    certMeta?.duration ||
+
+    courseDuration ||
+
+    certificate?.duration ||
+
+    student.duration ||
+
+    student.courseDuration ||
+
+    "N/A"
+  }
+</p>
+
+<p>
+  Issue Date :{" "}
+
+  {
+
+    certStudent?.issueDate ||
+
+    certMeta?.issueDate ||
+
+    (
+
+      certificate?.issueDate
+
+        ? new Date(certificate.issueDate)
+            .toLocaleDateString("en-GB")
+            .replace(/\//g, "-")
+
+        : "N/A"
+    )
+
+  }
+</p>
+
 
     <p>
   {isMultiple

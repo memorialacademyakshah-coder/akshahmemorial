@@ -85,21 +85,36 @@ parsed.issueDate = savedIssueDate;
 
 
 // ✅ SAVE FINAL DATA
+// ✅ SAVE FINAL DATA
 localStorage.setItem(
   "certificateStudent",
   JSON.stringify(parsed)
 );
 
-    // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
-    // ✅ SAVE FINAL CERT DATA FOR VERIFICATION
-    localStorage.setItem(
-      "certificateMeta",
-      JSON.stringify({
-        certificateNo: certNo,
-        issueDate: savedIssueDate,
-        duration: parsed.duration || parsed.courseDuration || ""
-      })
-    );
+// ✅ KEEP OLD SAVED DATE IF EXISTS
+const finalIssueDate =
+  localStorage.getItem("savedIssueDate") ||
+  savedIssueDate;
+
+// ✅ SAVE QR VERIFY DATA
+localStorage.setItem(
+  "certificateMeta",
+  JSON.stringify({
+    certificateNo: parsed.certificateNo || certNo,
+
+    issueDate: finalIssueDate,
+
+    duration:
+      parsed.duration ||
+      parsed.courseDuration ||
+      ""
+  })
+);
+
+// ✅ IMPORTANT
+parsed.issueDate = finalIssueDate;
+
+setIssueDate(finalIssueDate);
 
     console.log("FULL STUDENT DATA:", parsed);
     console.log("ID USED IN QR:", parsed.$id);
@@ -395,7 +410,7 @@ const handleChange = (field, value) => {
       className="border p-3 rounded"
     />
 
-  <input
+ <input
   type="text"
   value={issueDate}
   onChange={(e) => {
@@ -416,7 +431,20 @@ const handleChange = (field, value) => {
         JSON.stringify(updated)
       );
 
-      // ✅ ADD THIS
+      // ✅ UPDATE QR VERIFY DATA
+      localStorage.setItem(
+        "certificateMeta",
+        JSON.stringify({
+          certificateNo,
+          issueDate: value,
+          duration:
+            updated.duration ||
+            updated.courseDuration ||
+            ""
+        })
+      );
+
+      // ✅ SAVE GLOBALLY
       localStorage.setItem(
         "savedIssueDate",
         value
@@ -428,6 +456,8 @@ const handleChange = (field, value) => {
   placeholder="Issue Date"
   className="border p-3 rounded"
 />
+
+
   </div>
 
 )}
