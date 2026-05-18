@@ -4,6 +4,19 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
+import {
+  CheckCircle,
+  GraduationCap,
+  Calendar,
+  Clock3,
+  BadgeCheck,
+  School,
+  Mail,
+  Phone,
+  MapPin,
+  Trophy,
+  FileBadge2,
+} from "lucide-react";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const BUCKET_ID = "6986e8a4001925504f6b";
@@ -15,23 +28,31 @@ export default function VerifyCertificate() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [percentage, setPercentage] = useState(null);
-const [isMultiple, setIsMultiple] = useState(false);
+  const [isMultiple, setIsMultiple] = useState(false);
 
+  // =========================
+  // FETCH DATA
+  // =========================
   useEffect(() => {
 
     if (!id) return;
 
     const fetchAll = async () => {
+
       try {
 
-        // ✅ STUDENT
+        // =========================
+        // STUDENT
+        // =========================
         const student = await databases.getDocument(
           DATABASE_ID,
           "student_admissions",
           id
         );
 
-        // ✅ CERTIFICATE
+        // =========================
+        // CERTIFICATE
+        // =========================
         const certRes = await databases.listDocuments(
           DATABASE_ID,
           "certificates",
@@ -40,10 +61,13 @@ const [isMultiple, setIsMultiple] = useState(false);
 
         const certificate = certRes.documents[0];
 
-        // ✅ FRANCHISE
+        // =========================
+        // FRANCHISE
+        // =========================
         let franchise = null;
 
         if (student.franchiseEmail) {
+
           const res = await databases.listDocuments(
             DATABASE_ID,
             "franchise_approved",
@@ -53,13 +77,14 @@ const [isMultiple, setIsMultiple] = useState(false);
           franchise = res.documents[0];
         }
 
-        // ===============================
-        // ✅ FIXED: COURSE DURATION (CORRECT PLACE)
-        // ===============================
+        // =========================
+        // COURSE DURATION
+        // =========================
         let courseDuration = "";
 
         try {
-          const courseRes = await databases.listDocuments(
+
+          const beautyRes = await databases.listDocuments(
             DATABASE_ID,
             "beauty_courses_single",
             [
@@ -68,40 +93,57 @@ const [isMultiple, setIsMultiple] = useState(false);
             ]
           );
 
-          if (courseRes.documents.length > 0) {
-            courseDuration = courseRes.documents[0].duration || "";
+          if (beautyRes.documents.length > 0) {
+            courseDuration =
+              beautyRes.documents[0].duration || "";
           }
+
         } catch (err) {
-          console.log("Duration fetch error:", err);
+          console.log(err);
         }
-        // ✅ IF NOT BEAUTY → FETCH FROM courses_single
-if (!courseDuration) {
-  try {
-    const singleCourseRes = await databases.listDocuments(
-      DATABASE_ID,
-      "courses_single",
-      [
-        Query.equal("courseId", student.courseId),
-        Query.equal("franchiseEmail", student.franchiseEmail)
-      ]
-    );
 
-    if (singleCourseRes.documents.length > 0) {
-      courseDuration = singleCourseRes.documents[0].duration || "";
-    }
-  } catch (err) {
-    console.log("Single course duration error:", err);
-  }
-}
+        // =========================
+        // NORMAL COURSE
+        // =========================
+        if (!courseDuration) {
 
-        // ✅ FINAL SET DATA
-        setData({ student, certificate, franchise, courseDuration });
+          try {
+
+            const normalRes = await databases.listDocuments(
+              DATABASE_ID,
+              "courses_single",
+              [
+                Query.equal("courseId", student.courseId),
+                Query.equal("franchiseEmail", student.franchiseEmail)
+              ]
+            );
+
+            if (normalRes.documents.length > 0) {
+              courseDuration =
+                normalRes.documents[0].duration || "";
+            }
+
+          } catch (err) {
+            console.log(err);
+          }
+        }
+
+        setData({
+          student,
+          certificate,
+          franchise,
+          courseDuration
+        });
 
       } catch (err) {
-        console.error(err);
+
+        console.log(err);
         setData(false);
+
       } finally {
+
         setLoading(false);
+
       }
     };
 
@@ -109,251 +151,527 @@ if (!courseDuration) {
 
   }, [id]);
 
-
+  // =========================
+  // PERCENTAGE
+  // =========================
   useEffect(() => {
-  const fetchPercentage = async () => {
-    try {
-      if (!id) return;
 
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        "student_subject_results",
-        [Query.equal("studentId", id)]
-      );
+    const fetchPercentage = async () => {
 
-      // ✅ detect multiple course
-      if (res.documents.length > 1) {
-        setIsMultiple(true);
+      try {
 
-        const total = res.documents.reduce(
-          (sum, m) => sum + Number(m.total || 0),
-          0
+        if (!id) return;
+
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "student_subject_results",
+          [Query.equal("studentId", id)]
         );
 
-        const percent = (
-          total / (res.documents.length * 100)
-        ).toFixed(2);
+        if (res.documents.length > 1) {
 
-        setPercentage(percent);
-      } else {
-        setIsMultiple(false);
+          setIsMultiple(true);
+
+          const total = res.documents.reduce(
+            (sum, item) => sum + Number(item.total || 0),
+            0
+          );
+
+          const percent = (
+            total / (res.documents.length * 100)
+          ).toFixed(2);
+
+          setPercentage(percent);
+
+        } else {
+
+          setIsMultiple(false);
+
+        }
+
+      } catch (err) {
+
+        console.log(err);
+
       }
+    };
 
-    } catch (err) {
-      console.log("VERIFY PERCENT ERROR:", err);
-    }
-  };
+    fetchPercentage();
 
-  fetchPercentage();
-}, [id]);
+  }, [id]);
 
+  // =========================
+  // LOADING
+  // =========================
+  if (loading) {
 
-  if (loading) return <p className="p-10 text-center">Loading...</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-xl font-semibold animate-pulse">
+          Loading Verification...
+        </div>
+      </div>
+    );
+  }
 
-  if (data === false)
-    return <p className="p-10 text-center text-red-600">Invalid Certificate</p>;
+  // =========================
+  // INVALID
+  // =========================
+  if (data === false) {
 
-  const { student, certificate, franchise, courseDuration } = data;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
+        <div className="bg-white p-10 rounded-3xl shadow-xl">
+
+          <h1 className="text-2xl font-bold text-red-600">
+            Invalid Certificate
+          </h1>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  const {
+    student,
+    certificate,
+    franchise,
+    courseDuration
+  } = data;
+
+  // =========================
+  // PHOTO
+  // =========================
   const photoUrl = student.photoId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-  // ✅ LOCAL CERT (NO CHANGE)
+  // =========================
+  // LOCAL CERT
+  // =========================
   let localCert = null;
+
   if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("certificateStudent");
-   try {
 
-  if (stored && stored !== "undefined") {
+    try {
 
-    localCert = JSON.parse(stored);
+      const stored =
+        localStorage.getItem("certificateStudent");
 
-  }
+      if (stored && stored !== "undefined") {
 
-} catch (err) {
+        localCert = JSON.parse(stored);
 
-  console.log("LOCAL CERT ERROR:", err);
+      }
 
-}
-  }
+    } catch (err) {
 
-  // ✅ LOGO FIX
-  const logoUrl = franchise?.logo || localCert?.logo || null;
-
-  // ✅ CERT META (NO CHANGE)
-// ✅ CERTIFICATE STUDENT
-// ✅ CERTIFICATE STUDENT
-let certStudent = null;
-
-if (typeof window !== "undefined") {
-
-  try {
-
-    const storedStudent =
-      localStorage.getItem("certificateStudent");
-
-    if (
-      storedStudent &&
-      storedStudent !== "undefined"
-    ) {
-
-      certStudent = JSON.parse(storedStudent);
+      console.log(err);
 
     }
-
-  } catch (err) {
-
-    console.log("CERT STUDENT ERROR:", err);
-
   }
-}
 
-// ✅ CERT META
-let certMeta = null;
+  // =========================
+  // CERT META
+  // =========================
+  let certMeta = null;
 
-if (typeof window !== "undefined") {
+  if (typeof window !== "undefined") {
 
-  try {
+    try {
 
-    const storedMeta =
-      localStorage.getItem("certificateMeta");
+      const storedMeta =
+        localStorage.getItem("certificateMeta");
 
-    if (
-      storedMeta &&
-      storedMeta !== "undefined"
-    ) {
+      if (
+        storedMeta &&
+        storedMeta !== "undefined"
+      ) {
 
-      certMeta = JSON.parse(storedMeta);
+        certMeta = JSON.parse(storedMeta);
+
+      }
+
+    } catch (err) {
+
+      console.log(err);
 
     }
-
-  } catch (err) {
-
-    console.log("CERT META ERROR:", err);
-
   }
-}
+
+  // =========================
+  // CERT STUDENT
+  // =========================
+  let certStudent = null;
+
+  if (typeof window !== "undefined") {
+
+    try {
+
+      const storedStudent =
+        localStorage.getItem("certificateStudent");
+
+      if (
+        storedStudent &&
+        storedStudent !== "undefined"
+      ) {
+
+        certStudent = JSON.parse(storedStudent);
+
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+  }
+
+  // =========================
+  // LOGO
+  // =========================
+  const logoUrl =
+    franchise?.logo ||
+    localCert?.logo ||
+    null;
+
+  // =========================
+  // DATE FORMAT
+  // =========================
+  const formatIssueDate = (date) => {
+
+    try {
+
+      if (!date) return "N/A";
+
+      // already formatted
+      if (
+        typeof date === "string" &&
+        date.includes("-") &&
+        !date.includes("T")
+      ) {
+        return date;
+      }
+
+      return new Date(date)
+        .toLocaleDateString("en-GB")
+        .replace(/\//g, "-");
+
+    } catch {
+
+      return "N/A";
+    }
+  };
+
+  const finalIssueDate =
+    certStudent?.issueDate ||
+    certMeta?.issueDate ||
+    certificate?.issueDate;
+
+  const finalDuration =
+    certStudent?.duration ||
+    certMeta?.duration ||
+    courseDuration ||
+    certificate?.duration ||
+    student.duration ||
+    student.courseDuration ||
+    "N/A";
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center p-4">
 
-      <div className="w-full max-w-md rounded-[30px] p-[2px] bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 shadow-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-[#faf7f0] via-white to-[#f3efe6] flex justify-center p-4">
 
-  <div className="bg-white rounded-[28px] p-6 backdrop-blur-xl">
+      <div className="w-full max-w-md border-[3px] border-yellow-500 rounded-[35px] bg-white shadow-2xl overflow-hidden">
 
-        <div style={{ color: "#000", opacity: 1, WebkitTextFillColor: "#000" }}>
-
-<h1 className="text-2xl font-extrabold text-center mb-6 text-gray-800 tracking-wide">            ✅ Certificate Verified
-          </h1>
+        {/* TOP */}
+        <div className="px-6 pt-8 pb-5 text-center">
 
           {logoUrl && (
-            <img src={logoUrl} className="w-24 mx-auto mb-3" />
+            <img
+              src={logoUrl}
+              className="w-28 mx-auto mb-5"
+            />
           )}
 
           {photoUrl && (
-<img
-  src={photoUrl}
-  className="w-32 h-32 mx-auto rounded-2xl border-4 border-orange-400 shadow-xl object-cover"
-/>          )}
+            <img
+              src={photoUrl}
+              className="w-44 h-44 mx-auto rounded-[30px] border-[5px] border-orange-400 object-cover shadow-xl"
+            />
+          )}
 
-          <h2 className="text-center font-bold mt-2">
+          <h1 className="text-[42px] leading-tight font-black mt-6 text-[#0b1535] uppercase">
             {student.studentName}
-          </h2>
+          </h1>
 
-          <div className="mt-4">
+          {/* VERIFIED */}
+          <div className="flex justify-center mt-4">
 
-           <div className="flex justify-between items-center border-b py-2 text-[15px]">
-  <span className="font-semibold text-gray-700">
-    Course
-  </span>
+            <div className="flex items-center gap-2 px-5 py-2 rounded-full border border-green-600 bg-green-50">
 
-  <span className="text-gray-900 font-medium text-right">
-    {student.courseName || student.course || "N/A"}
-  </span>
-</div>
-            <p>
-              Certificate No : {certificate?.certificateNo || certMeta?.certificateNo || "N/A"}
-            </p>
+              <CheckCircle className="text-green-600 w-5 h-5" />
 
-            {/* ✅ FINAL DURATION FIX */}
-          
+              <span className="font-bold text-green-700">
+                CERTIFICATE VERIFIED
+              </span>
 
-<p>
-  Duration : {
-
-    certStudent?.duration ||
-
-    certMeta?.duration ||
-
-    courseDuration ||
-
-    certificate?.duration ||
-
-    student.duration ||
-
-    student.courseDuration ||
-
-    "N/A"
-  }
-</p>
-
-<p>
-  Issue Date :{" "}
-
-  {
-
-    certStudent?.issueDate ||
-
-    certMeta?.issueDate ||
-
-    (
-
-      certificate?.issueDate
-
-        ? (
-            certificate.issueDate.includes("-") &&
-            !certificate.issueDate.includes("T")
-          )
-
-          ? certificate.issueDate
-
-          : new Date(certificate.issueDate)
-              .toLocaleDateString("en-GB")
-              .replace(/\//g, "-")
-
-        : "N/A"
-    )
-
-  }
-</p>
-
-
-    <p>
-  {isMultiple
-    ? percentage
-      ? `Percentage : ${percentage}%`
-      : "Percentage : N/A"
-    : certificate?.marks
-    ? `Marks : ${certificate.marks}`
-    : "Marks : N/A"}
-</p>
-
-            <p>
-              Grade : {certificate?.grade || "N/A"}
-            </p>
+            </div>
 
           </div>
 
-          <div className="mt-4 border-t pt-3">
+        </div>
 
-            <p>Institute : {student.instituteName || "N/A"}</p>
+        {/* COURSE */}
+        <div className="px-7">
 
-            <p>Email : {franchise?.email || "N/A"}</p>
+          <div className="flex items-start gap-4 mt-3">
 
-            <p>Contact : {franchise?.mobile || "N/A"}</p>
+            <div className="min-w-[55px] min-h-[55px] rounded-full border-2 border-yellow-500 flex items-center justify-center">
 
-            <p>Address : {franchise?.address || "N/A"}</p>
+              <GraduationCap className="w-7 h-7 text-[#0b1535]" />
+
+            </div>
+
+            <div>
+
+              <div className="text-[18px] font-medium text-gray-700">
+                {student.courseName || student.course || "N/A"}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* INFO BOX */}
+        <div className="mx-6 mt-7 border rounded-2xl overflow-hidden">
+
+          {/* CERTIFICATE */}
+          <div className="flex justify-between items-center gap-4 p-4 border-b">
+
+            <div className="flex items-center gap-3">
+
+              <FileBadge2 className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Certificate No.
+              </span>
+
+            </div>
+
+            <span className="text-right font-medium break-all">
+              {certificate?.certificateNo ||
+                certMeta?.certificateNo ||
+                "N/A"}
+            </span>
+
+          </div>
+
+          {/* DURATION */}
+          <div className="flex justify-between items-center gap-4 p-4 border-b">
+
+            <div className="flex items-center gap-3">
+
+              <Clock3 className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Duration
+              </span>
+
+            </div>
+
+            <span className="font-medium">
+              {finalDuration}
+            </span>
+
+          </div>
+
+          {/* ISSUE DATE */}
+          <div className="flex justify-between items-center gap-4 p-4 border-b">
+
+            <div className="flex items-center gap-3">
+
+              <Calendar className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Issue Date
+              </span>
+
+            </div>
+
+            <span className="font-medium">
+              {formatIssueDate(finalIssueDate)}
+            </span>
+
+          </div>
+
+          {/* MARKS */}
+          <div className="flex justify-between items-center gap-4 p-4 border-b">
+
+            <div className="flex items-center gap-3">
+
+              <Trophy className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Marks
+              </span>
+
+            </div>
+
+            <span className="font-medium">
+
+              {isMultiple
+                ? percentage
+                  ? `${percentage}%`
+                  : "N/A"
+                : certificate?.marks || "N/A"}
+
+            </span>
+
+          </div>
+
+          {/* GRADE */}
+          <div className="flex justify-between items-center gap-4 p-4">
+
+            <div className="flex items-center gap-3">
+
+              <BadgeCheck className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Grade
+              </span>
+
+            </div>
+
+            <span className="font-medium">
+              {certificate?.grade || "N/A"}
+            </span>
+
+          </div>
+
+        </div>
+
+        {/* INSTITUTE */}
+        <div className="px-6 mt-8">
+
+          <div className="flex items-center gap-3 border-b pb-3">
+
+            <div className="bg-[#0b1535] text-white w-12 h-12 rounded-full flex items-center justify-center">
+
+              <School />
+
+            </div>
+
+            <h2 className="text-[22px] font-black text-[#0b1535]">
+              INSTITUTE DETAILS
+            </h2>
+
+          </div>
+
+        </div>
+
+        {/* DETAILS */}
+        <div className="mx-6 mt-5 mb-8 border rounded-2xl overflow-hidden">
+
+          {/* Institute */}
+          <div className="flex justify-between gap-4 p-4 border-b">
+
+            <div className="flex items-center gap-3">
+
+              <School className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Institute
+              </span>
+
+            </div>
+
+            <span className="font-medium text-right">
+              {student.instituteName || "N/A"}
+            </span>
+
+          </div>
+
+          {/* Email */}
+          <div className="flex justify-between gap-4 p-4 border-b">
+
+            <div className="flex items-center gap-3">
+
+              <Mail className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Email
+              </span>
+
+            </div>
+
+            <span className="font-medium text-right break-all">
+              {franchise?.email || "N/A"}
+            </span>
+
+          </div>
+
+          {/* Contact */}
+          <div className="flex justify-between gap-4 p-4 border-b">
+
+            <div className="flex items-center gap-3">
+
+              <Phone className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Contact
+              </span>
+
+            </div>
+
+            <span className="font-medium">
+              {franchise?.mobile || "N/A"}
+            </span>
+
+          </div>
+
+          {/* Address */}
+          <div className="flex justify-between gap-4 p-4">
+
+            <div className="flex items-center gap-3">
+
+              <MapPin className="text-yellow-600" />
+
+              <span className="font-semibold">
+                Address
+              </span>
+
+            </div>
+
+            <span className="font-medium text-right">
+              {franchise?.address || "N/A"}
+            </span>
+
+          </div>
+
+        </div>
+
+        {/* VERIFIED BOTTOM */}
+        <div className="mx-6 mb-8 bg-green-50 border border-green-300 rounded-2xl p-5 flex gap-4">
+
+          <div className="min-w-[50px]">
+
+            <CheckCircle className="w-12 h-12 text-green-600" />
+
+          </div>
+
+          <div>
+
+            <div className="font-bold text-green-700 text-lg">
+              This certificate is verified and valid.
+            </div>
+
+            <div className="text-gray-600 text-sm mt-1">
+              Information displayed is based on our records.
+            </div>
 
           </div>
 
@@ -361,7 +679,6 @@ if (typeof window !== "undefined") {
 
       </div>
 
-    </div>
     </div>
   );
 }
