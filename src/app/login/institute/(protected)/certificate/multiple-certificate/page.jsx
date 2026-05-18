@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode"; // ✅ ADDED
-import { databases, ID } from "@/lib/appwrite";
+import { databases, ID, account } from "@/lib/appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
 import { Query } from "appwrite";
@@ -20,6 +20,8 @@ export default function PrintCertificate() {
   const [issueDate, setIssueDate] = useState("");
 const [percentage, setPercentage] = useState(0);
 const [editMode, setEditMode] = useState(false);
+const [isAdmin, setIsAdmin] = useState(false);
+const [loadingUser, setLoadingUser] = useState(true);
 
   const printRef = useRef();
   useEffect(() => {
@@ -68,6 +70,8 @@ console.log("SHOW FATHER:", parsed.showFatherInCertificate);
 
   }, []);
 
+  
+
   useEffect(() => {
   const fetchMarks = async () => {
     try {
@@ -106,7 +110,39 @@ console.log("SHOW FATHER:", parsed.showFatherInCertificate);
 }, [student]);
 
 
+useEffect(() => {
+
+  const checkAdmin = async () => {
+
+    try {
+
+      const user = await account.get();
+
+      if (user.email === "bnmiindia@gmail.com") {
+        setIsAdmin(true);
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+    } finally {
+
+      setLoadingUser(false);
+
+    }
+  };
+
+  checkAdmin();
+
+}, []);
   if (!student) return <p className="p-10">Loading certificate...</p>;
+    const handleChange = (field, value) => {
+  setStudent((prev) => ({
+    ...prev,
+    [field]: value,
+  }));
+};
 
   // ✅ PHOTO
   const photoUrl = student.photoId
@@ -122,7 +158,7 @@ console.log("SHOW FATHER:", parsed.showFatherInCertificate);
 
   // ✅ COURSE DURATION FUNCTION (UNCHANGED)
   // ✅ NEW COURSE DURATION FUNCTION
-const getCourseDuration = (durationText) => {
+ const getCourseDuration = (durationText) => {
 
   if (!durationText) return "N/A";
 
@@ -160,7 +196,6 @@ const getCourseDuration = (durationText) => {
 
   return `${format(start)} To ${format(end)}`;
 };
-
   const toBase64 = async (url) => {
     const res = await fetch(url);
     const blob = await res.blob();
@@ -246,6 +281,128 @@ const getCourseDuration = (durationText) => {
         Download Certificate
       </button>
 
+{/* EDIT BUTTON */}
+{isAdmin && (
+
+<div className="mb-6 flex gap-4">
+
+  <button
+    onClick={() => setEditMode(!editMode)}
+    className="bg-blue-600 text-white px-5 py-2 rounded"
+  >
+    {editMode ? "Close Edit" : "Edit Certificate"}
+  </button>
+
+</div>
+
+)}
+
+{/* EDIT PANEL */}
+{editMode && isAdmin && (
+
+  <div className="bg-white shadow-lg rounded-xl p-6 mb-8 grid grid-cols-2 gap-4">
+
+    <input
+      type="text"
+      value={student.studentName || ""}
+      onChange={(e) =>
+        handleChange("studentName", e.target.value)
+      }
+      placeholder="Student Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.fatherName || ""}
+      onChange={(e) =>
+        handleChange("fatherName", e.target.value)
+      }
+      placeholder="Father Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.motherName || ""}
+      onChange={(e) =>
+        handleChange("motherName", e.target.value)
+      }
+      placeholder="Mother Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.course || ""}
+      onChange={(e) =>
+        handleChange("course", e.target.value)
+      }
+      placeholder="Course Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.duration || ""}
+      onChange={(e) =>
+        handleChange("duration", e.target.value)
+      }
+      placeholder="Course Duration"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.grade || ""}
+      onChange={(e) =>
+        handleChange("grade", e.target.value)
+      }
+      placeholder="Grade"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.marks || ""}
+      onChange={(e) =>
+        handleChange("marks", e.target.value)
+      }
+      placeholder="Marks"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.instituteName || ""}
+      onChange={(e) =>
+        handleChange("instituteName", e.target.value)
+      }
+      placeholder="Institute Name"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={student.city || ""}
+      onChange={(e) =>
+        handleChange("city", e.target.value)
+      }
+      placeholder="City"
+      className="border p-3 rounded"
+    />
+
+    <input
+      type="text"
+      value={issueDate}
+      onChange={(e) => setIssueDate(e.target.value)}
+      placeholder="Issue Date"
+      className="border p-3 rounded"
+    />
+
+  </div>
+
+)}
 
       <div
         ref={printRef}

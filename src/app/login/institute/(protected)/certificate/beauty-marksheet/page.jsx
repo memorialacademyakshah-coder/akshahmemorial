@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { databases } from "@/lib/appwrite";
+import { databases, ID, account } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import QRCode from "qrcode";
 import * as htmlToImage from "html-to-image";
@@ -209,10 +209,22 @@ const rect = node.getBoundingClientRect();
         <div className="absolute top-[450px] left-[330px]">{student.instituteName}</div>
 
         {/* RIGHT */}
-        <div className="absolute top-[325px] left-[680px]">1 Year</div>
-        <div className="absolute top-[348px] left-[680px]">{student.marksheetNo}</div>
-        <div className="absolute top-[369px] left-[680px]">{student.dob}</div>
-        <div className="absolute top-[390px] left-[680px]">{student.coursePeriod}</div>
+       {/* RIGHT */}
+<div className="absolute top-[325px] left-[680px]">
+  {student.coursePeriod || student.duration || "1 Year"}
+</div>
+
+<div className="absolute top-[348px] left-[680px]">
+  {student.marksheetNo}
+</div>
+
+<div className="absolute top-[369px] left-[680px]">
+  {student.dob}
+</div>
+
+<div className="absolute top-[390px] left-[680px]">
+  {student.coursePeriod || student.duration || "1 Year"}
+</div>
 
         {/* SUBJECTS */}
         {marksArray.map((m, index) => (

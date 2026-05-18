@@ -8,6 +8,7 @@ import QRCode from "qrcode";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const CERT_COLLECTION = "certificates";
 const BUCKET_ID = "6986e8a4001925504f6b";
+
 export default function FranchiseCertificateView() {
 
   const [certificates, setCertificates] = useState([]);
@@ -17,19 +18,31 @@ export default function FranchiseCertificateView() {
     getUser();
   }, []);
 
+  // ===============================
   // ✅ GET USER
+  // ===============================
   const getUser = async () => {
+
     try {
+
       const u = await account.get();
+
       setUser(u);
-      loadCertificates(u.$id); // 🔥 USE createdById
+
+      loadCertificates(u.$id);
+
     } catch (err) {
+
       console.log(err);
+
     }
   };
 
-  // ✅ LOAD CERTIFICATES (FIXED)
+  // ===============================
+  // ✅ LOAD CERTIFICATES
+  // ===============================
   const loadCertificates = async (userId) => {
+
     try {
 
       const res = await databases.listDocuments(
@@ -37,58 +50,16 @@ export default function FranchiseCertificateView() {
         CERT_COLLECTION,
         [
           Query.equal("status", "approved"),
-          Query.equal("createdById", userId) // 🔥 MAIN FIX
+          Query.equal("createdById", userId)
         ]
       );
 
-      console.log("CERTIFICATES:", res.documents);
       setCertificates(res.documents);
 
     } catch (err) {
+
       console.log(err);
-    }
-  };
 
-  // ===============================
-  // ✅ PRINT MARKSHEET
-  // ===============================
-  const printMarksheet = async (cert) => {
-    try {
-
-      let studentData = await databases.getDocument(
-        DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
-
-      const franchiseRes = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_approved",
-        [Query.equal("email", studentData.franchiseEmail)]
-      );
-
-      const franchiseData = franchiseRes.documents[0];
-
-      const data = {
-        studentName: studentData.studentName,
-        fatherName: studentData.fatherName,
-        course: studentData.courseName,
-        instituteName: studentData.instituteName,
-        studentId: cert.studentId,
-        marksArray: cert.marksArray || [],
-        grade: cert.grade,
-        marksheetNo: cert.$id,
-        franchiseSignature: franchiseData?.signature || "",
-        logo: franchiseData?.logo || ""
-      };
-
-      localStorage.setItem("marksheetStudent", JSON.stringify(data));
-
-      window.open("/login/institute/certificate/marksheet", "_blank");
-
-    } catch (err) {
-      console.log(err);
-      alert("Marksheet error");
     }
   };
 
@@ -96,14 +67,16 @@ export default function FranchiseCertificateView() {
   // ✅ PRINT CERTIFICATE
   // ===============================
   const printCertificate = async (cert) => {
+
     try {
 
-      let studentData = await databases.getDocument(
+      const studentData = await databases.getDocument(
         DATABASE_ID,
         "student_admissions",
         cert.studentId
       );
 
+      // ✅ FRANCHISE
       const franchiseRes = await databases.listDocuments(
         DATABASE_ID,
         "franchise_approved",
@@ -112,39 +85,307 @@ export default function FranchiseCertificateView() {
 
       const franchiseData = franchiseRes.documents[0];
 
-      const certId = `CERT-${Date.now()}`;
-      const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${certId}`;
+      // ✅ QR
+      const verifyUrl =
+        `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
+
       const qrCode = await QRCode.toDataURL(verifyUrl);
 
+      // ✅ FINAL DATA
       const data = {
-        studentName: studentData.studentName,
-        course: studentData.courseName,
-        grade: cert.grade,
-        instituteName: studentData.instituteName,
-        photoId: studentData.photoId,
-        franchiseSignature: franchiseData?.signature || "",
-        logo: franchiseData?.logo || "",
+
+        // 🔥 IMPORTANT
+        readOnly: true,
+
+        studentId: cert.studentId,
+
+        studentName:
+          studentData.studentName || "",
+
+        fatherName:
+          studentData.fatherName || "",
+
+        motherName:
+          studentData.motherName || "",
+
+        relationType:
+          studentData.relationType || "S/O",
+
+        showFatherInCertificate:
+          String(studentData.showFatherInCertificate)
+            .toLowerCase() === "true",
+
+        showMotherInCertificate:
+          String(studentData.showMotherInCertificate)
+            .toLowerCase() === "true",
+
+        course:
+          studentData.courseName || "",
+
+        duration:
+          studentData.duration ||
+          studentData.courseDuration ||
+          "1 YEAR",
+
+        grade:
+          cert.grade || "",
+
+        marks:
+          cert.marks || "",
+
+        instituteName:
+          studentData.instituteName || "",
+
+        photoId:
+          studentData.photoId || "",
+
+        signatureId:
+          studentData.signatureId || "",
+
+        franchiseSignature:
+          franchiseData?.signature || "",
+
+        logo:
+          franchiseData?.logo || "",
+
+        ownerName:
+          franchiseData?.ownerName ||
+          franchiseData?.owner ||
+          franchiseData?.name ||
+          "",
+
+        city:
+          franchiseData?.city || "",
+
+        address:
+          franchiseData?.address || "",
+
         qrCode,
         verifyUrl,
-        certificateId: certId
+
+        certificateNo:
+          cert.certificateNo ||
+          `CERT-${Date.now()}`,
+
+        issueDate:
+          cert.issueDate ||
+          new Date().toISOString(),
+
+        semesterNumber:
+          studentData.courseType === "semester"
+            ? cert.semesterNumber
+            : null
       };
 
-      localStorage.setItem("certificateStudent", JSON.stringify(data));
+      // ✅ SAVE
+      localStorage.setItem(
+        "certificateStudent",
+        JSON.stringify(data)
+      );
 
-      window.open("/login/institute/certificate/print", "_blank");
+      // ✅ OPEN PAGE
+      if (studentData.courseType === "beauty") {
+
+        window.open(
+          "/login/institute/certificate/beauty-certificate",
+          "_blank"
+        );
+
+      } else if (studentData.courseType === "semester") {
+
+        window.open(
+          "/login/institute/certificate/semester-certificate",
+          "_blank"
+        );
+
+      } else if (studentData.courseType === "multiple") {
+
+        window.open(
+          "/login/institute/certificate/multiple-certificate",
+          "_blank"
+        );
+
+      } else {
+
+        window.open(
+          "/login/institute/certificate/print",
+          "_blank"
+        );
+      }
 
     } catch (err) {
+
       console.log(err);
+
       alert("Certificate error");
+
     }
   };
-  const getPhoto = (photoId) => {
-  if (!photoId) return null;
 
-  return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
-};
+  // ===============================
+  // ✅ PRINT MARKSHEET
+  // ===============================
+  const printMarksheet = async (cert) => {
+
+    try {
+
+      const studentData = await databases.getDocument(
+        DATABASE_ID,
+        "student_admissions",
+        cert.studentId
+      );
+
+      // ✅ FRANCHISE
+      const franchiseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [Query.equal("email", studentData.franchiseEmail)]
+      );
+
+      const franchiseData = franchiseRes.documents[0];
+
+      // ===============================
+      // ✅ SUBJECT MARKS
+      // ===============================
+      let marksArray = [];
+
+      try {
+
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "student_subject_results",
+          [Query.equal("studentId", cert.studentId)]
+        );
+
+        marksArray = res.documents.map((m) => ({
+          subject: m.subject,
+          objective: Number(m.objective || 0),
+          practical: Number(m.practical || 0),
+          total: Number(m.total || 0),
+        }));
+
+      } catch (err) {
+
+        console.log("MARK FETCH ERROR:", err);
+
+      }
+
+      // ✅ FINAL DATA
+      const data = {
+
+        // 🔥 IMPORTANT
+        readOnly: true,
+
+        studentId:
+          cert.studentId,
+
+        studentName:
+          studentData.studentName || "",
+
+        fatherName:
+          studentData.fatherName || "",
+
+        motherName:
+          studentData.motherName || "",
+
+        surname:
+          studentData.surname || "",
+
+        dob:
+          studentData.dob
+            ? new Date(studentData.dob)
+                .toLocaleDateString("en-GB")
+            : "",
+
+        course:
+          studentData.courseName || "",
+
+        instituteName:
+          studentData.instituteName || "",
+
+        coursePeriod:
+          studentData.duration ||
+          studentData.courseDuration ||
+          "1 YEAR",
+
+        marksArray,
+
+        grade:
+          cert.grade || "",
+
+        marksheetNo:
+          cert.$id || "",
+
+        franchiseSignature:
+          franchiseData?.signature || "",
+
+        logo:
+          franchiseData?.logo || "",
+
+        ownerName:
+          franchiseData?.ownerName ||
+          franchiseData?.owner ||
+          franchiseData?.name ||
+          ""
+      };
+
+      // ✅ SAVE
+      localStorage.setItem(
+        "marksheetStudent",
+        JSON.stringify(data)
+      );
+
+      // ✅ OPEN PAGE
+      if (studentData.courseType === "beauty") {
+
+        window.open(
+          "/login/institute/certificate/beauty-marksheet",
+          "_blank"
+        );
+
+      } else if (studentData.courseType === "semester") {
+
+        window.open(
+          "/login/institute/certificate/semester-marksheet",
+          "_blank"
+        );
+
+      } else if (studentData.courseType === "multiple") {
+
+        window.open(
+          "/login/institute/certificate/multiple-marksheet",
+          "_blank"
+        );
+
+      } else {
+
+        window.open(
+          "/login/institute/certificate/marksheet",
+          "_blank"
+        );
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert("Marksheet error");
+
+    }
+  };
+
+  // ===============================
+  // ✅ PHOTO
+  // ===============================
+  const getPhoto = (photoId) => {
+
+    if (!photoId) return null;
+
+    return `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+  };
 
   return (
+
     <div className="p-10">
 
       <h1 className="text-2xl font-bold mb-6">
@@ -154,15 +395,37 @@ export default function FranchiseCertificateView() {
       <table className="w-full border">
 
         <thead>
+
           <tr>
+
             <th className="border p-2">#</th>
-            <th className="border p-2">Photo</th>
-            <th className="border p-2">Student</th>
-            <th className="border p-2">Course</th>
-            <th className="border p-2">Marks</th>
-            <th className="border p-2">Grade</th>
-            <th className="border p-2">Action</th>
+
+            <th className="border p-2">
+              Photo
+            </th>
+
+            <th className="border p-2">
+              Student
+            </th>
+
+            <th className="border p-2">
+              Course
+            </th>
+
+            <th className="border p-2">
+              Marks
+            </th>
+
+            <th className="border p-2">
+              Grade
+            </th>
+
+            <th className="border p-2">
+              Action
+            </th>
+
           </tr>
+
         </thead>
 
         <tbody>
@@ -171,21 +434,40 @@ export default function FranchiseCertificateView() {
 
             <tr key={c.$id}>
 
-              <td className="border p-2">{i + 1}</td>
               <td className="border p-2">
-  {getPhoto(c.photoId) ? (
-    <img
-      src={getPhoto(c.photoId)}
-      className="w-12 h-12 rounded-full object-cover mx-auto border"
-    />
-  ) : (
-    "N/A"
-  )}
-</td>
-              <td className="border p-2">{c.studentName}</td>
-              <td className="border p-2">{c.course}</td>
-              <td className="border p-2">{c.marks}</td>
-              <td className="border p-2">{c.grade}</td>
+                {i + 1}
+              </td>
+
+              <td className="border p-2">
+
+                {getPhoto(c.photoId) ? (
+
+                  <img
+                    src={getPhoto(c.photoId)}
+                    className="w-12 h-12 rounded-full object-cover mx-auto border"
+                  />
+
+                ) : (
+                  "N/A"
+                )}
+
+              </td>
+
+              <td className="border p-2">
+                {c.studentName}
+              </td>
+
+              <td className="border p-2">
+                {c.course}
+              </td>
+
+              <td className="border p-2">
+                {c.marks}
+              </td>
+
+              <td className="border p-2">
+                {c.grade}
+              </td>
 
               <td className="border p-2 flex gap-2">
 

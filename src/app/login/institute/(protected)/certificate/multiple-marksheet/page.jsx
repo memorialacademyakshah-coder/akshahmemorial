@@ -300,19 +300,21 @@ if (!student) return <div className="p-10">Loading...</div>;
             RIGHT SIDE (FIXED)
         =============================== */}
     
-<div className="absolute top-[390px] left-[680px] text-sm">
-  {getCoursePeriod(courseData?.duration)}
+{/* RIGHT */}
+<div className="absolute top-[325px] left-[680px]">
+  {student.coursePeriod || student.duration || "1 Year"}
 </div>
-        <div className="absolute top-[348px] left-[680px]">
-          {student.marksheetNo || ""}
-        </div>
 
-        <div className="absolute top-[369px] left-[680px]">
-          {student.dob || "N/A"}
-        </div>
+<div className="absolute top-[348px] left-[680px]">
+  {student.marksheetNo}
+</div>
 
-  <div className="absolute top-[325px] left-[680px] ">
-  {courseData?.duration || "N/A"}
+<div className="absolute top-[369px] left-[680px]">
+  {student.dob}
+</div>
+
+<div className="absolute top-[390px] left-[680px]">
+  {student.coursePeriod || student.duration || "1 Year"}
 </div>
 
 {qrCode && (

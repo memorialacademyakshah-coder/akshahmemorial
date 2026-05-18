@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
+import { account } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import QRCode from "qrcode";
 
@@ -23,6 +24,7 @@ export default function CertificateApprovalPage() {
 
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+  
 
   // ===============================
   // ✅ MARKSHEET PRINT

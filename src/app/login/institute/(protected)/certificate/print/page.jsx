@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode"; // ✅ ADDED
-import { databases, ID } from "@/lib/appwrite";
+import { databases, ID, account } from "@/lib/appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
 
@@ -18,6 +18,8 @@ export default function PrintCertificate() {
   const [certificateNo, setCertificateNo] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [editMode, setEditMode] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+const [loadingUser, setLoadingUser] = useState(true);
 
   const printRef = useRef();
   useEffect(() => {
@@ -64,6 +66,34 @@ export default function PrintCertificate() {
 
   }, []);
 
+
+
+  useEffect(() => {
+
+  const checkAdmin = async () => {
+
+    try {
+
+      const user = await account.get();
+
+      if (user.email === "bnmiindia@gmail.com") {
+        setIsAdmin(true);
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+    } finally {
+
+      setLoadingUser(false);
+
+    }
+  };
+
+  checkAdmin();
+
+}, []);
 
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
@@ -202,7 +232,9 @@ export default function PrintCertificate() {
         Download Certificate
       </button>
 
-      {/* EDIT BUTTON */}
+{/* EDIT BUTTON */}
+{isAdmin && (
+
 <div className="mb-6 flex gap-4">
 
   <button
@@ -214,8 +246,10 @@ export default function PrintCertificate() {
 
 </div>
 
+)}
+
 {/* EDIT PANEL */}
-{editMode && (
+{editMode && isAdmin && (
 
   <div className="bg-white shadow-lg rounded-xl p-6 mb-8 grid grid-cols-2 gap-4">
 
