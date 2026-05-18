@@ -163,9 +163,19 @@ if (!courseDuration) {
   let localCert = null;
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("certificateStudent");
-    if (stored) {
-      localCert = JSON.parse(stored);
-    }
+   try {
+
+  if (stored && stored !== "undefined") {
+
+    localCert = JSON.parse(stored);
+
+  }
+
+} catch (err) {
+
+  console.log("LOCAL CERT ERROR:", err);
+
+}
   }
 
   // ✅ LOGO FIX
@@ -173,27 +183,68 @@ if (!courseDuration) {
 
   // ✅ CERT META (NO CHANGE)
 // ✅ CERTIFICATE STUDENT
+// ✅ CERTIFICATE STUDENT
 let certStudent = null;
 
 if (typeof window !== "undefined") {
 
-  const storedStudent =
-    localStorage.getItem("certificateStudent");
+  try {
 
-  if (storedStudent) {
-    certStudent = JSON.parse(storedStudent);
+    const storedStudent =
+      localStorage.getItem("certificateStudent");
+
+    if (
+      storedStudent &&
+      storedStudent !== "undefined"
+    ) {
+
+      certStudent = JSON.parse(storedStudent);
+
+    }
+
+  } catch (err) {
+
+    console.log("CERT STUDENT ERROR:", err);
+
+  }
+}
+
+// ✅ CERT META
+let certMeta = null;
+
+if (typeof window !== "undefined") {
+
+  try {
+
+    const storedMeta =
+      localStorage.getItem("certificateMeta");
+
+    if (
+      storedMeta &&
+      storedMeta !== "undefined"
+    ) {
+
+      certMeta = JSON.parse(storedMeta);
+
+    }
+
+  } catch (err) {
+
+    console.log("CERT META ERROR:", err);
+
   }
 }
 
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center p-4">
 
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-5">
+      <div className="w-full max-w-md rounded-[30px] p-[2px] bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 shadow-2xl">
+
+  <div className="bg-white rounded-[28px] p-6 backdrop-blur-xl">
 
         <div style={{ color: "#000", opacity: 1, WebkitTextFillColor: "#000" }}>
 
-          <h1 className="text-lg font-bold text-center mb-4">
-            ✅ Certificate Verified
+<h1 className="text-2xl font-extrabold text-center mb-6 text-gray-800 tracking-wide">            ✅ Certificate Verified
           </h1>
 
           {logoUrl && (
@@ -201,8 +252,10 @@ if (typeof window !== "undefined") {
           )}
 
           {photoUrl && (
-            <img src={photoUrl} className="w-28 h-28 mx-auto rounded-lg" />
-          )}
+<img
+  src={photoUrl}
+  className="w-32 h-32 mx-auto rounded-2xl border-4 border-orange-400 shadow-xl object-cover"
+/>          )}
 
           <h2 className="text-center font-bold mt-2">
             {student.studentName}
@@ -210,10 +263,15 @@ if (typeof window !== "undefined") {
 
           <div className="mt-4">
 
-            <p>
-              Course : {student.courseName || student.course || "N/A"}
-            </p>
+           <div className="flex justify-between items-center border-b py-2 text-[15px]">
+  <span className="font-semibold text-gray-700">
+    Course
+  </span>
 
+  <span className="text-gray-900 font-medium text-right">
+    {student.courseName || student.course || "N/A"}
+  </span>
+</div>
             <p>
               Certificate No : {certificate?.certificateNo || certMeta?.certificateNo || "N/A"}
             </p>
@@ -253,9 +311,16 @@ if (typeof window !== "undefined") {
 
       certificate?.issueDate
 
-        ? new Date(certificate.issueDate)
-            .toLocaleDateString("en-GB")
-            .replace(/\//g, "-")
+        ? (
+            certificate.issueDate.includes("-") &&
+            !certificate.issueDate.includes("T")
+          )
+
+          ? certificate.issueDate
+
+          : new Date(certificate.issueDate)
+              .toLocaleDateString("en-GB")
+              .replace(/\//g, "-")
 
         : "N/A"
     )
@@ -296,6 +361,7 @@ if (typeof window !== "undefined") {
 
       </div>
 
+    </div>
     </div>
   );
 }
