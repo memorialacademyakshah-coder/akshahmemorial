@@ -364,11 +364,20 @@ export default function VerifyCertificate() {
       return "N/A";
     }
   };
+const finalIssueDate =
 
-  const finalIssueDate =
-    certStudent?.issueDate ||
-    certMeta?.issueDate ||
-    certificate?.issueDate;
+  // ✅ ALWAYS PRIORITIZE EDITED DATE
+  (typeof window !== "undefined"
+    ? localStorage.getItem("savedIssueDate")
+    : null) ||
+
+  certStudent?.issueDate ||
+
+  certMeta?.issueDate ||
+
+  certificate?.issueDate ||
+
+  "";
 
   const finalDuration =
     certStudent?.duration ||
