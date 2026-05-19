@@ -4,130 +4,227 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode"; // ✅ ADDED
-import { databases, ID, account } from "@/lib/appwrite";
+import { databases, account } from "@/lib/appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
+import { useParams } from "next/navigation";
+import { Query } from "appwrite";
 
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 
 
 export default function PrintCertificate() {
+  const { id } = useParams();
 
   const [student, setStudent] = useState(null);
   const [certificateNo, setCertificateNo] = useState("");
-  const [issueDate, setIssueDate] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 const [loadingUser, setLoadingUser] = useState(true);
 
   const printRef = useRef();
-  useEffect(() => {
 
-    const data = localStorage.getItem("certificateStudent");
-    if (!data) return;
+useEffect(() => {
 
-    const parsed = JSON.parse(data);
-    // ✅ CERTIFICATE DOC ID
-parsed.certificateDocId =
-  localStorage.getItem("certificateDocId");
+  if (!id) return;
 
-    console.log("STUDENT DATA:", parsed);
-    console.log("DURATION VALUE:", parsed.duration);
+  const loadCertificate = async () => {
 
-    setStudent(parsed);
+    try {
 
-    // ✅ CERTIFICATE NUMBER
-    let certNo = localStorage.getItem("certificateNo");
-    // ✅ CERTIFICATE DOCUMENT ID
-const certificateDocId =
-  localStorage.getItem("certificateDocId");
+      // ✅ CERTIFICATE
+      const cert = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+        "certificates",
+        id
+      );
+      
 
-    if (!certNo) {
-      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const numbers = Math.floor(10000 + Math.random() * 90000);
-      certNo = `${random}${numbers}`;
-      localStorage.setItem("certificateNo", certNo);
-    }
-
-  // ✅ CERTIFICATE NUMBER
-setCertificateNo(
-  parsed.certificateNo || certNo
-);
-
-parsed.certificateNo =
-  parsed.certificateNo || certNo;
+      // ✅ STUDENT
+      const studentData = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+        "student_admissions",
+        cert.studentId
+      );
 
 
-// ✅ ISSUE DATE
-let savedIssueDate = "";
+      // ✅ FETCH FRANCHISE
+let franchiseData = null;
 
-if (parsed.issueDate) {
+try {
+
+  const franchiseRes =
+    await databases.listDocuments(
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      "franchise_approved",
+      [
+        Query.equal(
+          "email",
+          studentData.franchiseEmail
+        )
+      ]
+    );
+
+  if (franchiseRes.documents.length > 0) {
+    franchiseData =
+      franchiseRes.documents[0];
+  }
+
+} catch (err) {
+
+  console.log("FRANCHISE ERROR:", err);
+
+}
+   
+
+
+  
+
+  // ✅ ISSUE DATE FROM CERTIFICATE COLLECTION
+// ✅ UNIVERSAL ISSUE DATE FORMATTER
+let formattedIssueDate = "";
+
+if (cert.issueDate) {
 
   // ✅ IF ALREADY FORMATTED
-  if (parsed.issueDate.includes("-") &&
-      !parsed.issueDate.includes("T")) {
+  if (
+    cert.issueDate.includes("-") &&
+    cert.issueDate.length <= 10
+  ) {
 
-    savedIssueDate = parsed.issueDate;
+    formattedIssueDate = cert.issueDate;
 
   } else {
 
-    // ✅ ISO DATE CONVERT
-    savedIssueDate = new Date(parsed.issueDate)
-      .toLocaleDateString("en-GB")
-      .replace(/\//g, "-");
+    // ✅ ISO DATE FORMAT
+    formattedIssueDate =
+      new Date(cert.issueDate)
+        .toLocaleDateString("en-GB")
+        .replace(/\//g, "-");
   }
-
-} else {
-
-  savedIssueDate = new Date()
-    .toLocaleDateString("en-GB")
-    .replace(/\//g, "-");
 }
 
-setIssueDate(savedIssueDate);
+    // ✅ VERIFY URL
+const verifyUrl =
+  cert.verifyUrl ||
+  `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
-parsed.issueDate = savedIssueDate;
+// ✅ QR
+let qrCodeImage = cert.qrCode || "";
+
+if (!qrCodeImage) {
+
+  try {
+
+    qrCodeImage =
+      await QRCode.toDataURL(verifyUrl);
+
+  } catch (err) {
+
+    console.log("QR ERROR:", err);
+
+  }
+}
 
 
-// ✅ SAVE FINAL DATA
-// ✅ SAVE FINAL DATA
-localStorage.setItem(
-  "certificateStudent",
-  JSON.stringify(parsed)
-);
+   // ✅ FINAL DATA
+const finalData = {
+
+  // ✅ STUDENT DATA
+  ...studentData,
+
+  // ✅ CERTIFICATE DATA
+  ...cert,
+
+  // ✅ FORCE VALUES
+  studentName:
+    cert.studentName ||
+    studentData.studentName ||
+    "",
+
+  course:
+    cert.course ||
+    studentData.courseName ||
+    "",
+
+  duration:
+    cert.duration ||
+    studentData.duration ||
+    studentData.courseDuration ||
+    "",
+
+  marks:
+    cert.marks || "",
+
+  grade:
+    cert.grade || "",
+
+  instituteName:
+    cert.instituteName ||
+    studentData.instituteName ||
+    "",
+
+ city:
+  cert.city ||
+  franchiseData?.city ||
+  "",
+
+  qrCode:
+    qrCodeImage || "",
+
+  verifyUrl,
+
+  certificateNo:
+    cert.certificateNo || "",
+
+  issueDate:
+    formattedIssueDate || "",
+
+logo:
+  cert.logo ||
+  franchiseData?.logo ||
+  "",
+
+ ownerName:
+  cert.ownerName ||
+  franchiseData?.ownerName ||
+  franchiseData?.owner ||
+  franchiseData?.name ||
+  "Controller",
+
+franchiseSignature:
+  cert.franchiseSignature ||
+  franchiseData?.signature ||
+  "",
+
+  photoId:
+  studentData.photoId || "",
+
+signatureId:
+  studentData.signatureId || "",
+};
+
+
+    setStudent(finalData);
+
+      setCertificateNo(
+        cert.certificateNo || ""
+      );
 
 
 
-// ✅ KEEP OLD SAVED DATE IF EXISTS
-const finalIssueDate =
-  localStorage.getItem("savedIssueDate") ||
-  savedIssueDate;
 
-// ✅ SAVE QR VERIFY DATA
-localStorage.setItem(
-  "certificateMeta",
-  JSON.stringify({
-    certificateNo: parsed.certificateNo || certNo,
+    } catch (err) {
 
-    issueDate: finalIssueDate,
+      console.log(err);
 
-    duration:
-      parsed.duration ||
-      parsed.courseDuration ||
-      ""
-  })
-);
+    }
+  };
 
-// ✅ IMPORTANT
-parsed.issueDate = finalIssueDate;
+  loadCertificate();
 
-setIssueDate(finalIssueDate);
-
-    console.log("FULL STUDENT DATA:", parsed);
-    console.log("ID USED IN QR:", parsed.$id);
-
-  }, []);
+}, [id]);
 
 
 
@@ -161,124 +258,19 @@ setIssueDate(finalIssueDate);
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
-const handleChange = async (field, value) => {
+const handleChange = (field, value) => {
 
-  const updated = {
-    ...student,
-    [field]: value,
-  };
+  setStudent((prev) => {
 
-  setStudent(updated);
+    const updated = {
+      ...prev,
+      [field]: value,
+    };
 
-  // ✅ SAVE LOCAL
-  localStorage.setItem(
-    "certificateStudent",
-    JSON.stringify(updated)
-  );
+  
 
-  if (field === "issueDate") {
-
-  localStorage.setItem(
-    "savedIssueDate",
-    value
-  );
-
-  localStorage.setItem(
-    "certificateMeta",
-    JSON.stringify({
-      certificateNo:
-        updated.certificateNo || certificateNo,
-
-      issueDate: value,
-
-      duration:
-        updated.duration ||
-        updated.courseDuration ||
-        ""
-    })
-  );
-}
-
-
-  // ✅ CERTIFICATE DOC ID
-  const certificateDocId =
-    localStorage.getItem("certificateDocId");
-
-  if (!certificateDocId) {
-    console.log("Certificate Doc ID Missing");
-    return;
-  }
-
-
-
-  try {
-
-    // ✅ UPDATE CERTIFICATE COLLECTION
-    await databases.updateDocument(
-      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-      "certificates",
-      certificateDocId,
-      {
-        studentName:
-          field === "studentName"
-            ? value
-            : updated.studentName,
-
-        fatherName:
-          field === "fatherName"
-            ? value
-            : updated.fatherName,
-
-        motherName:
-          field === "motherName"
-            ? value
-            : updated.motherName,
-
-        course:
-          field === "course"
-            ? value
-            : updated.course,
-
-        duration:
-          field === "duration"
-            ? value
-            : updated.duration,
-
-        grade:
-          field === "grade"
-            ? value
-            : updated.grade,
-
-        marks:
-          field === "marks"
-            ? value
-            : updated.marks,
-
-        instituteName:
-          field === "instituteName"
-            ? value
-            : updated.instituteName,
-
-        city:
-          field === "city"
-            ? value
-            : updated.city,
-
-        issueDate:
-          updated.issueDate || issueDate,
-
-        certificateNo:
-          updated.certificateNo || certificateNo,
-      }
-    );
-
-    console.log("Certificate Updated In DB");
-
-  } catch (err) {
-
-    console.log("DB UPDATE ERROR:", err);
-
-  }
+    return updated;
+  });
 };
 
   // ✅ PHOTO
@@ -286,13 +278,17 @@ const handleChange = async (field, value) => {
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-  // ✅ SIGNATURE
-  const signatureUrl = student.signatureId
-    ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-    : null;
+// ✅ STUDENT SIGNATURE FROM STUDENT ADMISSION
+const signatureUrl = student.signatureId
+  ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+  : null;
 
-  const franchiseSign = student.franchiseSignature || null;
+// ✅ FRANCHISE SIGNATURE FROM FRANCHISE APPROVAL
+// ✅ FRANCHISE SIGNATURE (DIRECT URL)
+const franchiseSign =
+  student.franchiseSignature || null;
 
+  
   // ✅ COURSE DURATION FUNCTION (UNCHANGED)
   const getCourseDuration = (durationText) => {
 
@@ -519,15 +515,15 @@ const handleChange = async (field, value) => {
       className="border p-3 rounded"
     />
 
- <input
-  type="text"
-value={student.issueDate || issueDate}
-  onChange={(e) =>
+    <input
+      type="text"
+     value={student.issueDate || ""}
+    onChange={(e) =>
   handleChange("issueDate", e.target.value)
-} placeholder="Issue Date (DD-MM-YYYY)"
-className="border p-3 rounded"
-/>
-
+}
+      placeholder="Issue Date"
+      className="border p-3 rounded"
+    />
 
   </div>
 
@@ -641,7 +637,7 @@ className="border p-3 rounded"
           <div>Certificate No : {certificateNo}</div>
 
           <div className="mt-1">
-            Date Of Issue : {student.issueDate || issueDate}
+          Date Of Issue : {student.issueDate || "N/A"}
           </div>
 
         </div>

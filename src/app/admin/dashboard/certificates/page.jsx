@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
-import { account } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import QRCode from "qrcode";
 
@@ -13,18 +12,11 @@ const CERT_COLLECTION = "certificates";
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 
-// inside printCertificate
 
-const certId = `CERT-${Date.now()}`
-
-const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/beauty-verification/${certId}`
-
-const qrCode = await QRCode.toDataURL(verifyUrl)
 export default function CertificateApprovalPage() {
 
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
-  
 
   // ===============================
   // ✅ MARKSHEET PRINT
@@ -225,100 +217,7 @@ const printMarksheet = async (cert) => {
     // ===============================
     // 🔥 FINAL DATA
     // ===============================
- const data = {
-
-  studentName:
-    cert.studentName ||
-    studentData.studentName ||
-    "",
-
-  marks:
-    cert.marks || finalMarks,
-
-  grade:
-    cert.grade || "",
-
-  course:
-    cert.course ||
-    studentData.courseName ||
-    "",
-
-  duration:
-    cert.duration ||
-    studentData.duration ||
-    "",
-
-  signatureId:
-    studentData.signatureId || "",
-
-  franchiseSignature:
-    franchiseData?.signature || "",
-
-  fatherName:
-    cert.fatherName ||
-    studentData.fatherName ||
-    "",
-
-  motherName:
-    cert.motherName ||
-    studentData.motherName ||
-    "",
-
-  showFatherInCertificate:
-    String(studentData.showFatherInCertificate)
-      .toLowerCase() === "true",
-
-  showMotherInCertificate:
-    String(studentData.showMotherInCertificate)
-      .toLowerCase() === "true",
-
-  relationType:
-    studentData.relationType || "",
-
-  photoId:
-    studentData.photoId || "",
-
-  instituteName:
-    cert.instituteName ||
-    studentData.instituteName ||
-    "",
-
-  semesterNumber:
-    studentData.courseType === "semester"
-      ? cert.semesterNumber
-      : null,
-
-  city:
-    cert.city ||
-    franchiseData?.city ||
-    "",
-
-  address:
-    franchiseData?.address || "",
-
-  certificateNo:
-    cert.certificateNo ||
-    `CERT-${Date.now()}`,
-
-  issueDate:
-    cert.issueDate ||
-    new Date().toISOString(),
-
-  logo:
-    franchiseData?.logo || "",
-
-  ownerName:
-    franchiseData?.ownerName ||
-    franchiseData?.owner ||
-    franchiseData?.name ||
-    "",
-
-  studentId:
-    cert.studentId,
-
-  qrCode,
-  verifyUrl
-};
+   
     // ===============================
     // ✅ SAVE + OPEN
     // ===============================
@@ -393,33 +292,9 @@ const printCertificate = async (cert) => {
   const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
     const qrCode = await QRCode.toDataURL(verifyUrl);
-    // ✅ GENERATE CERTIFICATE DATA
-const certificateNo = `CERT-${Date.now()}`;
-const issueDate =
-  cert.issueDate ||
-  new Date().toISOString();
-  
-// ✅ SAVE IN DATABASE
-// ✅ ONLY CREATE IF EMPTY
-if (!cert.issueDate || !cert.certificateNo) {
 
-  await databases.updateDocument(
-    DATABASE_ID,
-    "certificates",
-    cert.$id,
-    {
-      certificateNo:
-        cert.certificateNo || certificateNo,
 
-      issueDate:
-        cert.issueDate || issueDate,
 
-      duration:
-        studentData.duration || ""
-    }
-  );
-
-}
 
 let finalMarks = cert.marks;
 
@@ -474,13 +349,8 @@ relationType: studentData.relationType || "",
     : null,
       city: franchiseData?.city || "",
       address: franchiseData?.address || "",
-       certificateNo:
-  cert.certificateNo || `CERT-${Date.now()}`,
-
-issueDate:
-  cert.issueDate ||
-  new Date().toISOString(),
-
+  certificateNo: cert.certificateNo || "",
+issueDate: cert.issueDate || "",
       logo: franchiseData?.logo || "",
       ownerName:
         franchiseData?.ownerName ||
@@ -496,24 +366,36 @@ issueDate:
       verifyUrl
     };
 
-    localStorage.setItem("certificateStudent", JSON.stringify(data));
-    // ✅ SAVE CERTIFICATE DOC ID
-localStorage.setItem(
-  "certificateDocId",
-  cert.$id
-);
 
     // 🔄 OPEN PAGE
-    if (studentData.courseType === "beauty") {
-      window.open("/login/institute/certificate/beauty-certificate", "_blank");
-    } else if (studentData.courseType === "semester") {
-      window.open("/login/institute/certificate/semester-certificate", "_blank");
-    } else if (studentData.courseType === "multiple") {
-      window.open("/login/institute/certificate/multiple-certificate", "_blank"); 
-    
-    } else {
-      window.open("/login/institute/certificate/print", "_blank");
-    }
+ if (studentData.courseType === "beauty") {
+
+  window.open(
+    `/login/institute/certificate/beauty-certificate/${cert.$id}`,
+    "_blank"
+  );
+
+} else if (studentData.courseType === "semester") {
+
+  window.open(
+    `/login/institute/certificate/semester-certificate/${cert.$id}`,
+    "_blank"
+  );
+
+} else if (studentData.courseType === "multiple") {
+
+  window.open(
+    `/login/institute/certificate/multiple-certificate/${cert.$id}`,
+    "_blank"
+  );
+
+} else {
+
+  window.open(
+    `/login/institute/certificate/print/${cert.$id}`,
+    "_blank"
+  );
+}
 
   } catch (err) {
     console.error("CERT ERROR:", err);
@@ -538,12 +420,113 @@ localStorage.setItem(
     }
   };
 
-  const approveCertificate = async (id) => {
-    await databases.updateDocument(DATABASE_ID, CERT_COLLECTION, id, {
-      status: "approved"
-    });
+const approveCertificate = async (id, cert) => {
+
+  try {
+
+    // ✅ FETCH STUDENT
+    const studentData = await databases.getDocument(
+      DATABASE_ID,
+      "student_admissions",
+      cert.studentId
+    );
+
+    // ✅ FETCH FRANCHISE
+    const franchiseRes = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_approved",
+      [Query.equal("email", studentData.franchiseEmail)]
+    );
+
+    const franchiseData =
+      franchiseRes.documents[0];
+
+    // ✅ CERTIFICATE NO
+    const certificateNo =
+      `CERT-${Date.now()}`;
+
+    // ✅ ISSUE DATE
+  const issueDate =
+  new Date()
+    .toLocaleDateString("en-GB")
+    .replace(/\//g, "-");
+
+    // ✅ VERIFY URL
+    const verifyUrl =
+      `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
+
+    // ✅ QR
+    const qrCode =
+      await QRCode.toDataURL(verifyUrl);
+
+    // ✅ UPDATE DB
+    await databases.updateDocument(
+      DATABASE_ID,
+      CERT_COLLECTION,
+      id,
+      {
+        status: "approved",
+
+        certificateNo,
+        issueDate,
+        verifyUrl,
+        qrCode,
+
+        studentName:
+          studentData.studentName || "",
+
+        fatherName:
+          studentData.fatherName || "",
+
+        motherName:
+          studentData.motherName || "",
+
+        course:
+          studentData.courseName || "",
+
+        duration:
+          studentData.duration ||
+          studentData.courseDuration ||
+          "",
+
+        instituteName:
+          studentData.instituteName || "",
+
+        photoId:
+          studentData.photoId || "",
+
+        signatureId:
+          studentData.signatureId || "",
+
+        franchiseSignature:
+          franchiseData?.signature || "",
+
+        logo:
+          franchiseData?.logo || "",
+
+        city:
+          franchiseData?.city || "",
+
+        ownerName:
+          franchiseData?.ownerName ||
+          franchiseData?.owner ||
+          franchiseData?.name ||
+          ""
+      }
+    );
+
+    alert("Certificate Approved");
+
     loadCertificates();
-  };
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert("Approval Failed");
+
+  }
+};
 
   const rejectCertificate = async (id) => {
     await databases.updateDocument(DATABASE_ID, CERT_COLLECTION, id, {
@@ -647,7 +630,7 @@ localStorage.setItem(
                   <ActionBtn
                     label="Approve"
                     color="green"
-                    onClick={() => approveCertificate(c.$id)}
+                  onClick={() => approveCertificate(c.$id, c)}
                   />
 
                   <ActionBtn

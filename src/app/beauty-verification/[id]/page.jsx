@@ -250,95 +250,17 @@ student.certificateDocId = certificate?.$id;
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-  // =========================
-  // LOCAL CERT
-  // =========================
-  let localCert = null;
+  
 
-  if (typeof window !== "undefined") {
-
-    try {
-
-      const stored =
-        localStorage.getItem("certificateStudent");
-
-      if (stored && stored !== "undefined") {
-
-        localCert = JSON.parse(stored);
-
-      }
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-  }
-
-  // =========================
-  // CERT META
-  // =========================
-  let certMeta = null;
-
-  if (typeof window !== "undefined") {
-
-    try {
-
-      const storedMeta =
-        localStorage.getItem("certificateMeta");
-
-      if (
-        storedMeta &&
-        storedMeta !== "undefined"
-      ) {
-
-        certMeta = JSON.parse(storedMeta);
-
-      }
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-  }
-
-  // =========================
-  // CERT STUDENT
-  // =========================
-  let certStudent = null;
-
-  if (typeof window !== "undefined") {
-
-    try {
-
-      const storedStudent =
-        localStorage.getItem("certificateStudent");
-
-      if (
-        storedStudent &&
-        storedStudent !== "undefined"
-      ) {
-
-        certStudent = JSON.parse(storedStudent);
-
-      }
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-  }
+  
 
   // =========================
   // LOGO
   // =========================
-  const logoUrl =
-    franchise?.logo ||
-    localCert?.logo ||
-    null;
-
+ const logoUrl =
+  certificate?.logo ||
+  franchise?.logo ||
+  null;
   // =========================
   // DATE FORMAT
   // =========================
@@ -366,25 +288,19 @@ student.certificateDocId = certificate?.$id;
       return "N/A";
     }
   };
+
+// ✅ ISSUE DATE FROM CERTIFICATE DB
 const finalIssueDate =
+  certificate?.issueDate || "";
 
-  student?.issueDate ||
 
-  certStudent?.issueDate ||
-
-  certMeta?.issueDate ||
-
-  certificate?.issueDate ||
-
-  "";
-  const finalDuration =
-    certStudent?.duration ||
-    certMeta?.duration ||
-    courseDuration ||
-    certificate?.duration ||
-    student.duration ||
-    student.courseDuration ||
-    "N/A";
+  // ✅ DURATION FROM DB
+const finalDuration =
+  certificate?.duration ||
+  student.duration ||
+  student.courseDuration ||
+  courseDuration ||
+  "N/A";
 
   return (
 
@@ -475,9 +391,7 @@ const finalIssueDate =
             </div>
 
             <span className="text-right font-medium break-all">
-              {certificate?.certificateNo ||
-                certMeta?.certificateNo ||
-                "N/A"}
+              {certificate?.certificateNo || "N/A"}
             </span>
 
           </div>
@@ -539,10 +453,9 @@ const finalIssueDate =
                 ? percentage
                   ? `${percentage}%`
                   : "N/A"
-                : certificate?.marks ||
-  certStudent?.marks ||
-  "N/A"
-}
+                : certificate?.marks || "N/A"}
+  
+
             </span>
 
           </div>
@@ -562,9 +475,8 @@ const finalIssueDate =
 
             <span className="font-medium">
              {
-  certificate?.grade ||
-  certStudent?.grade ||
-  "N/A"
+ certificate?.grade || "N/A"
+
 }
             </span>
 
