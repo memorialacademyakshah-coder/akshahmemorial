@@ -61,6 +61,8 @@ export default function VerifyCertificate() {
 
         const certificate = certRes.documents[0];
 
+student.certificateDocId = certificate?.$id;
+
         // =========================
         // FRANCHISE
         // =========================
@@ -408,7 +410,7 @@ const finalIssueDate =
           )}
 
           <h1 className="text-[42px] leading-tight font-black mt-6 text-[#0b1535] uppercase">
-            {student.studentName}
+            {certificate?.studentName || student.studentName}
           </h1>
 
           {/* VERIFIED */}
@@ -442,7 +444,12 @@ const finalIssueDate =
             <div>
 
               <div className="text-[18px] font-medium text-gray-700">
-                {student.courseName || student.course || "N/A"}
+                {
+  certificate?.course ||
+  student.courseName ||
+  student.course ||
+  "N/A"
+}
               </div>
 
             </div>
@@ -532,8 +539,10 @@ const finalIssueDate =
                 ? percentage
                   ? `${percentage}%`
                   : "N/A"
-                : certificate?.marks || "N/A"}
-
+                : certificate?.marks ||
+  certStudent?.marks ||
+  "N/A"
+}
             </span>
 
           </div>
@@ -552,7 +561,11 @@ const finalIssueDate =
             </div>
 
             <span className="font-medium">
-              {certificate?.grade || "N/A"}
+             {
+  certificate?.grade ||
+  certStudent?.grade ||
+  "N/A"
+}
             </span>
 
           </div>
@@ -595,7 +608,11 @@ const finalIssueDate =
             </div>
 
             <span className="font-medium text-right">
-              {student.instituteName || "N/A"}
+             {
+  certificate?.instituteName ||
+  student.instituteName ||
+  "N/A"
+}
             </span>
 
           </div>

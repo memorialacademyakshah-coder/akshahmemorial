@@ -28,6 +28,9 @@ const [loadingUser, setLoadingUser] = useState(true);
     if (!data) return;
 
     const parsed = JSON.parse(data);
+    // ✅ CERTIFICATE DOC ID
+parsed.certificateDocId =
+  localStorage.getItem("certificateDocId");
 
     console.log("STUDENT DATA:", parsed);
     console.log("DURATION VALUE:", parsed.duration);
@@ -36,6 +39,9 @@ const [loadingUser, setLoadingUser] = useState(true);
 
     // ✅ CERTIFICATE NUMBER
     let certNo = localStorage.getItem("certificateNo");
+    // ✅ CERTIFICATE DOCUMENT ID
+const certificateDocId =
+  localStorage.getItem("certificateDocId");
 
     if (!certNo) {
       const random = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -155,23 +161,124 @@ setIssueDate(finalIssueDate);
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
-const handleChange = (field, value) => {
+const handleChange = async (field, value) => {
 
-  setStudent((prev) => {
+  const updated = {
+    ...student,
+    [field]: value,
+  };
 
-    const updated = {
-      ...prev,
-      [field]: value,
-    };
+  setStudent(updated);
 
-    // ✅ SAVE IN LOCALSTORAGE
-    localStorage.setItem(
-      "certificateStudent",
-      JSON.stringify(updated)
+  // ✅ SAVE LOCAL
+  localStorage.setItem(
+    "certificateStudent",
+    JSON.stringify(updated)
+  );
+
+  if (field === "issueDate") {
+
+  localStorage.setItem(
+    "savedIssueDate",
+    value
+  );
+
+  localStorage.setItem(
+    "certificateMeta",
+    JSON.stringify({
+      certificateNo:
+        updated.certificateNo || certificateNo,
+
+      issueDate: value,
+
+      duration:
+        updated.duration ||
+        updated.courseDuration ||
+        ""
+    })
+  );
+}
+
+
+  // ✅ CERTIFICATE DOC ID
+  const certificateDocId =
+    localStorage.getItem("certificateDocId");
+
+  if (!certificateDocId) {
+    console.log("Certificate Doc ID Missing");
+    return;
+  }
+
+
+
+  try {
+
+    // ✅ UPDATE CERTIFICATE COLLECTION
+    await databases.updateDocument(
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      "certificates",
+      certificateDocId,
+      {
+        studentName:
+          field === "studentName"
+            ? value
+            : updated.studentName,
+
+        fatherName:
+          field === "fatherName"
+            ? value
+            : updated.fatherName,
+
+        motherName:
+          field === "motherName"
+            ? value
+            : updated.motherName,
+
+        course:
+          field === "course"
+            ? value
+            : updated.course,
+
+        duration:
+          field === "duration"
+            ? value
+            : updated.duration,
+
+        grade:
+          field === "grade"
+            ? value
+            : updated.grade,
+
+        marks:
+          field === "marks"
+            ? value
+            : updated.marks,
+
+        instituteName:
+          field === "instituteName"
+            ? value
+            : updated.instituteName,
+
+        city:
+          field === "city"
+            ? value
+            : updated.city,
+
+        issueDate:
+          updated.issueDate || issueDate,
+
+        certificateNo:
+          updated.certificateNo || certificateNo,
+      }
     );
 
-    return updated;
-  });
+    console.log("Certificate Updated In DB");
+
+  } catch (err) {
+
+    console.log("DB UPDATE ERROR:", err);
+
+  }
 };
 
   // ✅ PHOTO
@@ -414,51 +521,11 @@ const handleChange = (field, value) => {
 
  <input
   type="text"
-  value={issueDate}
-  onChange={(e) => {
-
-    const value = e.target.value;
-
-    setIssueDate(value);
-
-    setStudent((prev) => {
-
-    const updated = {
-  ...prev,
-  issueDate: value,
-};
-
-localStorage.setItem(
-  "certificateStudent",
-  JSON.stringify(updated)
-);
-
-// ✅ IMPORTANT FOR QR PAGE
-student.issueDate = value;
-      // ✅ UPDATE QR VERIFY DATA
-      localStorage.setItem(
-        "certificateMeta",
-        JSON.stringify({
-          certificateNo,
-          issueDate: value,
-          duration:
-            updated.duration ||
-            updated.courseDuration ||
-            ""
-        })
-      );
-
-      // ✅ SAVE GLOBALLY
-      localStorage.setItem(
-        "savedIssueDate",
-        value
-      );
-
-      return updated;
-    });
-  }}
-  placeholder="Issue Date"
-  className="border p-3 rounded"
+value={student.issueDate || issueDate}
+  onChange={(e) =>
+  handleChange("issueDate", e.target.value)
+} placeholder="Issue Date (DD-MM-YYYY)"
+className="border p-3 rounded"
 />
 
 
@@ -574,7 +641,7 @@ student.issueDate = value;
           <div>Certificate No : {certificateNo}</div>
 
           <div className="mt-1">
-            Date Of Issue : {issueDate}
+            Date Of Issue : {student.issueDate || issueDate}
           </div>
 
         </div>

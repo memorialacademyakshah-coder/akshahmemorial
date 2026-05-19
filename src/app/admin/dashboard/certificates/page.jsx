@@ -225,47 +225,100 @@ const printMarksheet = async (cert) => {
     // ===============================
     // 🔥 FINAL DATA
     // ===============================
-    const data = {
-      studentName: studentData.studentName || "",
-      fatherName: studentData.fatherName || "",
-      surname: studentData.surname || "N/A",
-      motherName: studentData.motherName || "N/A",
+ const data = {
 
-      dob: studentData.dob
-        ? new Date(studentData.dob).toLocaleDateString("en-GB")
-        : "N/A",
+  studentName:
+    cert.studentName ||
+    studentData.studentName ||
+    "",
 
-      course: studentData.courseName || "",
+  marks:
+    cert.marks || finalMarks,
 
-      coursePeriod:
-        courseDuration ||
-        studentData.duration ||
-        studentData.courseDuration ||
-        "N/A",
+  grade:
+    cert.grade || "",
 
-      instituteName: studentData.instituteName || "",
-      studentId: cert.studentId,
+  course:
+    cert.course ||
+    studentData.courseName ||
+    "",
 
-      marksArray: marksArray,
+  duration:
+    cert.duration ||
+    studentData.duration ||
+    "",
 
-      semesterNumber:
-        studentData.courseType === "semester"
-          ? cert.semesterNumber
-          : null,
+  signatureId:
+    studentData.signatureId || "",
 
-      grade: cert.grade || "",
-      marksheetNo: cert.$id || "",
+  franchiseSignature:
+    franchiseData?.signature || "",
 
-      franchiseSignature: franchiseData?.signature || "",
-      logo: franchiseData?.logo || "",
+  fatherName:
+    cert.fatherName ||
+    studentData.fatherName ||
+    "",
 
-      ownerName:
-        franchiseData?.ownerName ||
-        franchiseData?.owner ||
-        franchiseData?.name ||
-        ""
-    };
+  motherName:
+    cert.motherName ||
+    studentData.motherName ||
+    "",
 
+  showFatherInCertificate:
+    String(studentData.showFatherInCertificate)
+      .toLowerCase() === "true",
+
+  showMotherInCertificate:
+    String(studentData.showMotherInCertificate)
+      .toLowerCase() === "true",
+
+  relationType:
+    studentData.relationType || "",
+
+  photoId:
+    studentData.photoId || "",
+
+  instituteName:
+    cert.instituteName ||
+    studentData.instituteName ||
+    "",
+
+  semesterNumber:
+    studentData.courseType === "semester"
+      ? cert.semesterNumber
+      : null,
+
+  city:
+    cert.city ||
+    franchiseData?.city ||
+    "",
+
+  address:
+    franchiseData?.address || "",
+
+  certificateNo:
+    cert.certificateNo ||
+    `CERT-${Date.now()}`,
+
+  issueDate:
+    cert.issueDate ||
+    new Date().toISOString(),
+
+  logo:
+    franchiseData?.logo || "",
+
+  ownerName:
+    franchiseData?.ownerName ||
+    franchiseData?.owner ||
+    franchiseData?.name ||
+    "",
+
+  studentId:
+    cert.studentId,
+
+  qrCode,
+  verifyUrl
+};
     // ===============================
     // ✅ SAVE + OPEN
     // ===============================
@@ -342,20 +395,31 @@ const printCertificate = async (cert) => {
     const qrCode = await QRCode.toDataURL(verifyUrl);
     // ✅ GENERATE CERTIFICATE DATA
 const certificateNo = `CERT-${Date.now()}`;
-const issueDate = new Date().toISOString();
-
+const issueDate =
+  cert.issueDate ||
+  new Date().toISOString();
+  
 // ✅ SAVE IN DATABASE
-await databases.updateDocument(
-  DATABASE_ID,
-  "certificates",
-  cert.$id,
-  {
-    certificateNo: certificateNo,
-    issueDate: issueDate,
-    duration: studentData.duration || ""
-  }
-);
+// ✅ ONLY CREATE IF EMPTY
+if (!cert.issueDate || !cert.certificateNo) {
 
+  await databases.updateDocument(
+    DATABASE_ID,
+    "certificates",
+    cert.$id,
+    {
+      certificateNo:
+        cert.certificateNo || certificateNo,
+
+      issueDate:
+        cert.issueDate || issueDate,
+
+      duration:
+        studentData.duration || ""
+    }
+  );
+
+}
 
 let finalMarks = cert.marks;
 
@@ -410,8 +474,13 @@ relationType: studentData.relationType || "",
     : null,
       city: franchiseData?.city || "",
       address: franchiseData?.address || "",
-       certificateNo: `CERT-${Date.now()}`, // ✅ NEW
-  issueDate: new Date().toISOString(), // ✅ NEW
+       certificateNo:
+  cert.certificateNo || `CERT-${Date.now()}`,
+
+issueDate:
+  cert.issueDate ||
+  new Date().toISOString(),
+
       logo: franchiseData?.logo || "",
       ownerName:
         franchiseData?.ownerName ||
@@ -428,6 +497,11 @@ relationType: studentData.relationType || "",
     };
 
     localStorage.setItem("certificateStudent", JSON.stringify(data));
+    // ✅ SAVE CERTIFICATE DOC ID
+localStorage.setItem(
+  "certificateDocId",
+  cert.$id
+);
 
     // 🔄 OPEN PAGE
     if (studentData.courseType === "beauty") {

@@ -99,14 +99,20 @@ export default function FranchiseCertificateView() {
 
         studentId: cert.studentId,
 
-        studentName:
-          studentData.studentName || "",
+       studentName:
+  cert.studentName ||
+  studentData.studentName ||
+  "",
 
         fatherName:
-          studentData.fatherName || "",
+  cert.fatherName ||
+  studentData.fatherName ||
+  "",
 
         motherName:
-          studentData.motherName || "",
+  cert.motherName ||
+  studentData.motherName ||
+  "",
 
         relationType:
           studentData.relationType || "S/O",
@@ -119,22 +125,26 @@ export default function FranchiseCertificateView() {
           String(studentData.showMotherInCertificate)
             .toLowerCase() === "true",
 
-        course:
-          studentData.courseName || "",
+       course:
+  cert.course ||
+  studentData.courseName ||
+  "",
 
         duration:
-          studentData.duration ||
-          studentData.courseDuration ||
+  cert.duration ||
+  studentData.duration ||
           "1 YEAR",
 
         grade:
-          cert.grade || "",
+  cert.grade || "",
 
-        marks:
-          cert.marks || "",
+     marks:
+  cert.marks || "",
 
-        instituteName:
-          studentData.instituteName || "",
+    instituteName:
+  cert.instituteName ||
+  studentData.instituteName ||
+  "",
 
         photoId:
           studentData.photoId || "",
@@ -166,16 +176,12 @@ export default function FranchiseCertificateView() {
         certificateNo:
           cert.certificateNo ||
           `CERT-${Date.now()}`,
-
-  issueDate:
-  localStorage.getItem("savedIssueDate") ||
-  (
-    cert.issueDate
-      ? new Date(cert.issueDate)
-          .toLocaleDateString("en-GB")
-          .replace(/\//g, "-")
-      : ""
-  ),
+issueDate:
+  cert.issueDate
+    ? new Date(cert.issueDate)
+        .toLocaleDateString("en-GB")
+        .replace(/\//g, "-")
+    : "",
 
         semesterNumber:
           studentData.courseType === "semester"
