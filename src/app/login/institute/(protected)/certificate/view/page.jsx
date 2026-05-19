@@ -177,11 +177,7 @@ export default function FranchiseCertificateView() {
           cert.certificateNo ||
           `CERT-${Date.now()}`,
 issueDate:
-  cert.issueDate
-    ? new Date(cert.issueDate)
-        .toLocaleDateString("en-GB")
-        .replace(/\//g, "-")
-    : "",
+  cert.issueDate || "",
 
         semesterNumber:
           studentData.courseType === "semester"
@@ -189,41 +185,36 @@ issueDate:
             : null
       };
 
-      // ✅ SAVE
-      localStorage.setItem(
-        "certificateStudent",
-        JSON.stringify(data)
-      );
+   
 
-      // ✅ OPEN PAGE
-      if (studentData.courseType === "beauty") {
+    if (studentData.courseType === "beauty") {
 
-        window.open(
-          "/login/institute/certificate/beauty-certificate",
-          "_blank"
-        );
+  window.open(
+    `/login/institute/certificate/beauty-certificate/${cert.$id}`,
+    "_blank"
+  );
 
-      } else if (studentData.courseType === "semester") {
+} else if (studentData.courseType === "semester") {
 
-        window.open(
-          "/login/institute/certificate/semester-certificate",
-          "_blank"
-        );
+  window.open(
+    `/login/institute/certificate/semester-certificate/${cert.$id}`,
+    "_blank"
+  );
 
-      } else if (studentData.courseType === "multiple") {
+} else if (studentData.courseType === "multiple") {
 
-        window.open(
-          "/login/institute/certificate/multiple-certificate",
-          "_blank"
-        );
+  window.open(
+    `/login/institute/certificate/multiple-certificate/${cert.$id}`,
+    "_blank"
+  );
 
-      } else {
+} else {
 
-        window.open(
-          "/login/institute/certificate/print",
-          "_blank"
-        );
-      }
+  window.open(
+    `/login/institute/certificate/print/${cert.$id}`,
+    "_blank"
+  );
+}
 
     } catch (err) {
 
@@ -283,69 +274,7 @@ issueDate:
       }
 
       // ✅ FINAL DATA
-      const data = {
-
-        // 🔥 IMPORTANT
-        readOnly: true,
-
-        studentId:
-          cert.studentId,
-
-        studentName:
-          studentData.studentName || "",
-
-        fatherName:
-          studentData.fatherName || "",
-
-        motherName:
-          studentData.motherName || "",
-
-        surname:
-          studentData.surname || "",
-
-        dob:
-          studentData.dob
-            ? new Date(studentData.dob)
-                .toLocaleDateString("en-GB")
-            : "",
-
-        course:
-          studentData.courseName || "",
-
-        instituteName:
-          studentData.instituteName || "",
-
-        coursePeriod:
-          studentData.duration ||
-          studentData.courseDuration ||
-          "1 YEAR",
-
-        marksArray,
-
-        grade:
-          cert.grade || "",
-
-        marksheetNo:
-          cert.$id || "",
-
-        franchiseSignature:
-          franchiseData?.signature || "",
-
-        logo:
-          franchiseData?.logo || "",
-
-        ownerName:
-          franchiseData?.ownerName ||
-          franchiseData?.owner ||
-          franchiseData?.name ||
-          ""
-      };
-
-      // ✅ SAVE
-      localStorage.setItem(
-        "marksheetStudent",
-        JSON.stringify(data)
-      );
+     
 
       // ✅ OPEN PAGE
       if (studentData.courseType === "beauty") {
