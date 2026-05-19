@@ -4,20 +4,21 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode"; // ✅ ADDED
-import { databases, ID, account } from "@/lib/appwrite";
+import { databases, account } from "@/lib/appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
 import { Query } from "appwrite";
+import { useParams } from "next/navigation";
 
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 
 
 export default function PrintCertificate() {
+  const { id } = useParams();
 
   const [student, setStudent] = useState(null);
   const [certificateNo, setCertificateNo] = useState("");
-  const [issueDate, setIssueDate] = useState("");
 const [percentage, setPercentage] = useState(0);
 const [editMode, setEditMode] = useState(false);
 const [isAdmin, setIsAdmin] = useState(false);
@@ -26,50 +27,223 @@ const [loadingUser, setLoadingUser] = useState(true);
   const printRef = useRef();
   useEffect(() => {
 
-    const data = localStorage.getItem("certificateStudent");
-    if (!data) return;
+  if (!id) return;
 
-    const parsed = JSON.parse(data);
+  const loadCertificate = async () => {
 
-    console.log("STUDENT DATA:", parsed);
-    console.log("DURATION VALUE:", parsed.duration);
+    try {
 
-    setStudent(parsed);
+      // ✅ CERTIFICATE
+      const cert = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+        "certificates",
+        id
+      );
 
-    // ✅ CERTIFICATE NUMBER
-    let certNo = localStorage.getItem("certificateNo");
+      // ✅ STUDENT
+      const studentData = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+        "student_admissions",
+        cert.studentId
+      );
 
-    if (!certNo) {
-      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const numbers = Math.floor(10000 + Math.random() * 90000);
-      certNo = `${random}${numbers}`;
-      localStorage.setItem("certificateNo", certNo);
+      // ✅ FRANCHISE
+      let franchiseData = null;
+
+      try {
+
+        const franchiseRes =
+          await databases.listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+            "franchise_approved",
+            [
+              Query.equal(
+                "email",
+                studentData.franchiseEmail
+              )
+            ]
+          );
+
+        if (franchiseRes.documents.length > 0) {
+
+          franchiseData =
+            franchiseRes.documents[0];
+        }
+
+      } catch (err) {
+
+        console.log(
+          "FRANCHISE ERROR:",
+          err
+        );
+
+      }
+
+      // ✅ ISSUE DATE
+      let formattedIssueDate = "";
+
+      if (cert.issueDate) {
+
+        if (
+          cert.issueDate.includes("-") &&
+          cert.issueDate.length <= 10
+        ) {
+
+          formattedIssueDate =
+            cert.issueDate;
+
+        } else {
+
+          formattedIssueDate =
+            new Date(cert.issueDate)
+              .toLocaleDateString("en-GB")
+              .replace(/\//g, "-");
+        }
+      }
+
+      // ✅ VERIFY URL
+      const verifyUrl =
+        cert.verifyUrl ||
+        `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
+
+      // ✅ QR
+      let qrCodeImage =
+        cert.qrCode || "";
+
+      if (!qrCodeImage) {
+
+        try {
+
+          qrCodeImage =
+            await QRCode.toDataURL(
+              verifyUrl
+            );
+
+        } catch (err) {
+
+          console.log(
+            "QR ERROR:",
+            err
+          );
+
+        }
+      }
+
+      // ✅ FINAL DATA
+      const finalData = {
+
+        ...studentData,
+        ...cert,
+
+       studentName:
+  cert.studentName ||
+  studentData.studentName ||
+  "",
+
+fatherName:
+  cert.fatherName ||
+  studentData.fatherName ||
+  "",
+
+motherName:
+  cert.motherName ||
+  studentData.motherName ||
+  "",
+
+        course:
+          cert.course ||
+          studentData.courseName ||
+          "",
+
+        duration:
+          cert.duration ||
+          studentData.duration ||
+          studentData.courseDuration ||
+          "",
+
+        grade:
+          cert.grade || "",
+
+        marks:
+          cert.marks || "",
+
+        instituteName:
+          cert.instituteName ||
+          studentData.instituteName ||
+          "",
+
+        city:
+          cert.city ||
+          franchiseData?.city ||
+          franchiseData?.address ||
+          "",
+
+        qrCode:
+          qrCodeImage || "",
+
+        verifyUrl,
+
+        certificateNo:
+          cert.certificateNo || "",
+
+        issueDate:
+          formattedIssueDate || "",
+
+        logo:
+          cert.logo ||
+          franchiseData?.logo ||
+          "",
+
+        ownerName:
+          cert.ownerName ||
+          franchiseData?.ownerName ||
+          franchiseData?.owner ||
+          franchiseData?.name ||
+          "Controller",
+
+        franchiseSignature:
+          cert.franchiseSignature ||
+          franchiseData?.signature ||
+          franchiseData?.franchiseSignature ||
+          "",
+
+        photoId:
+          studentData.photoId || "",
+
+        signatureId:
+          studentData.signatureId || "",
+
+        relationType:
+          studentData.relationType ||
+          "S/O",
+
+        showFatherInCertificate:
+          String(
+            studentData.showFatherInCertificate
+          ).toLowerCase() === "true",
+
+        showMotherInCertificate:
+          String(
+            studentData.showMotherInCertificate
+          ).toLowerCase() === "true"
+      };
+
+      setStudent(finalData);
+
+      setCertificateNo(
+        cert.certificateNo || ""
+      );
+
+    } catch (err) {
+
+      console.log(err);
+
     }
+  };
 
-    setCertificateNo(certNo);
+  loadCertificate();
 
-    // ✅ DATE OF ISSUE
-    const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
-    setIssueDate(today);
-
-    // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
-    // ✅ SAVE FINAL CERT DATA FOR VERIFICATION
-    localStorage.setItem(
-      "certificateMeta",
-      JSON.stringify({
-        certificateNo: certNo,
-        issueDate: today,
-        duration: parsed.duration || parsed.courseDuration || ""
-      })
-    );
-
-    console.log("FULL STUDENT DATA:", parsed);
-    console.log("FATHER NAME:", parsed.fatherName);
-console.log("SHOW FATHER:", parsed.showFatherInCertificate);           
-    console.log("ID USED IN QR:", parsed.$id);
-
-  }, []);
-
+}, [id]);
   
 
   useEffect(() => {
@@ -154,7 +328,10 @@ useEffect(() => {
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-  const franchiseSign = student.franchiseSignature || null;
+ const franchiseSign =
+  student.franchiseSignature ||
+  student.signature ||
+  null;
 
   // ✅ COURSE DURATION FUNCTION (UNCHANGED)
   // ✅ NEW COURSE DURATION FUNCTION
@@ -394,8 +571,10 @@ useEffect(() => {
 
     <input
       type="text"
-      value={issueDate}
-      onChange={(e) => setIssueDate(e.target.value)}
+      value={student.issueDate || ""}
+      onChange={(e) =>
+        handleChange("issueDate", e.target.value)
+      } 
       placeholder="Issue Date"
       className="border p-3 rounded"
     />
@@ -447,14 +626,14 @@ useEffect(() => {
     </span>
 
     {/* FATHER NAME */}
-    {String(student.showFatherInCertificate).toLowerCase() === "true" && (
+    {student.showFatherInCertificate && (
       <span className="text-3xl font-semibold">
         {student.relationType || "S/O"} {student.fatherName || ""}
       </span>
     )}
 
     {/* MOTHER NAME */}
-    {String(student.showMotherInCertificate).toLowerCase() === "true" && (
+  {student.showMotherInCertificate && (
       <span className="text-3xl font-semibold">
         M/O {student.motherName || ""}
       </span>
@@ -518,7 +697,7 @@ useEffect(() => {
           <div>Certificate No : {certificateNo}</div>
 
           <div className="mt-1">
-            Date Of Issue : {issueDate}
+            Date Of Issue : {student.issueDate || "N/A"}
           </div>
 
         </div>

@@ -21,313 +21,357 @@ export default function PrintCertificate() {
   const [certificateNo, setCertificateNo] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-const [loadingUser, setLoadingUser] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   const printRef = useRef();
 
-useEffect(() => {
+  useEffect(() => {
 
-  if (!id) return;
+    if (!id) return;
 
-  const loadCertificate = async () => {
+    const loadCertificate = async () => {
 
-    try {
+      try {
 
-      // ✅ CERTIFICATE
-      const cert = await databases.getDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-        "certificates",
-        id
-      );
-      
-
-      // ✅ STUDENT
-      const studentData = await databases.getDocument(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
+        // ✅ CERTIFICATE
+        const cert = await databases.getDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+          "certificates",
+          id
+        );
 
 
-      // ✅ FETCH FRANCHISE
-let franchiseData = null;
-
-try {
-
-  const franchiseRes =
-    await databases.listDocuments(
-      process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-      "franchise_approved",
-      [
-        Query.equal(
-          "email",
-          studentData.franchiseEmail
-        )
-      ]
-    );
-
-  if (franchiseRes.documents.length > 0) {
-    franchiseData =
-      franchiseRes.documents[0];
-  }
-
-} catch (err) {
-
-  console.log("FRANCHISE ERROR:", err);
-
-}
-   
+        // ✅ STUDENT
+        const studentData = await databases.getDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+          "student_admissions",
+          cert.studentId
+        );
 
 
-  
+        // ✅ FETCH FRANCHISE
+        let franchiseData = null;
 
-  // ✅ ISSUE DATE FROM CERTIFICATE COLLECTION
-// ✅ UNIVERSAL ISSUE DATE FORMATTER
-let formattedIssueDate = "";
+        try {
 
-if (cert.issueDate) {
+          const franchiseRes =
+            await databases.listDocuments(
+              process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+              "franchise_approved",
+              [
+                Query.equal(
+                  "email",
+                  studentData.franchiseEmail
+                )
+              ]
+            );
 
-  // ✅ IF ALREADY FORMATTED
-  if (
-    cert.issueDate.includes("-") &&
-    cert.issueDate.length <= 10
-  ) {
+          if (franchiseRes.documents.length > 0) {
+            franchiseData =
+              franchiseRes.documents[0];
+          }
 
-    formattedIssueDate = cert.issueDate;
+        } catch (err) {
 
-  } else {
+          console.log("FRANCHISE ERROR:", err);
 
-    // ✅ ISO DATE FORMAT
-    formattedIssueDate =
-      new Date(cert.issueDate)
-        .toLocaleDateString("en-GB")
-        .replace(/\//g, "-");
-  }
-}
-
-    // ✅ VERIFY URL
-const verifyUrl =
-  cert.verifyUrl ||
-  `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
-
-// ✅ QR
-let qrCodeImage = cert.qrCode || "";
-
-if (!qrCodeImage) {
-
-  try {
-
-    qrCodeImage =
-      await QRCode.toDataURL(verifyUrl);
-
-  } catch (err) {
-
-    console.log("QR ERROR:", err);
-
-  }
-}
-
-
-   // ✅ FINAL DATA
-const finalData = {
-
-  // ✅ STUDENT DATA
-  ...studentData,
-
-  // ✅ CERTIFICATE DATA
-  ...cert,
-
-  // ✅ FORCE VALUES
-  studentName:
-    cert.studentName ||
-    studentData.studentName ||
-    "",
-
-  course:
-    cert.course ||
-    studentData.courseName ||
-    "",
-
-  duration:
-    cert.duration ||
-    studentData.duration ||
-    studentData.courseDuration ||
-    "",
-
-  marks:
-    cert.marks || "",
-
-  grade:
-    cert.grade || "",
-
-  instituteName:
-    cert.instituteName ||
-    studentData.instituteName ||
-    "",
-
- city:
-  cert.city ||
-  franchiseData?.city ||
-  "",
-
-  qrCode:
-    qrCodeImage || "",
-
-  verifyUrl,
-
-  certificateNo:
-    cert.certificateNo || "",
-
-  issueDate:
-    formattedIssueDate || "",
-
-logo:
-  cert.logo ||
-  franchiseData?.logo ||
-  "",
-
- ownerName:
-  cert.ownerName ||
-  franchiseData?.ownerName ||
-  franchiseData?.owner ||
-  franchiseData?.name ||
-  "Controller",
-
-franchiseSignature:
-  cert.franchiseSignature ||
-  franchiseData?.signature ||
-  "",
-
-  photoId:
-  studentData.photoId || "",
-
-signatureId:
-  studentData.signatureId || "",
-};
-
-
-    setStudent(finalData);
-
-      setCertificateNo(
-        cert.certificateNo || ""
-      );
+        }
 
 
 
 
-    } catch (err) {
 
-      console.log(err);
+        // ✅ ISSUE DATE FROM CERTIFICATE COLLECTION
+        // ✅ UNIVERSAL ISSUE DATE FORMATTER
+        let formattedIssueDate = "";
 
-    }
-  };
+        if (cert.issueDate) {
 
-  loadCertificate();
+          // ✅ IF ALREADY FORMATTED
+          if (
+            cert.issueDate.includes("-") &&
+            cert.issueDate.length <= 10
+          ) {
 
-}, [id]);
+            formattedIssueDate = cert.issueDate;
+
+          } else {
+
+            // ✅ ISO DATE FORMAT
+            formattedIssueDate =
+              new Date(cert.issueDate)
+                .toLocaleDateString("en-GB")
+                .replace(/\//g, "-");
+          }
+        }
+
+        // ✅ VERIFY URL
+        const verifyUrl =
+          cert.verifyUrl ||
+          `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
+
+        // ✅ QR
+        let qrCodeImage = cert.qrCode || "";
+
+        if (!qrCodeImage) {
+
+          try {
+
+            qrCodeImage =
+              await QRCode.toDataURL(verifyUrl);
+
+          } catch (err) {
+
+            console.log("QR ERROR:", err);
+
+          }
+        }
+
+
+        // ✅ FINAL DATA
+        const finalData = {
+
+          // ✅ STUDENT DATA
+          ...studentData,
+
+          // ✅ CERTIFICATE DATA
+          ...cert,
+
+          // ✅ FORCE VALUES
+          studentName:
+            cert.studentName ||
+            studentData.studentName ||
+            "",
+
+          fatherName:
+            cert.fatherName ||
+            studentData.fatherName ||
+            "",
+
+          motherName:
+            cert.motherName ||
+            studentData.motherName ||
+            "",
+
+          relationType:
+            studentData.relationType ||
+            "S/O",
+
+          showFatherInCertificate:
+            String(
+              studentData.showFatherInCertificate
+            ).toLowerCase() === "true",
+
+          showMotherInCertificate:
+            String(
+              studentData.showMotherInCertificate
+            ).toLowerCase() === "true",
+
+          course:
+            cert.course ||
+            studentData.courseName ||
+            "",
+          duration:
+            cert.duration || "",
+
+          marks:
+            cert.marks || "",
+
+          grade:
+            cert.grade || "",
+
+          instituteName:
+            cert.instituteName ||
+            studentData.instituteName ||
+            "",
+
+          city:
+            cert.city ||
+            franchiseData?.city ||
+            "",
+
+          qrCode:
+            qrCodeImage || "",
+
+          verifyUrl,
+
+          certificateNo:
+            cert.certificateNo || "",
+
+          issueDate:
+            formattedIssueDate || "",
+
+          logo:
+            cert.logo ||
+            franchiseData?.logo ||
+            "",
+
+          ownerName:
+            cert.ownerName ||
+            franchiseData?.ownerName ||
+            franchiseData?.owner ||
+            franchiseData?.name ||
+            "Controller",
+
+          franchiseSignature:
+            cert.franchiseSignature ||
+            franchiseData?.signature ||
+            "",
+
+          photoId:
+            studentData.photoId || "",
+
+          signatureId:
+            studentData.signatureId || "",
+        };
+
+
+        setStudent(finalData);
+
+        setCertificateNo(
+          cert.certificateNo || ""
+        );
+
+
+
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+    };
+
+    loadCertificate();
+
+  }, [id]);
 
 
 
   useEffect(() => {
 
-  const checkAdmin = async () => {
+    const checkAdmin = async () => {
 
-    try {
+      try {
 
-      const user = await account.get();
+        const user = await account.get();
 
-      if (user.email === "bnmiindia@gmail.com") {
-        setIsAdmin(true);
+        if (user.email === "bnmiindia@gmail.com") {
+          setIsAdmin(true);
+        }
+
+      } catch (err) {
+
+        console.log(err);
+
+      } finally {
+
+        setLoadingUser(false);
+
       }
+    };
 
-    } catch (err) {
+    checkAdmin();
 
-      console.log(err);
-
-    } finally {
-
-      setLoadingUser(false);
-
-    }
-  };
-
-  checkAdmin();
-
-}, []);
+  }, []);
 
 
   if (!student) return <p className="p-10">Loading certificate...</p>;
 
-const handleChange = (field, value) => {
+  const handleChange = async (field, value) => {
 
-  setStudent((prev) => {
-
-    const updated = {
+    // ✅ UPDATE UI FIRST
+    setStudent((prev) => ({
       ...prev,
       [field]: value,
-    };
+    }));
 
-  
+    try {
 
-    return updated;
-  });
-};
+      // ✅ UPDATE CERTIFICATE DB
+      await databases.updateDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+        "certificates",
+        id,
+        {
+          [field]: value,
+        }
+      );
+
+      console.log(
+        `UPDATED: ${field}`,
+        value
+      );
+
+    } catch (err) {
+
+      console.log(
+        "DB UPDATE ERROR:",
+        err
+      );
+
+      alert(
+        `Failed to update ${field}`
+      );
+    }
+  };
+
 
   // ✅ PHOTO
   const photoUrl = student.photoId
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-// ✅ STUDENT SIGNATURE FROM STUDENT ADMISSION
-const signatureUrl = student.signatureId
-  ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-  : null;
+  // ✅ STUDENT SIGNATURE FROM STUDENT ADMISSION
+  const signatureUrl = student.signatureId
+    ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+    : null;
 
-// ✅ FRANCHISE SIGNATURE FROM FRANCHISE APPROVAL
-// ✅ FRANCHISE SIGNATURE (DIRECT URL)
-const franchiseSign =
-  student.franchiseSignature || null;
+  // ✅ FRANCHISE SIGNATURE FROM FRANCHISE APPROVAL
+  // ✅ FRANCHISE SIGNATURE (DIRECT URL)
+  const franchiseSign =
+    student.franchiseSignature || null;
 
-  
+
   // ✅ COURSE DURATION FUNCTION (UNCHANGED)
   const getCourseDuration = (durationText) => {
 
-  if (!durationText) return "N/A";
+    if (!durationText) return "N/A";
 
-  const today = new Date();
+    const today = new Date();
 
-  // ✅ END DATE = TODAY
-  const end = new Date(today);
+    // ✅ END DATE = TODAY
+    const end = new Date(today);
 
-  // ✅ START DATE = TODAY
-  const start = new Date(today);
+    // ✅ START DATE = TODAY
+    const start = new Date(today);
 
-  const text = durationText.toLowerCase();
+    const text = durationText.toLowerCase();
 
-  // ✅ YEAR
-  if (text.includes("year")) {
-    const years = parseInt(text) || 1;
-    start.setFullYear(start.getFullYear() - years);
-  }
+    // ✅ YEAR
+    if (text.includes("year")) {
+      const years = parseInt(text) || 1;
+      start.setFullYear(start.getFullYear() - years);
+    }
 
-  // ✅ MONTH
-  if (text.includes("month")) {
-    const months = parseInt(text) || 1;
-    start.setMonth(start.getMonth() - months);
-  }
+    // ✅ MONTH
+    if (text.includes("month")) {
+      const months = parseInt(text) || 1;
+      start.setMonth(start.getMonth() - months);
+    }
 
-  // ✅ ONE DAY FOR PERFECT RANGE
-  start.setDate(start.getDate() + 1);
+    // ✅ ONE DAY FOR PERFECT RANGE
+    start.setDate(start.getDate() + 1);
 
-  const format = (date) =>
-    date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    const format = (date) =>
+      date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
 
-  return `${format(start)} To ${format(end)}`;
-};
+    return `${format(start)} To ${format(end)}`;
+  };
 
 
 
@@ -404,130 +448,130 @@ const franchiseSign =
         Download Certificate
       </button>
 
-{/* EDIT BUTTON */}
-{isAdmin && (
+      {/* EDIT BUTTON */}
+      {isAdmin && (
 
-<div className="mb-6 flex gap-4">
+        <div className="mb-6 flex gap-4">
 
-  <button
-    onClick={() => setEditMode(!editMode)}
-    className="bg-blue-600 text-white px-5 py-2 rounded"
-  >
-    {editMode ? "Close Edit" : "Edit Certificate"}
-  </button>
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className="bg-blue-600 text-white px-5 py-2 rounded"
+          >
+            {editMode ? "Close Edit" : "Edit Certificate"}
+          </button>
 
-</div>
+        </div>
 
-)}
+      )}
 
-{/* EDIT PANEL */}
-{editMode && isAdmin && (
+      {/* EDIT PANEL */}
+      {editMode && isAdmin && (
 
-  <div className="bg-white shadow-lg rounded-xl p-6 mb-8 grid grid-cols-2 gap-4">
+        <div className="bg-white shadow-lg rounded-xl p-6 mb-8 grid grid-cols-2 gap-4">
 
-    <input
-      type="text"
-      value={student.studentName || ""}
-      onChange={(e) =>
-        handleChange("studentName", e.target.value)
-      }
-      placeholder="Student Name"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.studentName || ""}
+            onChange={(e) =>
+              handleChange("studentName", e.target.value)
+            }
+            placeholder="Student Name"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-      value={student.fatherName || ""}
-      onChange={(e) =>
-        handleChange("fatherName", e.target.value)
-      }
-      placeholder="Father Name"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.fatherName || ""}
+            onChange={(e) =>
+              handleChange("fatherName", e.target.value)
+            }
+            placeholder="Father Name"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-      value={student.motherName || ""}
-      onChange={(e) =>
-        handleChange("motherName", e.target.value)
-      }
-      placeholder="Mother Name"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.motherName || ""}
+            onChange={(e) =>
+              handleChange("motherName", e.target.value)
+            }
+            placeholder="Mother Name"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-      value={student.course || ""}
-      onChange={(e) =>
-        handleChange("course", e.target.value)
-      }
-      placeholder="Course Name"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.course || ""}
+            onChange={(e) =>
+              handleChange("course", e.target.value)
+            }
+            placeholder="Course Name"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-      value={student.duration || ""}
-      onChange={(e) =>
-        handleChange("duration", e.target.value)
-      }
-      placeholder="Course Duration"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.duration || ""}
+            onChange={(e) =>
+              handleChange("duration", e.target.value)
+            }
+            placeholder="Course Duration"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-      value={student.grade || ""}
-      onChange={(e) =>
-        handleChange("grade", e.target.value)
-      }
-      placeholder="Grade"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.grade || ""}
+            onChange={(e) =>
+              handleChange("grade", e.target.value)
+            }
+            placeholder="Grade"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-      value={student.marks || ""}
-      onChange={(e) =>
-        handleChange("marks", e.target.value)
-      }
-      placeholder="Marks"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.marks || ""}
+            onChange={(e) =>
+              handleChange("marks", e.target.value)
+            }
+            placeholder="Marks"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-      value={student.instituteName || ""}
-      onChange={(e) =>
-        handleChange("instituteName", e.target.value)
-      }
-      placeholder="Institute Name"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.instituteName || ""}
+            onChange={(e) =>
+              handleChange("instituteName", e.target.value)
+            }
+            placeholder="Institute Name"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-      value={student.city || ""}
-      onChange={(e) =>
-        handleChange("city", e.target.value)
-      }
-      placeholder="City"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.city || ""}
+            onChange={(e) =>
+              handleChange("city", e.target.value)
+            }
+            placeholder="City"
+            className="border p-3 rounded"
+          />
 
-    <input
-      type="text"
-     value={student.issueDate || ""}
-    onChange={(e) =>
-  handleChange("issueDate", e.target.value)
-}
-      placeholder="Issue Date"
-      className="border p-3 rounded"
-    />
+          <input
+            type="text"
+            value={student.issueDate || ""}
+            onChange={(e) =>
+              handleChange("issueDate", e.target.value)
+            }
+            placeholder="Issue Date"
+            className="border p-3 rounded"
+          />
 
-  </div>
+        </div>
 
-)}
+      )}
 
 
       <div
@@ -543,18 +587,18 @@ const franchiseSign =
         {/* TEMPLATE */}
         <img src="/beautycerti.png" className="absolute w-full h-full" />
 
-    {/* LOGO */}
-{student.logo && (
-  <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
-    <img
-      src={student.logo}
-      className="w-full h-full object-cover rounded-full"
-    />
-  </div>
+        {/* LOGO */}
+        {student.logo && (
+          <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+            <img
+              src={student.logo}
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
 
-)}
+        )}
 
-         {/* <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">
+        {/* <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">
           {signatureUrl && (
             <img
               src={signatureUrl}
@@ -571,46 +615,45 @@ const franchiseSign =
         </div>
 
 
-{/* NAME */}
-<div className="absolute top-[650px] left-[10px] w-full text-center">
+        {/* NAME */}
+        <div className="absolute top-[650px] left-[10px] w-full text-center">
 
-  <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
+          <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
 
-    {/* STUDENT NAME */}
-    <span>
-      {student.studentName || student.name || ""}
-    </span>
+            {/* STUDENT NAME */}
+            <span>
+              {student.studentName || student.name || ""}
+            </span>
 
-    {/* FATHER NAME */}
-    {String(student.showFatherInCertificate).toLowerCase() === "true" && (
-      <span className="text-3xl font-semibold">
-        {student.relationType || "S/O"} {student.fatherName || ""}
-      </span>
-    )}
+            {/* FATHER NAME */}
+            {student.showFatherInCertificate && (
+              <span className="text-3xl font-semibold">
+                {student.relationType || "S/O"} {student.fatherName || ""}
+              </span>
+            )}
 
-    {/* MOTHER NAME */}
-    {String(student.showMotherInCertificate).toLowerCase() === "true" && (
-      <span className="text-3xl font-semibold">
-        M/O {student.motherName || ""}
-      </span>
-    )}
+            {/* MOTHER NAME */}
+            {student.showMotherInCertificate && (
+              <span className="text-3xl font-semibold">
+                M/O {student.motherName || ""}
+              </span>
+            )}
 
-  </div>
+          </div>
 
-</div>
+        </div>
 
 
         {/* COURSE */}
-       <div className="absolute top-[837px] left-[0px] font-bold w-full text-center text-xl">
-  {student.course}
-</div>
+        <div className="absolute top-[837px] left-[0px] font-bold w-full text-center text-xl">
+          {student.course}
+        </div>
+
         {/* COURSE DURATION */}
         <div
-           className="absolute top-[864px] left-[0px] font-semibold w-full text-center text-xl"
+          className="absolute top-[864px] left-[0px] w-full text-center font-semibold text-xl whitespace-nowrap"
         >
-          Course Duration: {getCourseDuration(
-            student.duration || student.courseDuration || "1 year"
-          )}
+          Course Duration: {student.duration || "N/A"}
         </div>
 
         {/* GRADE */}
@@ -637,25 +680,25 @@ const franchiseSign =
           <div>Certificate No : {certificateNo}</div>
 
           <div className="mt-1">
-          Date Of Issue : {student.issueDate || "N/A"}
+            Date Of Issue : {student.issueDate || "N/A"}
           </div>
 
         </div>
 
-     {/* INSTITUTE */}
-<div
-  className="absolute bottom-[445px] left-[75px] w-[750px] text-center font-bold text-red-700"
-  style={{
-    fontSize: "25px",
-    lineHeight: "32px",
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
-    whiteSpace: "normal",
-  }}
->
-  ATC: {student.instituteName} |{" "}
-  {[student.city].filter(Boolean).join(", ")}
-</div>
+        {/* INSTITUTE */}
+        <div
+          className="absolute bottom-[445px] left-[75px] w-[750px] text-center font-bold text-red-700"
+          style={{
+            fontSize: "25px",
+            lineHeight: "32px",
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+            whiteSpace: "normal",
+          }}
+        >
+          ATC: {student.instituteName} |{" "}
+          {[student.city].filter(Boolean).join(", ")}
+        </div>
 
         {/* SIGNATURE */}
         <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">

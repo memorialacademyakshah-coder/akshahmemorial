@@ -219,6 +219,142 @@ const printMarksheet = async (cert) => {
     // ===============================
    
     // ===============================
+// ✅ FINAL DATA
+// ===============================
+
+// ✅ VERIFY URL
+const verifyUrl =
+  `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
+
+// ✅ QR
+const qrCode =
+  await QRCode.toDataURL(
+    verifyUrl
+  );
+
+const data = {
+
+  ...studentData,
+  ...cert,
+
+  studentName:
+    cert.studentName ||
+    studentData.studentName ||
+    "",
+
+  fatherName:
+    cert.fatherName ||
+    studentData.fatherName ||
+    "",
+
+  motherName:
+    cert.motherName ||
+    studentData.motherName ||
+    "",
+
+  course:
+    cert.course ||
+    studentData.courseName ||
+    "",
+
+  duration:
+    cert.duration ||
+    studentData.duration ||
+    studentData.courseDuration ||
+    "",
+
+  marks:
+    cert.marks || "",
+
+  grade:
+    cert.grade || "",
+
+  instituteName:
+    cert.instituteName ||
+    studentData.instituteName ||
+    "",
+
+  city:
+    cert.city ||
+    franchiseData?.city ||
+    franchiseData?.address ||
+    "",
+
+  certificateNo:
+    cert.certificateNo || "",
+
+  issueDate:
+    cert.issueDate || "",
+
+  logo:
+    cert.logo ||
+    franchiseData?.logo ||
+    "",
+
+  ownerName:
+    cert.ownerName ||
+    franchiseData?.ownerName ||
+    franchiseData?.owner ||
+    franchiseData?.name ||
+    "Controller",
+
+  franchiseSignature:
+    cert.franchiseSignature ||
+    franchiseData?.signature ||
+    "",
+
+  photoId:
+    studentData.photoId || "",
+
+  signatureId:
+    studentData.signatureId || "",
+
+  relationType:
+    studentData.relationType ||
+    "S/O",
+
+  showFatherInCertificate:
+    String(
+      studentData.showFatherInCertificate
+    ).toLowerCase() === "true",
+
+  showMotherInCertificate:
+    String(
+      studentData.showMotherInCertificate
+    ).toLowerCase() === "true",
+
+    
+  qrCode,
+
+  verifyUrl,
+
+  studentId:
+    cert.studentId,
+
+  marksArray,
+
+  courseType:
+    studentData.courseType ||
+
+    "",
+
+  marksheetNo:
+    cert.certificateNo ||
+
+    "",
+
+  dob:
+    studentData.dob ||
+
+    "",
+
+  coursePeriod:
+    cert.duration ||
+    studentData.duration ||
+    studentData.courseDuration ||
+    ""
+};
+    // ===============================
     // ✅ SAVE + OPEN
     // ===============================
     localStorage.setItem("marksheetStudent", JSON.stringify(data));
@@ -459,6 +595,60 @@ const approveCertificate = async (id, cert) => {
     const qrCode =
       await QRCode.toDataURL(verifyUrl);
 
+
+      // ✅ AUTO GENERATE COURSE DURATION
+let finalDuration = "";
+
+const rawDuration =
+  studentData.duration ||
+  studentData.courseDuration ||
+  "1 year";
+
+const today = new Date();
+
+const end = new Date(today);
+
+const start = new Date(today);
+
+const text =
+  rawDuration.toLowerCase();
+
+// ✅ YEAR
+if (text.includes("year")) {
+
+  const years =
+    parseInt(text) || 1;
+
+  start.setFullYear(
+    start.getFullYear() - years
+  );
+}
+
+// ✅ MONTH
+if (text.includes("month")) {
+
+  const months =
+    parseInt(text) || 1;
+
+  start.setMonth(
+    start.getMonth() - months
+  );
+}
+
+// ✅ PERFECT RANGE
+start.setDate(start.getDate() + 1);
+
+const formatDate = (date) =>
+  date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+finalDuration =
+  `${formatDate(start)} To ${formatDate(end)}`.trim();
+
+
+
     // ✅ UPDATE DB
     await databases.updateDocument(
       DATABASE_ID,
@@ -484,10 +674,9 @@ const approveCertificate = async (id, cert) => {
         course:
           studentData.courseName || "",
 
-        duration:
-          studentData.duration ||
-          studentData.courseDuration ||
-          "",
+          duration: finalDuration,
+
+ 
 
         instituteName:
           studentData.instituteName || "",

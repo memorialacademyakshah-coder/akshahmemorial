@@ -4,9 +4,11 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode"; // ✅ ADDED
-import { databases, ID } from "@/lib/appwrite";
+import { databases, account } from "@/lib/appwrite";
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
+import { useParams } from "next/navigation";
+import { Query } from "appwrite";
 
 const BUCKET_ID = "6986e8a4001925504f6b";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
@@ -14,77 +16,207 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 
 export default function PrintCertificate() {
+  const { id } = useParams();
+
 
   const [student, setStudent] = useState(null);
   const [certificateNo, setCertificateNo] = useState("");
-  const [issueDate, setIssueDate] = useState("");
+  
    const [editMode, setEditMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 const [loadingUser, setLoadingUser] = useState(true);
 
   const printRef = useRef();
-  useEffect(() => {
 
-    const data = localStorage.getItem("certificateStudent");
-    if (!data) return;
+useEffect(() => {
 
-    const parsed = JSON.parse(data);
+  if (!id) return;
 
-    console.log("STUDENT DATA:", parsed);
-    console.log("DURATION VALUE:", parsed.duration);
+  const loadCertificate = async () => {
 
-    setStudent(parsed);
+    try {
 
-    // ✅ CERTIFICATE NUMBER
-    let certNo = localStorage.getItem("certificateNo");
+      // ✅ CERTIFICATE
+      const cert = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+        "certificates",
+        id
+      );
 
-    if (!certNo) {
-      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const numbers = Math.floor(10000 + Math.random() * 90000);
-      certNo = `${random}${numbers}`;
-      localStorage.setItem("certificateNo", certNo);
-    }
+      // ✅ STUDENT
+      const studentData = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+        "student_admissions",
+        cert.studentId
+      );
 
-    setCertificateNo(certNo);
+      // ✅ FRANCHISE
+      let franchiseData = null;
 
-    // ✅ ONLY FIX (NO CHANGE IN STRUCTURE)
-   const saveCert = async () => {
-  try {
-    await databases.updateDocument(
-      DATABASE_ID,
-      "student_admissions",
-      parsed.$id,
-      {
-        certificateNo: certNo
+      try {
+
+        const franchiseRes =
+          await databases.listDocuments(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+            "franchise_approved",
+            [
+              Query.equal(
+                "email",
+                studentData.franchiseEmail
+              )
+            ]
+          );
+
+        if (franchiseRes.documents.length > 0) {
+          franchiseData =
+            franchiseRes.documents[0];
+        }
+
+      } catch (err) {
+
+        console.log("FRANCHISE ERROR:", err);
+
       }
-    );
-    console.log("✅ Certificate No saved");
-  } catch (err) {
-    console.log("❌ CERT SAVE ERROR:", err);
-  }
-};
 
-saveCert();
+      // ✅ ISSUE DATE
+      let formattedIssueDate = "";
 
-    // ✅ DATE OF ISSUE
-    const today = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
-    setIssueDate(today);
+      if (cert.issueDate) {
 
-    // ✅🔥 GENERATE QR WITH LIVE VERIFY URL
-    // ✅ SAVE FINAL CERT DATA FOR VERIFICATION
-    localStorage.setItem(
-      "certificateMeta",
-      JSON.stringify({
-        certificateNo: certNo,
-        issueDate: today,
-        duration: parsed.duration || parsed.courseDuration || ""
-      })
-    );
+        if (
+          cert.issueDate.includes("-") &&
+          cert.issueDate.length <= 10
+        ) {
 
-    console.log("FULL STUDENT DATA:", parsed);
-    console.log("ID USED IN QR:", parsed.$id);
+          formattedIssueDate =
+            cert.issueDate;
 
-  }, []);
+        } else {
+
+          formattedIssueDate =
+            new Date(cert.issueDate)
+              .toLocaleDateString("en-GB")
+              .replace(/\//g, "-");
+        }
+      }
+
+      // ✅ VERIFY URL
+      const verifyUrl =
+        cert.verifyUrl ||
+        `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
+
+      // ✅ QR
+      let qrCodeImage =
+        cert.qrCode || "";
+
+      if (!qrCodeImage) {
+
+        try {
+
+          qrCodeImage =
+            await QRCode.toDataURL(
+              verifyUrl
+            );
+
+        } catch (err) {
+
+          console.log("QR ERROR:", err);
+
+        }
+      }
+
+      // ✅ FINAL DATA
+      const finalData = {
+
+        ...studentData,
+        ...cert,
+
+        studentName:
+          cert.studentName ||
+          studentData.studentName ||
+          "",
+
+        course:
+          cert.course ||
+          studentData.courseName ||
+          "",
+
+        duration:
+          cert.duration ||
+          studentData.duration ||
+          studentData.courseDuration ||
+          "",
+
+        marks:
+          cert.marks || "",
+
+        grade:
+          cert.grade || "",
+
+        instituteName:
+          cert.instituteName ||
+          studentData.instituteName ||
+          "",
+
+        city:
+  cert.city ||
+  franchiseData?.city ||
+  franchiseData?.address ||
+  "",
+
+        qrCode:
+          qrCodeImage || "",
+
+        verifyUrl,
+
+        certificateNo:
+          cert.certificateNo || "",
+
+        issueDate:
+          formattedIssueDate || "",
+
+        logo:
+          cert.logo ||
+          franchiseData?.logo ||
+          "",
+
+        ownerName:
+          cert.ownerName ||
+          franchiseData?.ownerName ||
+          franchiseData?.owner ||
+          franchiseData?.name ||
+          "Controller",
+
+       franchiseSignature:
+  cert.franchiseSignature ||
+  franchiseData?.signature ||
+  franchiseData?.franchiseSignature ||
+  "",
+
+        photoId:
+          studentData.photoId || "",
+
+        signatureId:
+          studentData.signatureId || ""
+      };
+
+      setStudent(finalData);
+
+      setCertificateNo(
+        cert.certificateNo || ""
+      );
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+  };
+
+  loadCertificate();
+
+}, [id]);
+
 
 
   useEffect(() => {
@@ -133,7 +265,11 @@ saveCert();
     ? `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
     : null;
 
-  const franchiseSign = student.franchiseSignature || null;
+  // ✅ FRANCHISE SIGNATURE
+const franchiseSign =
+  student.franchiseSignature ||
+  student.signature ||
+  null;
 
   // ✅ COURSE DURATION FUNCTION (UNCHANGED)
   // ✅ NEW COURSE DURATION FUNCTION
@@ -374,8 +510,10 @@ saveCert();
 
     <input
       type="text"
-      value={issueDate}
-      onChange={(e) => setIssueDate(e.target.value)}
+     value={student.issueDate || ""}
+     onChange={(e) =>
+  handleChange("issueDate", e.target.value)
+}
       placeholder="Issue Date"
       className="border p-3 rounded"
     />
@@ -420,7 +558,7 @@ saveCert();
 
  
 {/* NAME */}
-<div className="absolute top-[660px] left-[10px] w-full text-center">
+<div className="absolute top-[650px] left-[10px] w-full text-center">
 
   <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
 
@@ -450,19 +588,16 @@ saveCert();
 
         
         {/* COURSE */}
-      <div className="absolute top-[837px] left-[270px] font-bold w-full text-center text-xl">
-  Course Name: {student.course}
+        <div className="absolute top-[837px] left-[0px] font-bold w-full text-center text-xl">
+  {student.course}
 </div>
 
         {/* COURSE DURATION */}
-        <div
-          className="absolute left-[270px] font-semibold"
-          style={{
-            top: 807 + (courseLines.length * 20) + 20
-          }}
+         <div
+           className="absolute top-[864px] left-[0px] font-semibold w-full text-center text-xl"
         >
           Course Duration: {getCourseDuration(
-            student.duration || student.courseDuration || "6 MONTHS"
+            student.duration || student.courseDuration || "1 year"
           )}
         </div>
 
@@ -490,16 +625,25 @@ saveCert();
           <div>Certificate No : {certificateNo}</div>
 
           <div className="mt-1">
-            Date Of Issue : {issueDate}
+            Date Of Issue : {student.issueDate || ""}
           </div>
 
         </div>
 
         {/* INSTITUTE */}
-        <div className="absolute bottom-[440px] left-[150px] w-full text-center text-3xl font-bold text-red-700">
-
-          ATC: {student.instituteName} | {[student.city].filter(Boolean).join(", ")}
-        </div>
+        <div
+  className="absolute bottom-[445px] left-[75px] w-[750px] text-center font-bold text-red-700"
+  style={{
+    fontSize: "25px",
+    lineHeight: "32px",
+    wordBreak: "break-word",
+    overflowWrap: "break-word",
+    whiteSpace: "normal",
+  }}
+>
+  ATC: {student.instituteName} |{" "}
+  {[student.city].filter(Boolean).join(", ")}
+</div>
 
         {/* SIGNATURE */}
         <div className="absolute top-[535px] left-[390px] w-[140px] h-[60px] bg-white flex items-center justify-center overflow-hidden">

@@ -130,10 +130,8 @@ export default function FranchiseCertificateView() {
   studentData.courseName ||
   "",
 
-        duration:
-  cert.duration ||
-  studentData.duration ||
-          "1 YEAR",
+   duration:
+  cert.duration || "N/A",
 
         grade:
   cert.grade || "",
@@ -152,8 +150,10 @@ export default function FranchiseCertificateView() {
         signatureId:
           studentData.signatureId || "",
 
-        franchiseSignature:
-          franchiseData?.signature || "",
+       franchiseSignature:
+  cert.franchiseSignature ||
+  franchiseData?.signature ||
+  "",
 
         logo:
           franchiseData?.logo || "",
@@ -163,9 +163,11 @@ export default function FranchiseCertificateView() {
           franchiseData?.owner ||
           franchiseData?.name ||
           "",
-
-        city:
-          franchiseData?.city || "",
+city:
+  cert.city ||
+  franchiseData?.city ||
+  franchiseData?.address ||
+  "",
 
         address:
           franchiseData?.address || "",
