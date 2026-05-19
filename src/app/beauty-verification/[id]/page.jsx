@@ -397,7 +397,7 @@ const finalDuration =
           </div>
 
           {/* DURATION */}
-          <div className="flex justify-between items-center gap-4 p-4 border-b">
+          {/* <div className="flex justify-between items-center gap-4 p-4 border-b">
 
             <div className="flex items-center gap-3">
 
@@ -413,7 +413,7 @@ const finalDuration =
               {finalDuration}
             </span>
 
-          </div>
+          </div> */}
 
           {/* ISSUE DATE */}
           <div className="flex justify-between items-center gap-4 p-4 border-b">
