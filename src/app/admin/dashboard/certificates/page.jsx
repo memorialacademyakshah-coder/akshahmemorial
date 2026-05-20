@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Query } from "appwrite";
-import QRCode from "qrcode";
+
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const CERT_COLLECTION = "certificates";
@@ -226,11 +226,7 @@ const printMarksheet = async (cert) => {
 const verifyUrl =
   `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
-// ✅ QR
-const qrCode =
-  await QRCode.toDataURL(
-    verifyUrl
-  );
+
 
 const data = {
 
@@ -324,9 +320,11 @@ const data = {
     ).toLowerCase() === "true",
 
     
-  qrCode,
+
 
   verifyUrl,
+
+
 
   studentId:
     cert.studentId,
@@ -427,7 +425,7 @@ const printCertificate = async (cert) => {
 
   const verifyUrl = `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
-    const qrCode = await QRCode.toDataURL(verifyUrl);
+ 
 
 
 
@@ -497,8 +495,7 @@ issueDate: cert.issueDate || "",
       // ✅ KEEP SAME
       studentId: cert.studentId,
 
-      // ✅ QR
-      qrCode,
+    
       verifyUrl
     };
 
@@ -591,18 +588,18 @@ const approveCertificate = async (id, cert) => {
     const verifyUrl =
       `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
-    // ✅ QR
-    const qrCode =
-      await QRCode.toDataURL(verifyUrl);
+    
+      
 
 
       // ✅ AUTO GENERATE COURSE DURATION
 let finalDuration = "";
 
-const rawDuration =
+const rawDuration = String(
   studentData.duration ||
   studentData.courseDuration ||
-  "1 year";
+  "1 year"
+);
 
 const today = new Date();
 
@@ -611,7 +608,7 @@ const end = new Date(today);
 const start = new Date(today);
 
 const text =
-  rawDuration.toLowerCase();
+  String(rawDuration).toLowerCase();
 
 // ✅ YEAR
 if (text.includes("year")) {
@@ -657,10 +654,9 @@ finalDuration =
       {
         status: "approved",
 
-        certificateNo,
-        issueDate,
-        verifyUrl,
-        qrCode,
+       certificateNo,
+issueDate,
+verifyUrl,
 
         studentName:
           studentData.studentName || "",
@@ -710,11 +706,14 @@ finalDuration =
 
   } catch (err) {
 
-    console.log(err);
+  console.log("FULL ERROR:", err);
 
-    alert("Approval Failed");
+  alert(
+    err?.message ||
+    JSON.stringify(err)
+  );
 
-  }
+}
 };
 
   const rejectCertificate = async (id) => {
