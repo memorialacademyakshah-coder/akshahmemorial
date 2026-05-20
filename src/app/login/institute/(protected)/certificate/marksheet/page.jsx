@@ -284,7 +284,7 @@ if (marksDocs.length === 0) {
   <img
     src={qrCode}
     alt="QR Code"
-    className="absolute top-[240px] right-[50px] w-[110px] bg-white p-1"
+    className="absolute top-[233px] right-[50px] w-[110px] bg-white p-1"
   />
 ) : (
   <div className="absolute top-[240px] right-[50px] text-xs">
@@ -303,7 +303,7 @@ if (marksDocs.length === 0) {
 
         {/* RIGHT SIDE */}
       {/* RIGHT */}
-<div className="absolute top-[325px] left-[680px]">
+<div className="absolute top-[330px] left-[680px] text-[13px]">
   {student.coursePeriod || student.duration || "1 Year"}
 </div>
 
@@ -312,10 +312,12 @@ if (marksDocs.length === 0) {
 </div>
 
 <div className="absolute top-[369px] left-[680px]">
-  {student.dob}
+  {student.dob
+    ? new Date(student.dob).toLocaleDateString("en-GB").replace(/\//g, "-")
+    : ""}
 </div>
 
-<div className="absolute top-[390px] left-[680px]">
+<div className="absolute top-[392px] left-[680px] text-[13px]">
   {student.coursePeriod || student.duration || "1 Year"}
 </div>
 
