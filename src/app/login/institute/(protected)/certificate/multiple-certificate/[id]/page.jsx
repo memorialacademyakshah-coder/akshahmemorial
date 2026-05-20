@@ -333,46 +333,7 @@ useEffect(() => {
   student.signature ||
   null;
 
-  // ✅ COURSE DURATION FUNCTION (UNCHANGED)
-  // ✅ NEW COURSE DURATION FUNCTION
- const getCourseDuration = (durationText) => {
-
-  if (!durationText) return "N/A";
-
-  const today = new Date();
-
-  // ✅ END DATE = TODAY
-  const end = new Date(today);
-
-  // ✅ START DATE = TODAY
-  const start = new Date(today);
-
-  const text = durationText.toLowerCase();
-
-  // ✅ YEAR
-  if (text.includes("year")) {
-    const years = parseInt(text) || 1;
-    start.setFullYear(start.getFullYear() - years);
-  }
-
-  // ✅ MONTH
-  if (text.includes("month")) {
-    const months = parseInt(text) || 1;
-    start.setMonth(start.getMonth() - months);
-  }
-
-  // ✅ ONE DAY FOR PERFECT RANGE
-  start.setDate(start.getDate() + 1);
-
-  const format = (date) =>
-    date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-  return `${format(start)} To ${format(end)}`;
-};
+  
   const toBase64 = async (url) => {
     const res = await fetch(url);
     const blob = await res.blob();
@@ -662,16 +623,15 @@ useEffect(() => {
         </div>
 
         {/* COURSE DURATION */}
-        <div
-          className="absolute left-[270px] font-semibold"
-          style={{
-            top: 827 + (courseLines.length * 20) + 20
-          }}
-        >
-          Course Duration: {getCourseDuration(
-            student.duration || student.courseDuration || "1 year"
-          )}
-        </div>
+       
+<div
+  className="absolute left-[270px] font-semibold"
+  style={{
+    top: 827 + (courseLines.length * 20) + 20
+  }}
+>
+  Course Duration: {student.duration || "N/A"}
+</div>
 
         {/* GRADE */}
         <div className="absolute top-[770px] left-[535px] font-bold text-2xl">

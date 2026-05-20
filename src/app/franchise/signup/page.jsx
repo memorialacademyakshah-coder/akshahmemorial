@@ -228,22 +228,7 @@ export default function FranchiseSignup() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-          {/* NAME */}
-          <input
-            placeholder="Full Name"
-            className="input"
-            style={{
-              textTransform: 'uppercase',
-            }}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                name:
-                  e.target.value.toUpperCase(),
-              })
-            }
-            required
-          />
+         
 
           {/* INSTITUTE */}
           <input
@@ -261,6 +246,24 @@ export default function FranchiseSignup() {
             }
             required
           />
+
+           {/* NAME */}
+          <input
+            placeholder="Owner's Name"
+            className="input"
+            style={{
+              textTransform: 'uppercase',
+            }}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                name:
+                  e.target.value.toUpperCase(),
+              })
+            }
+            required
+          />
+
 
           {/* EMAIL */}
           <input
