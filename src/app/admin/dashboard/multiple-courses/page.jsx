@@ -17,6 +17,8 @@ export default function CMS() {
     const [examFees, setExamFees] = useState("")
     const [subjects, setSubjects] = useState([""])
     const [courses, setCourses] = useState([])
+    const [editId, setEditId] = useState(null)
+const [isEditing, setIsEditing] = useState(false)
 
     // ================= AWARD LIST =================
     const awardList = [
@@ -60,21 +62,128 @@ export default function CMS() {
         fetchCourses()
     }, [])
 
+
+    // ================= EDIT COURSE =================
+const editCourse = async (course) => {
+
+    try {
+
+        setIsEditing(true)
+        setEditId(course.$id)
+
+        setCourseCode(course.courseCode)
+
+        // REMOVE "IN" FROM COURSE NAME
+        let cleanedName = course.courseName
+
+        if (course.award) {
+            cleanedName = cleanedName.replace(`${course.award} IN `, "")
+        }
+
+        setCourseTitle(cleanedName)
+
+        setAward(course.award)
+        setDuration(course.duration)
+        setExamFees(course.examFees || "")
+
+        // FETCH SUBJECTS
+        const subjectRes = await databases.listDocuments(
+            DATABASE_ID,
+            "subjects_master",
+            [
+                Query.equal("courseCode", course.courseCode)
+            ]
+        )
+
+        const subjectNames = subjectRes.documents.map(
+            (s) => s.subjectName
+        )
+
+        setSubjects(subjectNames.length ? subjectNames : [""])
+
+    } catch (err) {
+        console.log(err)
+        alert("Failed To Load Course")
+    }
+
+}
+
+
+
     // ================= SAVE COURSE =================
-    const saveCourse = async () => {
+// ================= SAVE / UPDATE COURSE =================
+const saveCourse = async () => {
 
-        try {
+    try {
 
-            const finalAward = award === "OTHER" ? customAward : award
+        const finalAward = award === "OTHER" ? customAward : award
 
-            if (!courseCode || !courseTitle || !finalAward || !duration) {
-                alert("Please fill all fields")
-                return
+        if (!courseCode || !courseTitle || !finalAward || !duration) {
+            alert("Please fill all fields")
+            return
+        }
+
+        const courseName = `${finalAward} IN ${courseTitle}`
+
+        // ================= UPDATE =================
+        if (isEditing) {
+
+            await databases.updateDocument(
+                DATABASE_ID,
+                "courses_master_multiple",
+                editId,
+                {
+                    courseCode,
+                    courseName,
+                    duration,
+                    award: finalAward,
+                    examFees: Number(examFees),
+                }
+            )
+
+            // DELETE OLD SUBJECTS
+            const oldSubjects = await databases.listDocuments(
+                DATABASE_ID,
+                "subjects_master",
+                [
+                    Query.equal("courseCode", courseCode)
+                ]
+            )
+
+            for (const sub of oldSubjects.documents) {
+                await databases.deleteDocument(
+                    DATABASE_ID,
+                    "subjects_master",
+                    sub.$id
+                )
             }
 
-            const courseName = `${finalAward} IN ${courseTitle}`
+            // SAVE NEW SUBJECTS
+            for (const subject of subjects) {
 
-            // SAVE COURSE
+                if (subject.trim() !== "") {
+
+                    await databases.createDocument(
+                        DATABASE_ID,
+                        "subjects_master",
+                        ID.unique(),
+                        {
+                            courseCode,
+                            subjectName: subject
+                        }
+                    )
+
+                }
+
+            }
+
+            alert("Course Updated Successfully")
+
+        }
+
+        // ================= CREATE =================
+        else {
+
             await databases.createDocument(
                 DATABASE_ID,
                 "courses_master_multiple",
@@ -89,9 +198,10 @@ export default function CMS() {
                 }
             )
 
-            // SAVE SUBJECTS
             for (const subject of subjects) {
+
                 if (subject.trim() !== "") {
+
                     await databases.createDocument(
                         DATABASE_ID,
                         "subjects_master",
@@ -101,29 +211,33 @@ export default function CMS() {
                             subjectName: subject
                         }
                     )
+
                 }
+
             }
 
             alert("Course Added Successfully")
-
-            // RESET
-            setCourseCode("")
-            setCourseTitle("")
-            setAward("")
-            setCustomAward("")
-            setDuration("")
-            setExamFees("")
-            setSubjects([""])
-
-            // REFRESH LIST
-            fetchCourses()
-
-        } catch (err) {
-            console.log(err)
-            alert(err.message)
         }
 
+        // RESET
+        setCourseCode("")
+        setCourseTitle("")
+        setAward("")
+        setCustomAward("")
+        setDuration("")
+        setExamFees("")
+        setSubjects([""])
+        setIsEditing(false)
+        setEditId(null)
+
+        fetchCourses()
+
+    } catch (err) {
+        console.log(err)
+        alert(err.message)
     }
+
+}
 
     // ================= DELETE =================
     const deleteCourse = async (id) => {
@@ -232,13 +346,12 @@ export default function CMS() {
 
                     </div>
 
-                    <button
-                        onClick={saveCourse}
-                        className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg text-lg"
-                    >
-                        🚀 Save Course
-                    </button>
-
+                  <button
+    onClick={saveCourse}
+    className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg text-lg"
+>
+    {isEditing ? "✏️ Update Course" : "🚀 Save Course"}
+</button>
                 </div>
 
                 {/* COURSE LIST */}
@@ -268,14 +381,23 @@ export default function CMS() {
                                     <td className="p-2 border">{course.courseName}</td>
                                     <td className="p-2 border">{course.duration}</td>
 
-                                    <td className="p-2 border">
-                                        <button
-                                            onClick={() => deleteCourse(course.$id)}
-                                            className="bg-red-500 text-white px-3 py-1 rounded"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
+                                   <td className="p-2 border flex gap-2">
+
+    <button
+        onClick={() => editCourse(course)}
+        className="bg-yellow-500 text-white px-3 py-1 rounded"
+    >
+        Edit
+    </button>
+
+    <button
+        onClick={() => deleteCourse(course.$id)}
+        className="bg-red-500 text-white px-3 py-1 rounded"
+    >
+        Delete
+    </button>
+
+</td>
 
                                 </tr>
                             ))}
