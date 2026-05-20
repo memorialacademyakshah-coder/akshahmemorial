@@ -592,14 +592,12 @@ const franchiseSign =
   {student.course}
 </div>
 
-        {/* COURSE DURATION */}
-         <div
-           className="absolute top-[864px] left-[0px] font-semibold w-full text-center text-xl"
-        >
-          Course Duration: {getCourseDuration(
-            student.duration || student.courseDuration || "1 year"
-          )}
-        </div>
+       {/* COURSE DURATION */}
+<div
+  className="absolute top-[864px] left-[0px] font-semibold w-full text-center text-xl"
+>
+  Course Duration: {student.duration || "N/A"}
+</div>
 
         {/* GRADE */}
         <div className="absolute top-[770px] left-[535px] font-bold text-2xl">

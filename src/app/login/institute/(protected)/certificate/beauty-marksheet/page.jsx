@@ -210,7 +210,7 @@ const rect = node.getBoundingClientRect();
 
         {/* RIGHT */}
        {/* RIGHT */}
-<div className="absolute top-[325px] left-[680px]">
+<div className="absolute top-[330px] left-[680px] text-[13px]">
   {student.coursePeriod || student.duration || "1 Year"}
 </div>
 
@@ -222,22 +222,40 @@ const rect = node.getBoundingClientRect();
   {student.dob}
 </div>
 
-<div className="absolute top-[390px] left-[680px]">
+<div className="absolute top-[392px] left-[680px] text-[13px]">
   {student.coursePeriod || student.duration || "1 Year"}
 </div>
 
         {/* SUBJECTS */}
         {marksArray.map((m, index) => (
           <div key={index}>
-            <div style={{ top: 570 + index * 30, left: 150, position: "absolute" }}>
-              {m.subject
-                ?.split(/\d+\.\s/) // split by "1. 2. 3."
-                .filter(Boolean)
-                .map((sub, i) => (
-                  <div key={i}>{i + 1}. {sub.trim()}</div>
-                ))
-              }
-            </div>
+          <div
+  style={{
+    top: 570 + index * 120,
+    left: 135,
+    width: "480px",
+    position: "absolute",
+    fontSize: "15px",
+    lineHeight: "1.7",
+    wordBreak: "break-word",
+    overflowWrap: "break-word",
+    whiteSpace: "normal",
+  }}
+>
+  {m.subject
+    ?.split(/\d+\.\s/)
+    .filter(Boolean)
+    .map((sub, i) => (
+      <div
+        key={i}
+        style={{
+          marginBottom: "8px",
+        }}
+      >
+        {i + 1}. {sub.trim()}
+      </div>
+    ))}
+</div>
             <div style={{ top: 570 + index * 30, left: 620, position: "absolute" }}>
               {m.objective}
             </div>
