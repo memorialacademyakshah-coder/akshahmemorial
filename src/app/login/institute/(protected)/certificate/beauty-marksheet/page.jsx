@@ -279,7 +279,7 @@ const rect = node.getBoundingClientRect();
         {qrCode && (
           <img
             src={qrCode}
-            className="absolute top-[240px] right-[50px] w-[110px] bg-white p-1"
+            className="absolute top-[240px] right-[50px] w-[90px] bg-white p-1"
           />
         )}
 
