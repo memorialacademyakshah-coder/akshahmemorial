@@ -46,6 +46,14 @@ const statesAndCities = {
   Kerala: ['Kochi', 'Trivandrum'],
   Rajasthan: ['Jaipur', 'Udaipur', 'Jodhpur'],
   Gujarat: ['Ahmedabad', 'Surat', 'Vadodara'],
+  Punjab: ['Ludhiana', 'Jalandhar', 'Bathinda'],
+  Haryana: ['Chandigarh'],
+  Himachal: ['Shimla'],
+  Chhattisgarh: ['Raipur', 'Bhilai', 'Durg'],
+  Odisha: ['Bhubaneswar', 'Cuttack'],
+  Jharkhand: ['Ranchi', 'Jamshedpur'],
+  Uttarakhand: ['Dehradun', 'Haridwar'],
+  'jammu & kashmir': ['Srinagar', 'Jammu'],
 }
 
 /* ---------------- SAFE ATC GENERATOR ---------------- */
