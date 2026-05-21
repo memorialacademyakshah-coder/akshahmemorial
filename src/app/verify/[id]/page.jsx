@@ -2,49 +2,62 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react"
-import { databases } from "@/lib/appwrite"
-import { useParams } from "next/navigation"
+import { useEffect, useState } from "react";
+import { databases } from "@/lib/appwrite";
+import { Query } from "appwrite";
+import { useSearchParams } from "next/navigation";
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export default function VerifyPage() {
 
-  const { id } = useParams()
+  const searchParams = useSearchParams();
 
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const code = searchParams.get("code");
+
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
 
     const fetchData = async () => {
+
       try {
 
-        const res = await databases.getDocument(
+        if (!code) {
+          setLoading(false);
+          return;
+        }
+
+        const res = await databases.listDocuments(
           DATABASE_ID,
           "franchise_approved",
-          id
-        )
+          [
+            Query.equal("atcCode", code)
+          ]
+        );
 
-        setData(res)
+        if (res.documents.length > 0) {
+          setData(res.documents[0]);
+        }
 
       } catch (err) {
-        console.error(err)
+        console.error(err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
+    fetchData();
 
-  }, [id])
+  }, [code]);
 
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center text-lg">
         Loading...
       </div>
-    )
+    );
   }
 
   if (!data) {
@@ -52,7 +65,7 @@ export default function VerifyPage() {
       <div className="h-screen flex items-center justify-center text-red-500 text-xl">
         Invalid or Not Found ❌
       </div>
-    )
+    );
   }
 
   return (
@@ -61,16 +74,14 @@ export default function VerifyPage() {
 
       <div className="bg-white shadow-xl rounded-xl w-[500px] p-8 text-center">
 
-        {/* HEADER */}
         <h1 className="text-2xl font-bold text-black mb-2">
-         Franchise Verification Certificate
+          Franchise Verification Certificate
         </h1>
 
         <p className="text-green-600 font-semibold mb-4">
           ✔ Verified Franchise
         </p>
 
-        {/* LOGO */}
         {data.logo && (
           <img
             src={data.logo}
@@ -78,7 +89,6 @@ export default function VerifyPage() {
           />
         )}
 
-        {/* OWNER PHOTO */}
         {data.ownerPhoto && (
           <img
             src={data.ownerPhoto}
@@ -86,7 +96,6 @@ export default function VerifyPage() {
           />
         )}
 
-        {/* DETAILS */}
         <div className="text-left space-y-2 mt-4">
 
           <p><strong>Institute:</strong> {data.instituteName}</p>
@@ -106,7 +115,6 @@ export default function VerifyPage() {
 
         </div>
 
-        {/* FOOTER */}
         <div className="mt-6 text-sm text-gray-500 border-t pt-4">
           This franchise is verified by BNMI
         </div>
@@ -114,5 +122,5 @@ export default function VerifyPage() {
       </div>
 
     </div>
-  )
+  );
 }

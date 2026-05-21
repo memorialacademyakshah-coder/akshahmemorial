@@ -54,6 +54,7 @@ const statesAndCities = {
   Jharkhand: ['Ranchi', 'Jamshedpur'],
   Uttarakhand: ['Dehradun', 'Haridwar'],
   'jammu & kashmir': ['Srinagar', 'Jammu'],
+  
 }
 
 /* ---------------- SAFE ATC GENERATOR ---------------- */
