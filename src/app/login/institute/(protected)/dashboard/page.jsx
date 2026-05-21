@@ -260,7 +260,7 @@ const handleDownload = async () => {
         {franchiseData && (
           <ActionButton
             icon={<Layers size={18} />}
-            label="ID Card"
+            label="ATC Certificate"
             color="bg-indigo-600"
             onClick={() => setShowIdCard(true)}
           />
