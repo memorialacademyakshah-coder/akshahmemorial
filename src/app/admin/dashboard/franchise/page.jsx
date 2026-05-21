@@ -216,7 +216,12 @@ const fetchAll = async () => {
   const fixQR = async (req) => {
     try {
 
-      const verifyUrl = `https://www.bnmiindia.org/verify/${req.$id}`
+     const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "https://www.bnmiindia.org";
+
+const verifyUrl =
+  `${BASE_URL}/verify/${req.$id}`;
 
       const qrCode = await QRCode.toDataURL(verifyUrl)
 
