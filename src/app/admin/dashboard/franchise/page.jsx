@@ -50,7 +50,6 @@ export default function Dashboard() {
   /* ---------------- LOGIN CHECK ---------------- */
 
   useEffect(() => {
-
     const checkSession = async () => {
       try {
         const user = await account.get()
@@ -217,8 +216,7 @@ const fetchAll = async () => {
   const fixQR = async (req) => {
     try {
 
-      const verifyUrl =
-`https://www.bnmiindia.org/verify?code=${req.atcCode}`
+      const verifyUrl = `https://www.bnmiindia.org/verify/${req.$id}`
 
       const qrCode = await QRCode.toDataURL(verifyUrl)
 
@@ -1103,16 +1101,10 @@ const getExpiryDate = () => {
                 alt="certificate"
                 className="w-full"
               />
-             {selectedFranchise?.qrCode ? (
-  <img
-    src={selectedFranchise.qrCode}
-    className="absolute top-[575px] left-[125px] w-[100px]"
-  />
-) : (
-  <div className="absolute top-[575px] left-[125px] text-red-500">
-    QR Missing
-  </div>
-)}
+              <img
+                src={selectedFranchise?.qrCode}
+                className="absolute top-[555px] left-[125px] w-[100px]"
+              />
               {/* ----------- DYNAMIC TEXT ----------- */}
 
               {/* Institute Name (RED CENTER) */}
