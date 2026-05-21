@@ -214,13 +214,7 @@ const printMarksheet = async (cert) => {
       marksArray = formattedMarks;
     }
 
-    // ===============================
-    // 🔥 FINAL DATA
-    // ===============================
-   
-    // ===============================
-// ✅ FINAL DATA
-// ===============================
+
 
 // ✅ VERIFY URL
 const verifyUrl =
@@ -544,7 +538,15 @@ issueDate: cert.issueDate || "",
 
   const loadCertificates = async () => {
     try {
-      const res = await databases.listDocuments(DATABASE_ID, CERT_COLLECTION);
+      const res = await databases.listDocuments(
+  DATABASE_ID,
+  CERT_COLLECTION,
+  [
+    Query.orderDesc("$createdAt")
+  ]
+);
+
+setCertificates(res.documents || []);
       setCertificates(res.documents || []);
     } catch (err) {
       console.log(err);

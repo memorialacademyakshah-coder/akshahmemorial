@@ -273,7 +273,7 @@ if (!student) return <div className="p-10">Loading...</div>;
 >
 
         {/* TEMPLATE */}
-        <img src="/marksheet.png" className="absolute w-full h-full" />
+        <img src="/multiplemark.png" className="absolute w-full h-full" />
 
         {/* LOGO */}
         {student?.logo && (
@@ -327,60 +327,127 @@ if (!student) return <div className="p-10">Loading...</div>;
         {/* ===============================
             SUBJECT TABLE (NO OVERFLOW FIXED)
         =============================== */}
-        {marksArray.map((m, index) => {
+   {/* ===============================
+    SUBJECT TABLE
+=============================== */}
 
-          const baseTop = 560;
+{marksArray.map((m, index) => {
 
-          const topPosition =
-            baseTop +
-            marksArray
-              .slice(0, index)
-              .reduce((acc, item) => {
-                const lines = Math.ceil(item.subject.length / 40);
-                return acc + lines * 10 + 15;
-              }, 0);
+  const baseTop = 560;
 
-          return (
-            <div key={index}>
+  const topPosition =
+    baseTop +
+    marksArray
+      .slice(0, index)
+      .reduce((acc, item) => {
+        const lines = Math.ceil(item.subject.length / 40);
+        return acc + lines * 10 + 15;
+      }, 0);
 
-              {/* SUBJECT */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: topPosition -10,
-                  left: 150,
-                  width: "420px",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                  lineHeight: "18px",
-                }}
-              >
-                {index + 1}) {m.subject}
-              </div>
-              {/* MAX MARKS */}
-<div style={{ position: "absolute", top: topPosition - 10, left: 580, textAlign: "center" }}>
-  100
-</div>
+  return (
+    <div key={index}>
 
-              {/* OBJECTIVE */}
-              <div style={{ position: "absolute", top: topPosition - 10, left: 650, textAlign: "center" }}>
-                {m.objective}
-              </div>
+      {/* SUBJECT */}
+      <div
+        style={{
+          position: "absolute",
+          top: topPosition - 10,
+          left: 150,
+          width: "320px",
+          wordWrap: "break-word",
+          whiteSpace: "normal",
+          lineHeight: "18px",
+          fontSize: "14px"
+        }}
+      >
+        {index + 1}) {m.subject}
+      </div>
 
-              {/* PRACTICAL */}
-              <div style={{ position: "absolute", top: topPosition - 10, left: 710, textAlign: "center" }}>
-                {m.practical}
-              </div>
+      {/* OBJECTIVE OUT OF */}
+      <div
+        style={{
+          position: "absolute",
+          top: topPosition - 10,
+          left: 450,
+          width: "40px",
+          textAlign: "center",
+          fontWeight: "bold"
+        }}
+      >
+        50
+      </div>
 
-              {/* TOTAL */}
-              <div style={{ position: "absolute", top: topPosition - 10, left: 780, textAlign: "center" }}>
-                {m.total}
-              </div>
+      {/* OBJECTIVE SCORE */}
+      <div
+        style={{
+          position: "absolute",
+          top: topPosition - 10,
+          left: 510,
+          width: "40px",
+          textAlign: "center"
+        }}
+      >
+        {m.objective}
+      </div>
 
-            </div>
-          );
-        })}
+      {/* PRACTICAL OUT OF */}
+      <div
+        style={{
+          position: "absolute",
+          top: topPosition - 10,
+          left: 570,
+          width: "40px",
+          textAlign: "center",
+          fontWeight: "bold"
+        }}
+      >
+        50
+      </div>
 
+      {/* PRACTICAL SCORE */}
+      <div
+        style={{
+          position: "absolute",
+          top: topPosition - 10,
+          left: 630,
+          width: "40px",
+          textAlign: "center"
+        }}
+      >
+        {m.practical}
+      </div>
+
+      {/* TOTAL OUT OF */}
+      <div
+        style={{
+          position: "absolute",
+          top: topPosition - 10,
+          left: 690,
+          width: "40px",
+          textAlign: "center",
+          fontWeight: "bold"
+        }}
+      >
+        100
+      </div>
+
+      {/* TOTAL SCORE */}
+      <div
+        style={{
+          position: "absolute",
+          top: topPosition - 10,
+          left: 765,
+          width: "40px",
+          textAlign: "center",
+          fontWeight: "bold"
+        }}
+      >
+        {Number(m.objective) + Number(m.practical)}
+      </div>
+
+    </div>
+  );
+})}
         {/* ===============================
             TOTAL
         =============================== */}
@@ -391,12 +458,12 @@ if (!student) return <div className="p-10">Loading...</div>;
 
 
         {/* PERCENTAGE */}
-<div className="absolute bottom-[289px] left-[350px] font-bold">
+<div className="absolute bottom-[260px] left-[350px] font-bold">
   Percentage: {percentage}%
 </div>
 
 {/* GRADE */}
-<div className="absolute bottom-[289px] left-[250px] font-bold">
+<div className="absolute bottom-[260px] left-[250px] font-bold">
   Grade: {getGrade()}
 </div>
         {/* ===============================
