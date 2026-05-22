@@ -801,7 +801,23 @@ const getExpiryDate = () => {
 
         {/* Tabs */}
    <div className="flex flex-wrap gap-3 mb-6">
-          <Tab label={`Pending (${pending.length})`} active={activeTab === 'pending'} onClick={() => setActiveTab('pending')} />
+         <Tab
+  label={`Pending (${
+    pending.filter((item) => {
+
+      if (!item) return false;
+
+      const alreadyApproved = approved.some(
+        (a) => a.requestId === item.$id
+      );
+
+      return !alreadyApproved;
+
+    }).length
+  })`}
+  active={activeTab === 'pending'}
+  onClick={() => setActiveTab('pending')}
+/>
           <Tab label={`Approved (${approved.length})`} active={activeTab === 'approved'} onClick={() => setActiveTab('approved')} />
           <Tab label={`Rejected (${rejected.length})`} active={activeTab === 'rejected'} onClick={() => setActiveTab('rejected')} />
         </div>
@@ -1234,7 +1250,7 @@ const getExpiryDate = () => {
               </div>
 
               {/* Address */}
-              <div className="absolute top-[540px] w-full text-center text-sm px-10">
+              <div className="absolute top-[520px] w-full text-center text-sm px-10">
                 {selectedFranchise?.address}{selectedFranchise?.city}, {selectedFranchise?.state} - {selectedFranchise?.pincode}
               </div>
 
