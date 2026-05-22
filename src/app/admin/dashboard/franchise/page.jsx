@@ -9,7 +9,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
 import { storage } from '@/lib/appwrite'
-import { ID } from 'appwrite'
+import { ID, Query } from 'appwrite'
 import * as htmlToImage from "html-to-image";
 import { useRef } from "react";
 
@@ -164,34 +164,132 @@ const fetchAll = async () => {
 
   /* ---------------- FETCH STATS ---------------- */
 
-  const fetchStats = async () => {
+const fetchStats = async () => {
 
-    const admissions = await databases.listDocuments(
-      DATABASE_ID,
-      "student_admissions"
-    )
+  try {
 
-    const enquiries = await databases.listDocuments(
-      DATABASE_ID,
-      "student_enquiries"
-    )
+    // =========================
+    // LOAD ALL TOGETHER
+    // =========================
 
-    const data = {}
+   const [
+  admissions,
+  enquiries,
+  certificates
+] = await Promise.all([
 
-    admissions.documents.forEach(item => {
-      const email = item.franchiseEmail
-      data[email] = data[email] || { admissions: 0, enquiries: 0 }
-      data[email].admissions++
-    })
+  databases.listDocuments(
+    DATABASE_ID,
+    "student_admissions",
+    [
+      Query.limit(5000)
+    ]
+  ),
 
-    enquiries.documents.forEach(item => {
-      const email = item.franchiseEmail
-      data[email] = data[email] || { admissions: 0, enquiries: 0 }
-      data[email].enquiries++
-    })
+  databases.listDocuments(
+    DATABASE_ID,
+    "student_enquiries",
+    [
+      Query.limit(5000)
+    ]
+  ),
 
-    setStats(data)
+  databases.listDocuments(
+    DATABASE_ID,
+    "certificates",
+    [
+      Query.limit(5000)
+    ]
+  )
+
+]);
+
+    const data = {};
+
+    // =========================
+    // ADMISSIONS COUNT
+    // =========================
+
+    admissions.documents.forEach((item) => {
+
+      const email = item.franchiseEmail;
+
+      if (!email) return;
+
+      if (!data[email]) {
+
+        data[email] = {
+          admissions: 0,
+          enquiries: 0,
+          courier: 0
+        };
+
+      }
+
+      data[email].admissions++;
+
+    });
+
+    // =========================
+    // ENQUIRIES COUNT
+    // =========================
+
+    enquiries.documents.forEach((item) => {
+
+      const email = item.franchiseEmail;
+
+      if (!email) return;
+
+      if (!data[email]) {
+
+        data[email] = {
+          admissions: 0,
+          enquiries: 0,
+          courier: 0
+        };
+
+      }
+
+      data[email].enquiries++;
+
+    });
+
+    // =========================
+    // COURIER WALLET
+    // =========================
+
+    certificates.documents.forEach((item) => {
+
+      const email = item.franchiseEmail;
+
+      if (!email) return;
+
+      if (!data[email]) {
+
+        data[email] = {
+          admissions: 0,
+          enquiries: 0,
+          courier: 0
+        };
+
+      }
+
+      // ₹50 per certificate
+      data[email].courier += 50;
+
+    });
+
+    console.log("FINAL STATS:", data);
+
+    setStats(data);
+
+  } catch (err) {
+
+    console.log("FETCH STATS ERROR:", err);
+
   }
+
+};
 
   const fetchPlans = async () => {
     try {
@@ -755,23 +853,28 @@ const getExpiryDate = () => {
   <p><b>Amc Code:</b> {req.amcCode}</p>
 </div>
                 {/* Stats */}
-                <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                  <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-                    Admissions: {stats[req.email]?.admissions || 0}
-                  </span>
-                  <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full">
-                    Enquiries: {stats[req.email]?.enquiries || 0}
-                  </span>
-                  <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full">
-                    Wallet: ₹{req.wallet || "0.00"}
-                  </span>
-                  <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full">
-                    Courier: ₹{req.courierWallet || "0.00"}
-                  </span>
-                </div>
-              </div>
+               
+               <div className="flex flex-wrap gap-4 mt-4">
 
-              {/* RIGHT */}
+  <span className="bg-blue-100 text-blue-700 px-5 py-3 rounded-xl text-base font-bold shadow-sm">
+    Admissions: {stats[req.email]?.admissions || 0}
+  </span>
+
+  <span className="bg-purple-100 text-purple-700 px-5 py-3 rounded-xl text-base font-bold shadow-sm">
+    Enquiries: {stats[req.email]?.enquiries || 0}
+  </span>
+
+  <span className="bg-green-100 text-green-700 px-5 py-3 rounded-xl text-base font-bold shadow-sm">
+    Wallet: ₹{req.wallet || "0.00"}
+  </span>
+
+  <span className="bg-orange-100 text-orange-700 px-5 py-3 rounded-xl text-base font-bold shadow-sm">
+    Courier: ₹{stats[req.email]?.courier || 0}
+  </span>
+
+</div>
+              </div>
+                      {/* RIGHT */}
             <div className="w-full lg:w-auto flex flex-wrap items-center gap-3 justify-start lg:justify-end">
 
                 {/* Pending */}
