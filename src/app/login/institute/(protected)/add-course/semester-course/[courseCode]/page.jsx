@@ -22,18 +22,21 @@ export default function ManageSemesterCourse() {
     fetchCourse();
   }, []);
 
-  // ✅ FETCH COURSE DETAILS
+  // FETCH COURSE
   const fetchCourse = async () => {
+
     const res = await databases.listDocuments(
       DATABASE_ID,
       "semester_courses",
       [Query.equal("courseCode", courseCode)]
     );
+
     setCourse(res.documents[0]);
   };
 
-  // ✅ FETCH SUBJECTS
+  // FETCH SUBJECTS
   const fetchSubjects = async () => {
+
     const res = await databases.listDocuments(
       DATABASE_ID,
       "semester_subjects",
@@ -41,27 +44,36 @@ export default function ManageSemesterCourse() {
     );
 
     setSubjects(res.documents);
+
     groupBySemester(res.documents);
   };
 
-  // ✅ GROUP SUBJECTS BY SEMESTER
+  // GROUP SUBJECTS
   const groupBySemester = (data) => {
+
     const groupedData = {};
 
     data.forEach((item) => {
+
       if (!groupedData[item.semesterNumber]) {
         groupedData[item.semesterNumber] = [];
       }
+
       groupedData[item.semesterNumber].push(item);
     });
 
     setGrouped(groupedData);
   };
 
-  // ✅ ADD NEW SEMESTER
+  // ADD SEMESTER
   const addSemester = () => {
+
     const existing = Object.keys(grouped).map(Number);
-    const next = existing.length > 0 ? Math.max(...existing) + 1 : 1;
+
+    const next =
+      existing.length > 0
+        ? Math.max(...existing) + 1
+        : 1;
 
     setGrouped({
       ...grouped,
@@ -69,20 +81,27 @@ export default function ManageSemesterCourse() {
     });
   };
 
-  // ✅ ADD SUBJECT INPUT
+  // ADD SUBJECT INPUT
   const addSubjectInput = (sem) => {
+
     setNewSubjects((prev) => ({
       ...prev,
       [sem]: [
         ...(prev[sem] || []),
-        { subjectName: "", objective: "", practical: "" }
+        {
+          subjectName: "",
+          objective: "",
+          practical: ""
+        }
       ]
     }));
   };
 
-  // ✅ UPDATE INPUT
+  // UPDATE INPUT
   const updateInput = (sem, index, field, value) => {
+
     const updated = [...(newSubjects[sem] || [])];
+
     updated[index][field] = value;
 
     setNewSubjects({
@@ -91,10 +110,11 @@ export default function ManageSemesterCourse() {
     });
   };
 
-  // ✅ SAVE SUBJECTS + UPDATE SEMESTER COUNT + DUPLICATE CHECK
+  // SAVE SUBJECTS
   const saveSubjects = async (sem) => {
 
     const user = await account.get();
+
     const list = newSubjects[sem] || [];
 
     if (list.length === 0) {
@@ -104,7 +124,7 @@ export default function ManageSemesterCourse() {
 
     for (const sub of list) {
 
-      // 🔥 DUPLICATE CHECK
+      // DUPLICATE CHECK
       const existing = await databases.listDocuments(
         DATABASE_ID,
         "semester_subjects",
@@ -116,11 +136,13 @@ export default function ManageSemesterCourse() {
       );
 
       if (existing.documents.length > 0) {
+
         alert(`Subject "${sub.subjectName}" already exists in Semester ${sem}`);
+
         continue;
       }
 
-      // ✅ SAVE SUBJECT
+      // SAVE SUBJECT
       await databases.createDocument(
         DATABASE_ID,
         "semester_subjects",
@@ -138,7 +160,7 @@ export default function ManageSemesterCourse() {
       );
     }
 
-    // 🔥 UPDATE TOTAL SEMESTERS
+    // UPDATE SEMESTERS
     const allSemesters = [
       ...Object.keys(grouped).map(Number),
       Number(sem)
@@ -155,6 +177,7 @@ export default function ManageSemesterCourse() {
     const courseDoc = courseRes.documents[0];
 
     if (courseDoc) {
+
       await databases.updateDocument(
         DATABASE_ID,
         "semester_courses",
@@ -168,96 +191,197 @@ export default function ManageSemesterCourse() {
     alert(`Semester ${sem} saved`);
 
     setNewSubjects({});
+
     fetchSubjects();
+
     fetchCourse();
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0f] text-white p-10">
 
-      <h1 className="text-3xl font-bold mb-6">
-        Manage Course: {courseCode} {course && `- ${course.courseName}`}
-      </h1>
+    <div className="min-h-screen bg-[#0b0b0f] text-white p-3 sm:p-5 lg:p-10">
 
-      <button
-        onClick={addSemester}
-        className="bg-orange-500 px-4 py-2 rounded mb-6 text-black"
-      >
-        ➕ Add Semester
-      </button>
+      {/* HEADER */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
 
-      {Object.keys(grouped)
-        .sort((a, b) => a - b)
-        .map((sem) => (
-          <div key={sem} className="bg-[#121212] p-6 rounded mb-6">
+        <div>
 
-            <h2 className="text-xl text-orange-400 mb-4">
-              Semester {sem}
-            </h2>
+          <h1 className="text-2xl sm:text-3xl font-bold leading-tight break-words">
 
-            {/* ✅ EXISTING SUBJECTS */}
-            {grouped[sem]?.map((sub, i) => (
-              <div key={i} className="mb-2 text-gray-300">
-                {sub.subjectName} 
-                (Obj: {sub.objectiveMarks} | Prac: {sub.practicalMarks})
+            Manage Course:
+            <span className="text-orange-400 ml-2">
+              {courseCode}
+            </span>
+
+          </h1>
+
+          {course && (
+
+            <p className="text-gray-400 mt-2 text-sm sm:text-base break-words">
+              {course.courseName}
+            </p>
+
+          )}
+
+        </div>
+
+        <button
+          onClick={addSemester}
+          className="bg-orange-500 hover:bg-orange-600 transition px-4 py-3 rounded-lg text-black font-semibold w-full sm:w-auto"
+        >
+          ➕ Add Semester
+        </button>
+
+      </div>
+
+      {/* SEMESTERS */}
+      <div className="space-y-6">
+
+        {Object.keys(grouped)
+          .sort((a, b) => a - b)
+          .map((sem) => (
+
+            <div
+              key={sem}
+              className="bg-[#121212] border border-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg"
+            >
+
+              {/* SEM HEADER */}
+              <h2 className="text-xl sm:text-2xl text-orange-400 font-semibold mb-5">
+                Semester {sem}
+              </h2>
+
+              {/* EXISTING SUBJECTS */}
+              <div className="space-y-2 mb-5">
+
+                {grouped[sem]?.map((sub, i) => (
+
+                  <div
+                    key={i}
+                    className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-3 text-sm sm:text-base text-gray-300 break-words"
+                  >
+
+                    <div className="font-medium">
+                      {sub.subjectName}
+                    </div>
+
+                    <div className="text-gray-400 mt-1 text-xs sm:text-sm">
+
+                      Obj:
+                      <span className="text-white ml-1 mr-3">
+                        {sub.objectiveMarks}
+                      </span>
+
+                      Prac:
+                      <span className="text-white ml-1">
+                        {sub.practicalMarks}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
               </div>
-            ))}
 
-            {/* ✅ NEW SUBJECT INPUT */}
-            {(newSubjects[sem] || []).map((sub, i) => (
-              <div key={i} className="grid md:grid-cols-3 gap-4 mb-3">
-                <input
-                  placeholder="Subject Name"
-                  className="input"
-                  onChange={(e) =>
-                    updateInput(sem, i, "subjectName", e.target.value)
-                  }
-                />
-                <input
-                  type="number"
-                  placeholder="Objective"
-                  className="input"
-                  onChange={(e) =>
-                    updateInput(sem, i, "objective", e.target.value)
-                  }
-                />
-                <input
-                  type="number"
-                  placeholder="Practical"
-                  className="input"
-                  onChange={(e) =>
-                    updateInput(sem, i, "practical", e.target.value)
-                  }
-                />
+              {/* NEW SUBJECT INPUTS */}
+              <div className="space-y-4">
+
+                {(newSubjects[sem] || []).map((sub, i) => (
+
+                  <div
+                    key={i}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                  >
+
+                    <input
+                      placeholder="Subject Name"
+                      className="input"
+                      onChange={(e) =>
+                        updateInput(
+                          sem,
+                          i,
+                          "subjectName",
+                          e.target.value
+                        )
+                      }
+                    />
+
+                    <input
+                      type="number"
+                      placeholder="Objective"
+                      className="input"
+                      onChange={(e) =>
+                        updateInput(
+                          sem,
+                          i,
+                          "objective",
+                          e.target.value
+                        )
+                      }
+                    />
+
+                    <input
+                      type="number"
+                      placeholder="Practical"
+                      className="input"
+                      onChange={(e) =>
+                        updateInput(
+                          sem,
+                          i,
+                          "practical",
+                          e.target.value
+                        )
+                      }
+                    />
+
+                  </div>
+
+                ))}
+
               </div>
-            ))}
 
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={() => addSubjectInput(sem)}
-                className="bg-gray-700 px-3 py-1 rounded"
-              >
-                + Add Subject
-              </button>
+              {/* BUTTONS */}
+              <div className="flex flex-col sm:flex-row gap-3 mt-6">
 
-              <button
-                onClick={() => saveSubjects(sem)}
-                className="bg-green-500 px-3 py-1 rounded text-black"
-              >
-                Save Semester
-              </button>
+                <button
+                  onClick={() => addSubjectInput(sem)}
+                  className="bg-gray-700 hover:bg-gray-600 transition px-4 py-3 rounded-lg w-full sm:w-auto"
+                >
+                  + Add Subject
+                </button>
+
+                <button
+                  onClick={() => saveSubjects(sem)}
+                  className="bg-green-500 hover:bg-green-600 transition px-4 py-3 rounded-lg text-black font-semibold w-full sm:w-auto"
+                >
+                  Save Semester
+                </button>
+
+              </div>
+
             </div>
 
-          </div>
-        ))}
+          ))}
+
+      </div>
 
       <style jsx>{`
         .input {
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.1);
-          padding: 10px;
-          border-radius: 8px;
+          padding: 12px;
+          border-radius: 10px;
           color: white;
+          width: 100%;
+          outline: none;
+          transition: 0.3s;
+        }
+
+        .input:focus {
+          border-color: #f97316;
+          box-shadow: 0 0 0 1px #f97316;
         }
       `}</style>
 

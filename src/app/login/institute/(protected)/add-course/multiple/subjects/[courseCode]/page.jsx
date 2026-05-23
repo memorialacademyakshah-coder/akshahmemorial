@@ -28,6 +28,7 @@ export default function SubjectPage() {
   }, []);
 
   const fetchSubjects = async () => {
+
     const res = await databases.listDocuments(
       DATABASE_ID,
       "subjects_master",
@@ -37,23 +38,26 @@ export default function SubjectPage() {
     setSubjects(res.documents);
   };
 
-const toggleSubject = (name) => {
-  setSelectedSubjects((prev) => {
-    // ❌ If already selected → remove
-    if (prev.includes(name)) {
-      return prev.filter((s) => s !== name);
-    }
+  const toggleSubject = (name) => {
 
-    // 🚫 Limit to 10 subjects
-    if (prev.length >= 10) {
-      alert("You can select maximum 10 subjects");
-      return prev;
-    }
+    setSelectedSubjects((prev) => {
 
-    // ✅ Add in order
-    return [...prev, name];
-  });
-};
+      // REMOVE
+      if (prev.includes(name)) {
+        return prev.filter((s) => s !== name);
+      }
+
+      // LIMIT
+      if (prev.length >= 10) {
+        alert("You can select maximum 10 subjects");
+        return prev;
+      }
+
+      // ADD
+      return [...prev, name];
+    });
+  };
+
   const saveCourse = async () => {
 
     if (selectedSubjects.length === 0) {
@@ -82,48 +86,63 @@ const toggleSubject = (name) => {
     );
 
     alert("Course Saved");
+
     router.push("/login/institute/add-course/multiple/list");
   };
 
   return (
 
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black to-gray-900 text-white p-3 sm:p-5 lg:p-10 flex items-center justify-center">
 
-      <div className="w-full max-w-lg bg-[#121212] border border-gray-800 rounded-2xl shadow-xl p-8">
+      <div className="w-full max-w-2xl bg-[#121212] border border-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8">
 
-        <h1 className="text-2xl font-bold mb-2">
-          {courseName}
-        </h1>
+        {/* HEADER */}
+        <div className="mb-6">
 
-        <p className="text-gray-400 mb-6">
-          Select subjects and configure fees
-        </p>
+          <h1 className="text-2xl sm:text-3xl font-bold leading-tight break-words">
+            {courseName}
+          </h1>
+
+          <p className="text-gray-400 mt-2 text-sm sm:text-base">
+            Select subjects and configure fees
+          </p>
+
+        </div>
 
         {/* SUBJECT LIST */}
-        <div className="max-h-52 overflow-y-auto mb-6 space-y-2">
+        <div className="max-h-[350px] overflow-y-auto mb-6 space-y-2 pr-1">
 
-          {subjects.map(s => (
+          {subjects.map((s) => (
 
             <label
               key={s.$id}
-              className="flex items-center gap-3 p-2 rounded hover:bg-[#1a1a1a] cursor-pointer"
+              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#1a1a1a] cursor-pointer border border-transparent hover:border-gray-700 transition"
             >
 
               <input
                 type="checkbox"
+                checked={selectedSubjects.includes(s.subjectName)}
                 onChange={() => toggleSubject(s.subjectName)}
-                className="accent-orange-500"
+                className="accent-orange-500 mt-1 w-4 h-4 shrink-0"
               />
 
-          <span className="flex justify-between w-full">
-  {s.subjectName}
+              <div className="flex justify-between items-start w-full gap-3">
 
-  {selectedSubjects.includes(s.subjectName) && (
-    <span className="bg-orange-500 text-black px-2 py-0.5 rounded text-xs">
-      {selectedSubjects.indexOf(s.subjectName) + 1}
-    </span>
-  )}
-</span>
+                <span className="break-words text-sm sm:text-base">
+                  {s.subjectName}
+                </span>
+
+                {selectedSubjects.includes(s.subjectName) && (
+
+                  <span className="bg-orange-500 text-black px-2 py-1 rounded text-xs font-semibold whitespace-nowrap shrink-0">
+
+                    {selectedSubjects.indexOf(s.subjectName) + 1}
+
+                  </span>
+
+                )}
+
+              </div>
 
             </label>
 
@@ -137,23 +156,35 @@ const toggleSubject = (name) => {
           <input
             type="number"
             placeholder="Course Fees"
+            value={courseFees}
             onChange={(e) => setCourseFees(e.target.value)}
-            className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:border-orange-500 outline-none"
+            className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:border-orange-500 outline-none text-sm sm:text-base"
           />
 
           <input
             type="number"
             placeholder="Minimum Fees"
+            value={minimumFees}
             onChange={(e) => setMinimumFees(e.target.value)}
-            className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:border-orange-500 outline-none"
+            className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:border-orange-500 outline-none text-sm sm:text-base"
           />
+
+        </div>
+
+        {/* SELECTED COUNT */}
+        <div className="mt-4 text-sm text-gray-400">
+
+          Selected Subjects:
+          <span className="text-orange-400 font-semibold ml-2">
+            {selectedSubjects.length}/10
+          </span>
 
         </div>
 
         {/* BUTTON */}
         <button
           onClick={saveCourse}
-          className="w-full mt-6 bg-orange-500 hover:bg-orange-600 transition py-3 rounded-lg font-semibold text-black shadow-lg"
+          className="w-full mt-6 bg-orange-500 hover:bg-orange-600 transition py-3 rounded-lg font-semibold text-black shadow-lg text-sm sm:text-base"
         >
           Save Course
         </button>

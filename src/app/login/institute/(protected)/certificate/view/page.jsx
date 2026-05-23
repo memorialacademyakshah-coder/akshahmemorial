@@ -6,7 +6,9 @@ import { Query } from "appwrite";
 import QRCode from "qrcode";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+
 const CERT_COLLECTION = "certificates";
+
 const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function FranchiseCertificateView() {
@@ -18,9 +20,7 @@ export default function FranchiseCertificateView() {
     getUser();
   }, []);
 
-  // ===============================
-  // ✅ GET USER
-  // ===============================
+  // GET USER
   const getUser = async () => {
 
     try {
@@ -38,9 +38,7 @@ export default function FranchiseCertificateView() {
     }
   };
 
-  // ===============================
-  // ✅ LOAD CERTIFICATES
-  // ===============================
+  // LOAD CERTIFICATES
   const loadCertificates = async (userId) => {
 
     try {
@@ -63,9 +61,7 @@ export default function FranchiseCertificateView() {
     }
   };
 
-  // ===============================
-  // ✅ PRINT CERTIFICATE
-  // ===============================
+  // PRINT CERTIFICATE
   const printCertificate = async (cert) => {
 
     try {
@@ -76,73 +72,76 @@ export default function FranchiseCertificateView() {
         cert.studentId
       );
 
-      // ✅ FRANCHISE
+      // FRANCHISE
       const franchiseRes = await databases.listDocuments(
         DATABASE_ID,
         "franchise_approved",
         [Query.equal("email", studentData.franchiseEmail)]
       );
 
-      const franchiseData = franchiseRes.documents[0];
+      const franchiseData =
+        franchiseRes.documents[0];
 
-      // ✅ QR
+      // QR
       const verifyUrl =
         `https://www.bnmiindia.org/beauty-verification/${cert.studentId}`;
 
-      const qrCode = await QRCode.toDataURL(verifyUrl);
+      const qrCode =
+        await QRCode.toDataURL(verifyUrl);
 
-      // ✅ FINAL DATA
+      // FINAL DATA
       const data = {
 
-        // 🔥 IMPORTANT
         readOnly: true,
 
         studentId: cert.studentId,
 
-       studentName:
-  cert.studentName ||
-  studentData.studentName ||
-  "",
+        studentName:
+          cert.studentName ||
+          studentData.studentName ||
+          "",
 
         fatherName:
-  cert.fatherName ||
-  studentData.fatherName ||
-  "",
+          cert.fatherName ||
+          studentData.fatherName ||
+          "",
 
         motherName:
-  cert.motherName ||
-  studentData.motherName ||
-  "",
+          cert.motherName ||
+          studentData.motherName ||
+          "",
 
         relationType:
           studentData.relationType || "S/O",
 
         showFatherInCertificate:
-          String(studentData.showFatherInCertificate)
-            .toLowerCase() === "true",
+          String(
+            studentData.showFatherInCertificate
+          ).toLowerCase() === "true",
 
         showMotherInCertificate:
-          String(studentData.showMotherInCertificate)
-            .toLowerCase() === "true",
+          String(
+            studentData.showMotherInCertificate
+          ).toLowerCase() === "true",
 
-       course:
-  cert.course ||
-  studentData.courseName ||
-  "",
+        course:
+          cert.course ||
+          studentData.courseName ||
+          "",
 
-   duration:
-  cert.duration || "N/A",
+        duration:
+          cert.duration || "N/A",
 
         grade:
-  cert.grade || "",
+          cert.grade || "",
 
-     marks:
-  cert.marks || "",
+        marks:
+          cert.marks || "",
 
-    instituteName:
-  cert.instituteName ||
-  studentData.instituteName ||
-  "",
+        instituteName:
+          cert.instituteName ||
+          studentData.instituteName ||
+          "",
 
         photoId:
           studentData.photoId || "",
@@ -150,10 +149,10 @@ export default function FranchiseCertificateView() {
         signatureId:
           studentData.signatureId || "",
 
-       franchiseSignature:
-  cert.franchiseSignature ||
-  franchiseData?.signature ||
-  "",
+        franchiseSignature:
+          cert.franchiseSignature ||
+          franchiseData?.signature ||
+          "",
 
         logo:
           franchiseData?.logo || "",
@@ -163,11 +162,12 @@ export default function FranchiseCertificateView() {
           franchiseData?.owner ||
           franchiseData?.name ||
           "",
-city:
-  cert.city ||
-  franchiseData?.city ||
-  franchiseData?.address ||
-  "",
+
+        city:
+          cert.city ||
+          franchiseData?.city ||
+          franchiseData?.address ||
+          "",
 
         address:
           franchiseData?.address || "",
@@ -178,8 +178,9 @@ city:
         certificateNo:
           cert.certificateNo ||
           `CERT-${Date.now()}`,
-issueDate:
-  cert.issueDate || "",
+
+        issueDate:
+          cert.issueDate || "",
 
         semesterNumber:
           studentData.courseType === "semester"
@@ -187,36 +188,39 @@ issueDate:
             : null
       };
 
-   
+      // OPEN CERTIFICATE
+      if (studentData.courseType === "beauty") {
 
-    if (studentData.courseType === "beauty") {
+        window.open(
+          `/login/institute/certificate/beauty-certificate/${cert.$id}`,
+          "_blank"
+        );
 
-  window.open(
-    `/login/institute/certificate/beauty-certificate/${cert.$id}`,
-    "_blank"
-  );
+      } else if (
+        studentData.courseType === "semester"
+      ) {
 
-} else if (studentData.courseType === "semester") {
+        window.open(
+          `/login/institute/certificate/semester-certificate/${cert.$id}`,
+          "_blank"
+        );
 
-  window.open(
-    `/login/institute/certificate/semester-certificate/${cert.$id}`,
-    "_blank"
-  );
+      } else if (
+        studentData.courseType === "multiple"
+      ) {
 
-} else if (studentData.courseType === "multiple") {
+        window.open(
+          `/login/institute/certificate/multiple-certificate/${cert.$id}`,
+          "_blank"
+        );
 
-  window.open(
-    `/login/institute/certificate/multiple-certificate/${cert.$id}`,
-    "_blank"
-  );
+      } else {
 
-} else {
-
-  window.open(
-    `/login/institute/certificate/print/${cert.$id}`,
-    "_blank"
-  );
-}
+        window.open(
+          `/login/institute/certificate/print/${cert.$id}`,
+          "_blank"
+        );
+      }
 
     } catch (err) {
 
@@ -227,58 +231,72 @@ issueDate:
     }
   };
 
-  // ===============================
-  // ✅ PRINT MARKSHEET
-  // ===============================
+  // PRINT MARKSHEET
   const printMarksheet = async (cert) => {
 
     try {
 
-      const studentData = await databases.getDocument(
-        DATABASE_ID,
-        "student_admissions",
-        cert.studentId
-      );
+      const studentData =
+        await databases.getDocument(
+          DATABASE_ID,
+          "student_admissions",
+          cert.studentId
+        );
 
-      // ✅ FRANCHISE
-      const franchiseRes = await databases.listDocuments(
-        DATABASE_ID,
-        "franchise_approved",
-        [Query.equal("email", studentData.franchiseEmail)]
-      );
+      // FRANCHISE
+      const franchiseRes =
+        await databases.listDocuments(
+          DATABASE_ID,
+          "franchise_approved",
+          [
+            Query.equal(
+              "email",
+              studentData.franchiseEmail
+            )
+          ]
+        );
 
-      const franchiseData = franchiseRes.documents[0];
+      const franchiseData =
+        franchiseRes.documents[0];
 
-      // ===============================
-      // ✅ SUBJECT MARKS
-      // ===============================
+      // SUBJECT MARKS
       let marksArray = [];
 
       try {
 
-        const res = await databases.listDocuments(
-          DATABASE_ID,
-          "student_subject_results",
-          [Query.equal("studentId", cert.studentId)]
-        );
+        const res =
+          await databases.listDocuments(
+            DATABASE_ID,
+            "student_subject_results",
+            [
+              Query.equal(
+                "studentId",
+                cert.studentId
+              )
+            ]
+          );
 
         marksArray = res.documents.map((m) => ({
           subject: m.subject,
-          objective: Number(m.objective || 0),
-          practical: Number(m.practical || 0),
+          objective: Number(
+            m.objective || 0
+          ),
+          practical: Number(
+            m.practical || 0
+          ),
           total: Number(m.total || 0),
         }));
 
       } catch (err) {
 
-        console.log("MARK FETCH ERROR:", err);
+        console.log(
+          "MARK FETCH ERROR:",
+          err
+        );
 
       }
 
-      // ✅ FINAL DATA
-     
-
-      // ✅ OPEN PAGE
+      // OPEN MARKSHEET
       if (studentData.courseType === "beauty") {
 
         window.open(
@@ -286,14 +304,18 @@ issueDate:
           "_blank"
         );
 
-      } else if (studentData.courseType === "semester") {
+      } else if (
+        studentData.courseType === "semester"
+      ) {
 
         window.open(
           "/login/institute/certificate/semester-marksheet",
           "_blank"
         );
 
-      } else if (studentData.courseType === "multiple") {
+      } else if (
+        studentData.courseType === "multiple"
+      ) {
 
         window.open(
           "/login/institute/certificate/multiple-marksheet",
@@ -317,9 +339,7 @@ issueDate:
     }
   };
 
-  // ===============================
-  // ✅ PHOTO
-  // ===============================
+  // PHOTO
   const getPhoto = (photoId) => {
 
     if (!photoId) return null;
@@ -329,114 +349,153 @@ issueDate:
 
   return (
 
-    <div className="p-10">
+    <div className="min-h-screen bg-gray-100 p-3 sm:p-5 lg:p-10">
 
-      <h1 className="text-2xl font-bold mb-6">
-        Approved Certificates
-      </h1>
+      {/* HEADER */}
+      <div className="mb-6">
 
-      <table className="w-full border">
+        <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
+          Approved Certificates
+        </h1>
 
-        <thead>
+      </div>
 
-          <tr>
+      {/* TABLE CARD */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
-            <th className="border p-2">#</th>
+        <div className="overflow-x-auto">
 
-            <th className="border p-2">
-              Photo
-            </th>
+          <table className="w-full min-w-[900px] border-collapse text-xs sm:text-sm">
 
-            <th className="border p-2">
-              Student
-            </th>
+            <thead className="bg-gray-100">
 
-            <th className="border p-2">
-              Course
-            </th>
+              <tr>
 
-            <th className="border p-2">
-              Marks
-            </th>
+                <th className="border p-3 whitespace-nowrap">
+                  #
+                </th>
 
-            <th className="border p-2">
-              Grade
-            </th>
+                <th className="border p-3 whitespace-nowrap">
+                  Photo
+                </th>
 
-            <th className="border p-2">
-              Action
-            </th>
+                <th className="border p-3 whitespace-nowrap">
+                  Student
+                </th>
 
-          </tr>
+                <th className="border p-3 whitespace-nowrap">
+                  Course
+                </th>
 
-        </thead>
+                <th className="border p-3 whitespace-nowrap">
+                  Marks
+                </th>
 
-        <tbody>
+                <th className="border p-3 whitespace-nowrap">
+                  Grade
+                </th>
 
-          {certificates.map((c, i) => (
+                <th className="border p-3 whitespace-nowrap">
+                  Action
+                </th>
 
-            <tr key={c.$id}>
+              </tr>
 
-              <td className="border p-2">
-                {i + 1}
-              </td>
+            </thead>
 
-              <td className="border p-2">
+            <tbody>
 
-                {getPhoto(c.photoId) ? (
+              {certificates.map((c, i) => (
 
-                  <img
-                    src={getPhoto(c.photoId)}
-                    className="w-12 h-12 rounded-full object-cover mx-auto border"
-                  />
-
-                ) : (
-                  "N/A"
-                )}
-
-              </td>
-
-              <td className="border p-2">
-                {c.studentName}
-              </td>
-
-              <td className="border p-2">
-                {c.course}
-              </td>
-
-              <td className="border p-2">
-                {c.marks}
-              </td>
-
-              <td className="border p-2">
-                {c.grade}
-              </td>
-
-              <td className="border p-2 flex gap-2">
-
-                <button
-                  onClick={() => printCertificate(c)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                <tr
+                  key={c.$id}
+                  className="hover:bg-gray-50 transition"
                 >
-                  Certificate
-                </button>
 
-                <button
-                  onClick={() => printMarksheet(c)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"
-                >
-                  Marksheet
-                </button>
+                  {/* INDEX */}
+                  <td className="border p-3 whitespace-nowrap">
+                    {i + 1}
+                  </td>
 
-              </td>
+                  {/* PHOTO */}
+                  <td className="border p-3">
 
-            </tr>
+                    {getPhoto(c.photoId) ? (
 
-          ))}
+                      <img
+                        src={getPhoto(c.photoId)}
+                        alt="student"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover mx-auto border"
+                      />
 
-        </tbody>
+                    ) : (
 
-      </table>
+                      <span className="text-gray-500">
+                        N/A
+                      </span>
+
+                    )}
+
+                  </td>
+
+                  {/* STUDENT */}
+                  <td className="border p-3 min-w-[180px] break-words">
+                    {c.studentName}
+                  </td>
+
+                  {/* COURSE */}
+                  <td className="border p-3 min-w-[200px] break-words">
+                    {c.course}
+                  </td>
+
+                  {/* MARKS */}
+                  <td className="border p-3 whitespace-nowrap">
+                    {c.marks}
+                  </td>
+
+                  {/* GRADE */}
+                  <td className="border p-3 whitespace-nowrap">
+                    {c.grade}
+                  </td>
+
+                  {/* ACTION */}
+                  <td className="border p-3">
+
+                    <div className="flex flex-col sm:flex-row gap-2 min-w-[180px]">
+
+                      <button
+                        onClick={() =>
+                          printCertificate(c)
+                        }
+                        className="bg-blue-600 hover:bg-blue-700 transition text-white px-3 py-2 rounded-lg text-xs sm:text-sm"
+                      >
+                        Certificate
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          printMarksheet(c)
+                        }
+                        className="bg-purple-600 hover:bg-purple-700 transition text-white px-3 py-2 rounded-lg text-xs sm:text-sm"
+                      >
+                        Marksheet
+                      </button>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
 
     </div>
   );

@@ -156,7 +156,23 @@ const getExpiryDate = (data) => {
 
 const handleDownload = async () => {
   try {
-    const node = document.getElementById("print-area");
+  let node = document.getElementById("print-area");
+
+if (!node) {
+  node = document.createElement("div");
+
+  node.style.position = "fixed";
+  node.style.left = "-9999px";
+  node.style.top = "0";
+
+  node.innerHTML = `
+    <div style="position:relative;width:800px;">
+      <img src="/ATC.png" style="width:100%;" />
+    </div>
+  `;
+
+  document.body.appendChild(node);
+}
 
     if (!node) {
       alert("Certificate not found");
@@ -257,14 +273,20 @@ const handleDownload = async () => {
         />
 
         {/* ✅ ID CARD BUTTON */}
-        {franchiseData && (
-          <ActionButton
-            icon={<Layers size={18} />}
-            label="ATC Certificate"
-            color="bg-indigo-600"
-            onClick={() => setShowIdCard(true)}
-          />
-        )}
+       <ActionButton
+  icon={<Layers size={18} />}
+  label="ATC Certificate"
+  color="bg-indigo-600"
+  onClick={() => {
+    if (window.innerWidth < 768) {
+      setTimeout(() => {
+        handleDownload();
+      }, 300);
+    } else {
+      setShowIdCard(true);
+    }
+  }}
+/>
 
       </div>
 
@@ -327,80 +349,100 @@ const handleDownload = async () => {
           ⚠ Low Wallet Balance! Please recharge.
         </div>
       )}
+{showIdCard && franchiseData && (
+  <div className="fixed inset-0 bg-black/70 z-50 overflow-y-auto">
 
-      {showIdCard && franchiseData && (
-<div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-start overflow-y-auto z-50 p-6">
+    <div className="min-h-screen flex justify-center items-start sm:items-center p-2 sm:p-6">
 
-<div className="bg-white p-2 sm:p-4 relative rounded-lg shadow-xl max-h-[95vh] overflow-auto w-full">
-  <button
-  onClick={handleDownload}
-  className="bg-green-600 text-white px-6 py-2 mt-4 rounded-lg shadow hover:scale-105"
->
-  Download Certificate
-</button>
-      {/* CLOSE */}
-      <button
-        onClick={() => setShowIdCard(false)}
-        className="absolute top-2 right-3 text-xl"
-      >
-        ✖
-      </button>
+      <div className="bg-white relative rounded-xl shadow-2xl w-full max-w-5xl overflow-hidden">
 
-      {/* CERTIFICATE */}
-<div
-  id="print-area"
-  className="w-[800px] max-w-full relative"
->
-        {/* BACKGROUND */}
-        <img src="/ATC.png" className="w-full" />
+        {/* TOP BAR */}
+        <div className="sticky top-0 z-20 bg-white border-b flex items-center justify-between p-3 sm:p-4">
 
-        {/* QR */}
-        {franchiseData.qrCode && (
-          <img
-            src={franchiseData.qrCode}
-            className="absolute top-[550px] left-[130px] w-[100px]"
-          />
-        )}
+          {/* DOWNLOAD BUTTON */}
+          <button
+            onClick={handleDownload}
+            className="bg-green-600 text-white px-4 sm:px-6 py-2 rounded-lg shadow hover:scale-105 transition-all"
+          >
+            Download Certificate
+          </button>
 
-        {/* INSTITUTE NAME */}
-        <div className="absolute top-[470px] w-full text-center">
-          <h1 className="text-red-600 text-2xl font-bold">
-            {franchiseData.instituteName}
-          </h1>
+          {/* CLOSE */}
+          <button
+            onClick={() => setShowIdCard(false)}
+            className="text-2xl font-bold text-black"
+          >
+            ✖
+          </button>
         </div>
 
-        {/* ADDRESS */}
-        <div className="absolute top-[520px] w-full text-center text-sm px-10">
-          {franchiseData.address}, {franchiseData.city}, {franchiseData.state} - {franchiseData.pincode}
-        </div>
+        {/* CERTIFICATE CONTAINER */}
+        <div className="flex justify-center items-center bg-gray-100 p-2 sm:p-6 overflow-auto">
 
-        {/* APPLICANT NAME */}
-        <div className="absolute top-[540px] w-full text-center font-semibold">
-          Applicant Name: {franchiseData.name}
-        </div>
+          <div
+            id="print-area"
+            className="relative w-full max-w-[850px]"
+          >
 
-        {/* ATC CODE (TOP) */}
-        <div className="absolute top-[580px] left-[304px] font-bold">
-          ATC Code: {franchiseData.atcCode}
-        </div>
+            {/* BACKGROUND */}
+            <img
+              src="/ATC.png"
+              className="w-full h-auto block"
+            />
 
-        {/* ATC CODE (BOTTOM) */}
-        <div className="absolute bottom-[90px] left-[220px] font-bold">
-          ATC Code: {franchiseData.atcCode}
-        </div>
+            {/* QR */}
+            {franchiseData.qrCode && (
+              <img
+                src={franchiseData.qrCode}
+                className="absolute top-[590px] left-[130px] w-[100px]"
+              />
+            )}
 
-        {/* ISSUE DATE */}
-        <div className="absolute bottom-[70px] left-[220px] font-semibold">
-          Issue Date: {formatDate(
-            franchiseData.issueDate || franchiseData.$createdAt
-          )}
-        </div>
+            {/* INSTITUTE NAME */}
+            <div className="absolute top-[500px] w-full text-center">
+              <h1 className="text-red-600 text-2xl font-bold">
+                {franchiseData.instituteName}
+              </h1>
+            </div>
 
-        {/* EXPIRY DATE */}
-        <div className="absolute bottom-[50px] left-[220px] font-semibold">
-          Expiry Date: {formatDate(getExpiryDate(franchiseData))}
-        </div>
+            {/* ADDRESS */}
+            <div className="absolute top-[550px] w-full text-center text-sm px-10">
+              {franchiseData.address}, {franchiseData.city},{" "}
+              {franchiseData.state} - {franchiseData.pincode}
+            </div>
 
+            {/* APPLICANT NAME */}
+            <div className="absolute top-[580px] w-full text-center font-semibold">
+              Applicant Name: {franchiseData.name}
+            </div>
+
+            {/* ATC CODE TOP */}
+            <div className="absolute top-[620px] text-center w-full font-bold">
+              ATC Code: {franchiseData.atcCode}
+            </div>
+
+            {/* ATC CODE BOTTOM */}
+            <div className="absolute bottom-[90px] left-[220px] font-bold">
+              ATC Code: {franchiseData.atcCode}
+            </div>
+
+            {/* ISSUE DATE */}
+            <div className="absolute bottom-[70px] left-[220px] font-semibold">
+              Issue Date:{" "}
+              {formatDate(
+                franchiseData.issueDate ||
+                  franchiseData.$createdAt
+              )}
+            </div>
+
+            {/* EXPIRY DATE */}
+            <div className="absolute bottom-[50px] left-[220px] font-semibold">
+              Expiry Date:{" "}
+              {formatDate(getExpiryDate(franchiseData))}
+            </div>
+
+          </div>
+        </div>
       </div>
     </div>
   </div>

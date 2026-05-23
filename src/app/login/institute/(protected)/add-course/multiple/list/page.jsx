@@ -8,198 +8,262 @@ const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 
 export default function ListPage() {
 
-    const [courses, setCourses] = useState([])
-    const [editCourse, setEditCourse] = useState(null)
-const [courseFees, setCourseFees] = useState('')
-const [minimumFees, setMinimumFees] = useState('')
-const [search, setSearch] = useState('')
+  const [courses, setCourses] = useState([])
+  const [editCourse, setEditCourse] = useState(null)
 
-    useEffect(() => {
-        fetchCourses()
-    }, [])
+  const [courseFees, setCourseFees] = useState('')
+  const [minimumFees, setMinimumFees] = useState('')
+  const [search, setSearch] = useState('')
 
-    const deleteCourse = async (id) => {
-  if (!id) return
-
-  try {
-    await databases.deleteDocument(
-      DATABASE_ID,
-      "franchise_multiple_courses",
-      id
-    )
+  useEffect(() => {
     fetchCourses()
-  } catch (error) {
-    console.log("Delete Error:", error)
-  }
-}
+  }, [])
 
-const openEdit = (course) => {
-  setEditCourse(course)
-  setCourseFees(course.courseFees)
-  setMinimumFees(course.minimumFees)
-}
+  const deleteCourse = async (id) => {
 
-const updateFees = async () => {
-  if (!editCourse) return
+    if (!id) return
 
-  try {
-    await databases.updateDocument(
-      DATABASE_ID,
-      "franchise_multiple_courses",
-      editCourse.$id,
-      {
-        courseFees: Number(courseFees),
-        minimumFees: Number(minimumFees)
-      }
-    )
+    try {
 
-    setEditCourse(null)
-    fetchCourses()
+      await databases.deleteDocument(
+        DATABASE_ID,
+        "franchise_multiple_courses",
+        id
+      )
 
-  } catch (error) {
-    console.log("Update Error:", error)
-  }
-}
+      fetchCourses()
 
-    const fetchCourses = async () => {
+    } catch (error) {
 
-        const user = await account.get()
-
-        const res = await databases.listDocuments(
-            DATABASE_ID,
-            "franchise_multiple_courses",
-            [
-                Query.equal("franchiseEmail", user.email)
-            ]
-        )
-
-        setCourses(res.documents)
-
+      console.log("Delete Error:", error)
     }
+  }
 
-    return (
+  const openEdit = (course) => {
 
-        <div className="p-10 bg-black min-h-screen text-white">
+    setEditCourse(course)
+    setCourseFees(course.courseFees)
+    setMinimumFees(course.minimumFees)
+  }
 
-            <h1 className="text-2xl font-bold mb-6">
-                LIST COURSES ADDED MULTIPLE SUBJECT
-            </h1>
-<input
-  type="text"
-  placeholder="Search by course code..."
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  className="mb-4 p-2 w-full bg-black border border-gray-700 rounded"
-/>
-            <table className="w-full bg-[#121212] border border-gray-800 shadow rounded">
+  const updateFees = async () => {
 
-                <thead className="bg-orange-500 text-black">
+    if (!editCourse) return
 
-                    <tr>
-                        <th className="p-3 border border-gray-800">Course Code</th>
-                        <th className=" border border-gray-800">Subjects</th>
-                        <th className="p-3 border border-gray-800">Course Fees</th>
-                        <th className="p-3 border border-gray-800">Minimum Fees</th>
-                        <th className="p-3 border border-gray-800">Status</th>
-                        <th className="p-3 border border-gray-800">Action</th>
-                    </tr>
+    try {
 
-                </thead>
+      await databases.updateDocument(
+        DATABASE_ID,
+        "franchise_multiple_courses",
+        editCourse.$id,
+        {
+          courseFees: Number(courseFees),
+          minimumFees: Number(minimumFees)
+        }
+      )
 
-                <tbody>
+      setEditCourse(null)
 
-        {courses
-  .filter(course =>
-    course.courseCode?.toLowerCase().includes(search.toLowerCase())
-  )
-  .map(course => (
-                        <tr key={course.$id} className="border-t border-gray-800 hover:bg-[#1a1a1a]">
+      fetchCourses()
 
-                            <td className="p-3 border border-gray-800">{course.courseCode}</td>
-<td className="p-3 border border-gray-800 max-w-[400px] truncate">
-  {course.subjects || "No Subjects"}
-</td>
+    } catch (error) {
 
-                            <td className="p-3 border border-gray-800">{course.courseFees}</td>
-                            <td className="p-3 border border-gray-800">{course.minimumFees}</td>
-                            <td className="p-3 border border-gray-800 text-green-400">{course.status}</td>
-                            <td className="p-3 border border-gray-800 space-x-2">
+      console.log("Update Error:", error)
+    }
+  }
 
-  <button
-    onClick={() => openEdit(course)}
-    className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded"
-  >
-    Edit
-  </button>
+  const fetchCourses = async () => {
 
-  <button
-    onClick={() => deleteCourse(course.$id)}
-    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-  >
-    Delete
-  </button>
+    const user = await account.get()
 
-</td>
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "franchise_multiple_courses",
+      [
+        Query.equal("franchiseEmail", user.email)
+      ]
+    )
 
-                        </tr>
-                    ))}
+    setCourses(res.documents)
+  }
 
-                    {editCourse && (
+  return (
 
-  <div className="fixed inset-0 flex items-center justify-center bg-black/70">
+    <div className="min-h-screen bg-black text-white p-3 sm:p-5 lg:p-10">
 
-    <div className="bg-[#121212] border border-gray-700 p-6 rounded w-[400px] text-white">
+      {/* HEADER */}
+      <div className="mb-6">
 
-      <h3 className="text-lg font-bold mb-4">
-        Edit Course Fees
-      </h3>
-
-      <input
-        type="number"
-        value={courseFees}
-        onChange={(e) => setCourseFees(e.target.value)}
-        className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded"
-        placeholder="Course Fee"
-      />
-
-      <input
-        type="number"
-        value={minimumFees}
-        onChange={(e) => setMinimumFees(e.target.value)}
-        className="border border-gray-700 bg-black text-white p-2 w-full mb-4 rounded"
-        placeholder="Minimum Fee"
-      />
-
-      <div className="flex justify-end gap-2">
-
-        <button
-          onClick={() => setEditCourse(null)}
-          className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded"
-        >
-          Close
-        </button>
-
-        <button
-          onClick={updateFees}
-          className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded"
-        >
-          Save
-        </button>
+        <h1 className="text-xl sm:text-2xl font-bold leading-tight">
+          LIST COURSES ADDED MULTIPLE SUBJECT
+        </h1>
 
       </div>
 
-    </div>
+      {/* SEARCH */}
+      <input
+        type="text"
+        placeholder="Search by course code..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="mb-4 p-3 w-full bg-black border border-gray-700 rounded-lg outline-none focus:border-orange-500 text-sm sm:text-base"
+      />
 
-  </div>
+      {/* TABLE */}
+      <div className="overflow-x-auto rounded-xl border border-gray-800">
 
-)}
+        <table className="w-full min-w-[900px] bg-[#121212] border-collapse shadow">
 
-                </tbody>
+          <thead className="bg-orange-500 text-black text-xs sm:text-sm">
 
-            </table>
+            <tr>
+
+              <th className="p-3 border border-gray-800 whitespace-nowrap">
+                Course Code
+              </th>
+
+              <th className="p-3 border border-gray-800 whitespace-nowrap">
+                Subjects
+              </th>
+
+              <th className="p-3 border border-gray-800 whitespace-nowrap">
+                Course Fees
+              </th>
+
+              <th className="p-3 border border-gray-800 whitespace-nowrap">
+                Minimum Fees
+              </th>
+
+              <th className="p-3 border border-gray-800 whitespace-nowrap">
+                Status
+              </th>
+
+              <th className="p-3 border border-gray-800 whitespace-nowrap">
+                Action
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {courses
+              .filter(course =>
+                course.courseCode
+                  ?.toLowerCase()
+                  .includes(search.toLowerCase())
+              )
+              .map(course => (
+
+                <tr
+                  key={course.$id}
+                  className="border-t border-gray-800 hover:bg-[#1a1a1a]"
+                >
+
+                  <td className="p-3 border border-gray-800 whitespace-nowrap">
+                    {course.courseCode}
+                  </td>
+
+                  <td className="p-3 border border-gray-800 min-w-[300px] max-w-[450px] break-words">
+                    {course.subjects || "No Subjects"}
+                  </td>
+
+                  <td className="p-3 border border-gray-800 whitespace-nowrap">
+                    {course.courseFees}
+                  </td>
+
+                  <td className="p-3 border border-gray-800 whitespace-nowrap">
+                    {course.minimumFees}
+                  </td>
+
+                  <td className="p-3 border border-gray-800 text-green-400 whitespace-nowrap">
+                    {course.status}
+                  </td>
+
+                  <td className="p-3 border border-gray-800">
+
+                    <div className="flex flex-wrap gap-2 min-w-[180px]">
+
+                      <button
+                        onClick={() => openEdit(course)}
+                        className="bg-orange-500 hover:bg-orange-600 text-black px-3 py-1 rounded text-xs sm:text-sm"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => deleteCourse(course.$id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs sm:text-sm"
+                      >
+                        Delete
+                      </button>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      {/* EDIT MODAL */}
+      {editCourse && (
+
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 p-4">
+
+          <div className="bg-[#121212] border border-gray-700 p-4 sm:p-6 rounded-xl w-full max-w-md text-white">
+
+            <h3 className="text-lg font-bold mb-4">
+              Edit Course Fees
+            </h3>
+
+            <input
+              type="number"
+              value={courseFees}
+              onChange={(e) => setCourseFees(e.target.value)}
+              className="border border-gray-700 bg-black text-white p-3 w-full mb-4 rounded outline-none"
+              placeholder="Course Fee"
+            />
+
+            <input
+              type="number"
+              value={minimumFees}
+              onChange={(e) => setMinimumFees(e.target.value)}
+              className="border border-gray-700 bg-black text-white p-3 w-full mb-4 rounded outline-none"
+              placeholder="Minimum Fee"
+            />
+
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
+
+              <button
+                onClick={() => setEditCourse(null)}
+                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded w-full sm:w-auto"
+              >
+                Close
+              </button>
+
+              <button
+                onClick={updateFees}
+                className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded w-full sm:w-auto"
+              >
+                Save
+              </button>
+
+            </div>
+
+          </div>
 
         </div>
 
-    )
+      )}
 
+    </div>
+  )
 }
