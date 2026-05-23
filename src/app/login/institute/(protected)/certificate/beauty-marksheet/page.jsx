@@ -233,7 +233,7 @@ const rect = node.getBoundingClientRect();
   style={{
     top: 570 + index * 120,
     left: 135,
-    width: "480px",
+    width: "465px",
     position: "absolute",
     fontSize: "15px",
     lineHeight: "1.7",
