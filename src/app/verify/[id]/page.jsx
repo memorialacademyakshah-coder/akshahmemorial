@@ -119,18 +119,22 @@ export default function VerifyPage() {
         <div className="p-8 md:p-10 text-white">
 
           {/* OWNER IMAGE */}
-          {data.ownerPhoto && (
-            <div className="flex justify-center -mt-20 mb-8">
-              <div className="bg-white p-2 rounded-full shadow-2xl">
-                <img
-                  src={data.ownerPhoto}
-                  alt="Owner"
-                  className="h-36 w-36 rounded-full object-cover border-4 border-green-500"
-                />
-              </div>
-            </div>
-          )}
+         {/* OWNER IMAGE */}
+{data.ownerPhoto && (
+  <div className="flex justify-center mt-[-70px] md:mt-[-80px] mb-8 relative z-20">
 
+    <div className="bg-white p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+
+      <img
+        src={data.ownerPhoto}
+        alt="Owner"
+        className="h-36 w-36 rounded-full object-cover border-[5px] border-green-500"
+      />
+
+    </div>
+
+  </div>
+)}
           {/* DETAILS GRID */}
           <div className="grid md:grid-cols-2 gap-5">
 
