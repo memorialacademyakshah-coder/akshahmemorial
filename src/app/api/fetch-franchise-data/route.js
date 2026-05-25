@@ -22,7 +22,7 @@ export async function GET(request) {
       "franchise_requests",
       [
         Query.limit(5000),
-        Query.orderDesc("$createdAt")
+        Query.orderAsc("$createdAt")
       ]
     );
 
@@ -31,7 +31,7 @@ export async function GET(request) {
       "franchise_approved",
       [
         Query.limit(5000),
-        Query.orderDesc("$createdAt")
+        Query.orderAsc("$createdAt")
       ]
     );
 
