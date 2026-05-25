@@ -207,13 +207,13 @@ export default function AdmissionForm() {
 
                 {/* MOBILE */}
 
-                <div className="absolute top-[537px] w-[200px] left-[270px] text-lg">
+                <div className="absolute top-[670px] w-[200px] left-[240px] text-lg">
                     {student.mobile || ""}
                 </div>
 
                 {/* ALT MOBILE */}
 
-                <div className="absolute top-[496px] left-[620px] text-lg">
+                <div className="absolute top-[670px] left-[620px] text-lg">
                     {student.altMobile || ""}
                 </div>
 
