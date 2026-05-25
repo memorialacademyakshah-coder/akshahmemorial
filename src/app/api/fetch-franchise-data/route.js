@@ -40,7 +40,7 @@ export async function GET(request) {
       "franchise_rejected",
       [
         Query.limit(5000),
-        Query.orderDesc("$createdAt")
+        Query.orderAsc("$createdAt")
       ]
     );
 
