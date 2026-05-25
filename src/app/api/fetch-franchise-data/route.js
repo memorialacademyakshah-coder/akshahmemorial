@@ -1,4 +1,4 @@
-import { Client, Databases } from "node-appwrite";
+import { Client, Databases, Query } from "node-appwrite";
 import { NextResponse } from "next/server";
 
 const client = new Client();
@@ -19,17 +19,29 @@ export async function GET(request) {
 
     const pendingRes = await databases.listDocuments(
       DATABASE_ID,
-      "franchise_requests"
+      "franchise_requests",
+      [
+        Query.limit(5000),
+        Query.orderDesc("$createdAt")
+      ]
     );
 
     const approvedRes = await databases.listDocuments(
       DATABASE_ID,
-      "franchise_approved"
+      "franchise_approved",
+      [
+        Query.limit(5000),
+        Query.orderDesc("$createdAt")
+      ]
     );
 
     const rejectedRes = await databases.listDocuments(
       DATABASE_ID,
-      "franchise_rejected"
+      "franchise_rejected",
+      [
+        Query.limit(5000),
+        Query.orderDesc("$createdAt")
+      ]
     );
 
     return NextResponse.json({
