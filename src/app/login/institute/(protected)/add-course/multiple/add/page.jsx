@@ -25,30 +25,43 @@ export default function AddMultipleCourse() {
   }, []);
 
   // FETCH MASTER COURSES
-  const fetchCourses = async (pageNumber = 0) => {
+// FETCH MASTER COURSES
+const fetchCourses = async () => {
+
+  let allCourses = [];
+  let offset = 0;
+  const LIMIT = 100;
+
+  while (true) {
 
     const res = await databases.listDocuments(
       DATABASE_ID,
       "courses_master_multiple",
       [
         Query.limit(LIMIT),
-        Query.offset(pageNumber * LIMIT),
+        Query.offset(offset),
       ]
     );
 
-    // NATURAL SORTING
-    const sorted = res.documents.sort((a, b) => {
+    if (res.documents.length === 0) break;
 
-      const numA = parseInt(a.courseCode.replace(/\D/g, "")) || 0;
-      const numB = parseInt(b.courseCode.replace(/\D/g, "")) || 0;
+    allCourses = [...allCourses, ...res.documents];
 
-      return numA - numB;
-    });
+    offset += LIMIT;
+  }
 
-    setCourses(sorted);
-    setFilteredCourses(sorted);
-  };
+  // NATURAL SORTING
+  const sorted = allCourses.sort((a, b) => {
 
+    const numA = parseInt(a.courseCode.replace(/\D/g, "")) || 0;
+    const numB = parseInt(b.courseCode.replace(/\D/g, "")) || 0;
+
+    return numA - numB;
+  });
+
+  setCourses(sorted);
+  setFilteredCourses(sorted);
+};
   // FETCH USER PLAN
   const fetchPlan = async () => {
 
@@ -101,27 +114,7 @@ export default function AddMultipleCourse() {
 
   }, [search, courses]);
 
-  // PAGINATION
-  const nextPage = () => {
-
-    const newPage = page + 1;
-
-    setPage(newPage);
-
-    fetchCourses(newPage);
-  };
-
-  const prevPage = () => {
-
-    if (page === 0) return;
-
-    const newPage = page - 1;
-
-    setPage(newPage);
-
-    fetchCourses(newPage);
-  };
-
+  
   return (
 
     <div className="min-h-screen bg-gradient-to-br from-black to-gray-900 text-white p-3 sm:p-5 lg:p-10">
@@ -245,29 +238,7 @@ export default function AddMultipleCourse() {
 
       </div>
 
-      {/* PAGINATION */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-
-        <button
-          onClick={prevPage}
-          disabled={page === 0}
-          className="bg-gray-700 px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto"
-        >
-          Previous
-        </button>
-
-        <span className="text-gray-400 text-sm sm:text-base">
-          Page {page + 1}
-        </span>
-
-        <button
-          onClick={nextPage}
-          className="bg-orange-500 px-4 py-2 rounded text-black w-full sm:w-auto"
-        >
-          Next
-        </button>
-
-      </div>
+   
 
     </div>
   );

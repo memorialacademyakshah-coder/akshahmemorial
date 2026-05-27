@@ -46,11 +46,11 @@ export default function AddCourseHome() {
                     
                     <NavBtn
                         label="Semester Course List"
-                        href="/login/institute/add-course/semester-course"
+                        href="/login/institute/add-course/semester-course/list"
                     />
                     <NavBtn
                         label="Add Semester Course"
-                        href="/login/institute/add-course/semester-course/add"
+                        href="/login/institute/add-course/semester-course"
                     />
 
                 </div>

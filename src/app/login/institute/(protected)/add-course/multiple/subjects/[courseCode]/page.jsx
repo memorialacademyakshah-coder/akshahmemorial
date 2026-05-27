@@ -1,195 +1,691 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { databases, account, ID } from "@/lib/appwrite";
+
+import {
+  databases,
+  account,
+  ID,
+} from "@/lib/appwrite";
+
 import { Query } from "appwrite";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+import {
+  useParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
-export default function SubjectPage() {
+const DATABASE_ID =
+  process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+
+export default function MultipleSubjectPage() {
 
   const params = useParams();
-  const searchParams = useSearchParams();
+
   const router = useRouter();
 
-  const courseId = params.courseId;
-  const courseName = searchParams.get("name");
-  const courseCode = searchParams.get("code");
-  const courseDuration = searchParams.get("duration");
+  const searchParams =
+    useSearchParams();
 
-  const [subjects, setSubjects] = useState([]);
-  const [selectedSubjects, setSelectedSubjects] = useState([]);
-  const [courseFees, setCourseFees] = useState("");
-  const [minimumFees, setMinimumFees] = useState("");
+  const courseId =
+    params.courseId;
+
+  const courseName =
+    searchParams.get("name") || "";
+
+  const courseCode =
+    searchParams.get("code") || "";
+
+  const duration =
+    searchParams.get("duration") || "";
+
+  const [subjects,
+    setSubjects] =
+    useState([]);
+
+  const [selectedSubjects,
+    setSelectedSubjects] =
+    useState([]);
+
+  const [courseFees,
+    setCourseFees] =
+    useState("");
+
+  const [minimumFees,
+    setMinimumFees] =
+    useState("");
+
+  const [loading,
+    setLoading] =
+    useState(false);
 
   useEffect(() => {
+
     fetchSubjects();
+
   }, []);
 
-  const fetchSubjects = async () => {
+  // FETCH SUBJECTS
+  const fetchSubjects =
+    async () => {
 
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "subjects_master",
-      [Query.equal("courseCode", courseCode)]
-    );
+      try {
 
-    setSubjects(res.documents);
-  };
+        const res =
+          await databases.listDocuments(
+            DATABASE_ID,
+            "multiple_subjects_master",
+            [
+              Query.equal(
+                "courseCode",
+                courseCode
+              ),
 
-  const toggleSubject = (name) => {
+              Query.orderAsc(
+                "$createdAt"
+              ),
+            ]
+          );
 
-    setSelectedSubjects((prev) => {
+        setSubjects(
+          res.documents
+        );
 
-      // REMOVE
-      if (prev.includes(name)) {
-        return prev.filter((s) => s !== name);
+      } catch (error) {
+
+        console.log(error);
       }
+    };
 
-      // LIMIT
-      if (prev.length >= 10) {
-        alert("You can select maximum 10 subjects");
-        return prev;
+  // TOGGLE SUBJECT
+  const toggleSubject =
+    (subjectName) => {
+
+      setSelectedSubjects(
+        (prev) => {
+
+          if (
+            prev.includes(
+              subjectName
+            )
+          ) {
+
+            return prev.filter(
+              (sub) =>
+                sub !==
+                subjectName
+            );
+          }
+
+          return [
+            ...prev,
+            subjectName,
+          ];
+        }
+      );
+    };
+
+  // SAVE COURSE
+  const saveCourse =
+    async () => {
+
+      try {
+
+        setLoading(true);
+
+        if (
+          selectedSubjects.length === 0
+        ) {
+          alert(
+            "Select at least one subject"
+          );
+
+          return;
+        }
+
+        if (
+          !courseFees ||
+          !minimumFees
+        ) {
+          alert(
+            "Please enter fees"
+          );
+
+          return;
+        }
+
+        const user =
+          await account.get();
+
+        // CHECK DUPLICATE
+        const existing =
+          await databases.listDocuments(
+            DATABASE_ID,
+            "franchise_multiple_courses",
+            [
+              Query.equal(
+                "courseId",
+                courseId
+              ),
+
+              Query.equal(
+                "franchiseEmail",
+                user.email
+              ),
+            ]
+          );
+
+        if (
+          existing.documents.length > 0
+        ) {
+
+          alert(
+            "Course already added"
+          );
+
+          return;
+        }
+
+        // SAVE COURSE
+        await databases.createDocument(
+          DATABASE_ID,
+          "franchise_multiple_courses",
+          ID.unique(),
+          {
+            courseId,
+
+            courseCode,
+
+            courseName,
+
+            duration,
+
+            selectedSubjects:
+              selectedSubjects.join(
+                "||"
+              ),
+
+            courseFees:
+              Number(
+                courseFees
+              ),
+
+            minimumFees:
+              Number(
+                minimumFees
+              ),
+
+            franchiseEmail:
+              user.email,
+
+            createdById:
+              user.$id,
+
+            status: "Active",
+          }
+        );
+
+        alert(
+          "Course Added Successfully"
+        );
+
+        router.push(
+          "/login/institute/add-course/multiple/list"
+        );
+
+      } catch (error) {
+
+        console.log(error);
+
+        alert(
+          error.message
+        );
+
+      } finally {
+
+        setLoading(false);
       }
-
-      // ADD
-      return [...prev, name];
-    });
-  };
-
-  const saveCourse = async () => {
-
-    if (selectedSubjects.length === 0) {
-      alert("Select at least one subject");
-      return;
-    }
-
-    const user = await account.get();
-
-    await databases.createDocument(
-      DATABASE_ID,
-      "franchise_multiple_courses",
-      ID.unique(),
-      {
-        courseId,
-        courseName,
-        courseCode,
-        subjects: selectedSubjects.join("||"),
-        duration: courseDuration || "",
-        courseFees: Number(courseFees),
-        minimumFees: Number(minimumFees),
-        franchiseEmail: user.email,
-        createdById: user.$id,
-        status: "Active"
-      }
-    );
-
-    alert("Course Saved");
-
-    router.push("/login/institute/add-course/multiple/list");
-  };
+    };
 
   return (
 
-    <div className="min-h-screen bg-gradient-to-br from-black to-gray-900 text-white p-3 sm:p-5 lg:p-10 flex items-center justify-center">
+    <div className="min-h-screen bg-[#07070a] text-white relative overflow-hidden p-3 sm:p-5 lg:p-10">
 
-      <div className="w-full max-w-2xl bg-[#121212] border border-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8">
+      {/* BG */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-orange-500/20 blur-[140px] rounded-full"></div>
+
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-500/20 blur-[140px] rounded-full"></div>
+
+      <div className="relative z-10 max-w-7xl mx-auto">
 
         {/* HEADER */}
-        <div className="mb-6">
+        <div className="mb-8">
 
-          <h1 className="text-2xl sm:text-3xl font-bold leading-tight break-words">
+          <h1 className="text-3xl sm:text-5xl font-black bg-gradient-to-r from-orange-400 to-pink-500 text-transparent bg-clip-text">
+
             {courseName}
+
           </h1>
 
-          <p className="text-gray-400 mt-2 text-sm sm:text-base">
-            Select subjects and configure fees
+          <p className="text-gray-400 mt-3">
+
+            Select subjects for this course
+
           </p>
 
         </div>
 
-        {/* SUBJECT LIST */}
-        <div className="max-h-[350px] overflow-y-auto mb-6 space-y-2 pr-1">
+        {/* COURSE INFO */}
+        <div className="glass-card mb-8">
 
-          {subjects.map((s) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-            <label
-              key={s.$id}
-              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#1a1a1a] cursor-pointer border border-transparent hover:border-gray-700 transition"
-            >
+            <div className="info-box">
 
-              <input
-                type="checkbox"
-                checked={selectedSubjects.includes(s.subjectName)}
-                onChange={() => toggleSubject(s.subjectName)}
-                className="accent-orange-500 mt-1 w-4 h-4 shrink-0"
-              />
+              <span className="label">
+                Course Code
+              </span>
 
-              <div className="flex justify-between items-start w-full gap-3">
+              <span className="value orange">
 
-                <span className="break-words text-sm sm:text-base">
-                  {s.subjectName}
-                </span>
+                {courseCode}
 
-                {selectedSubjects.includes(s.subjectName) && (
+              </span>
 
-                  <span className="bg-orange-500 text-black px-2 py-1 rounded text-xs font-semibold whitespace-nowrap shrink-0">
+            </div>
 
-                    {selectedSubjects.indexOf(s.subjectName) + 1}
+            <div className="info-box">
 
-                  </span>
+              <span className="label">
+                Duration
+              </span>
 
-                )}
+              <span className="value">
 
-              </div>
+                {duration}
 
-            </label>
+              </span>
 
-          ))}
+            </div>
 
-        </div>
+            <div className="info-box">
 
-        {/* INPUTS */}
-        <div className="space-y-4">
+              <span className="label">
+                Total Subjects
+              </span>
 
-          <input
-            type="number"
-            placeholder="Course Fees"
-            value={courseFees}
-            onChange={(e) => setCourseFees(e.target.value)}
-            className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:border-orange-500 outline-none text-sm sm:text-base"
-          />
+              <span className="value blue">
 
-          <input
-            type="number"
-            placeholder="Minimum Fees"
-            value={minimumFees}
-            onChange={(e) => setMinimumFees(e.target.value)}
-            className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:border-orange-500 outline-none text-sm sm:text-base"
-          />
+                {subjects.length}
+
+              </span>
+
+            </div>
+
+          </div>
 
         </div>
 
-        {/* SELECTED COUNT */}
-        <div className="mt-4 text-sm text-gray-400">
+        {/* SUBJECTS */}
+        <div className="glass-card">
 
-          Selected Subjects:
-          <span className="text-orange-400 font-semibold ml-2">
-            {selectedSubjects.length}/10
-          </span>
+          <div className="flex items-center justify-between mb-6">
+
+            <h2 className="text-2xl font-bold">
+
+              Select Subjects
+
+            </h2>
+
+            <div className="selected-box">
+
+              {
+                selectedSubjects.length
+              } Selected
+
+            </div>
+
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+            {subjects.map(
+              (subject) => {
+
+                const isSelected =
+                  selectedSubjects.includes(
+                    subject.subjectName
+                  );
+
+                return (
+
+                  <div
+                    key={subject.$id}
+                    onClick={() =>
+                      toggleSubject(
+                        subject.subjectName
+                      )
+                    }
+                    className={`subject-card ${
+                      isSelected
+                        ? "active-card"
+                        : ""
+                    }`}
+                  >
+
+                    <div className="flex items-center justify-between gap-4 mb-4">
+
+                      <div className="font-semibold text-lg">
+
+                        {
+                          subject.subjectName
+                        }
+
+                      </div>
+
+                      <div className={`checkbox ${
+                        isSelected
+                          ? "checkbox-active"
+                          : ""
+                      }`}>
+
+                        {isSelected &&
+                          "✓"}
+
+                      </div>
+
+                    </div>
+
+                    <div className="flex justify-between text-sm text-gray-400">
+
+                      <span>
+
+                        Theory:
+                        {" "}
+                        {
+                          subject.theoryMarks
+                        }
+
+                      </span>
+
+                      <span>
+
+                        Practical:
+                        {" "}
+                        {
+                          subject.practicalMarks
+                        }
+
+                      </span>
+
+                      <span className="text-orange-300 font-bold">
+
+                        Total:
+                        {" "}
+                        {
+                          subject.totalMarks
+                        }
+
+                      </span>
+
+                    </div>
+
+                  </div>
+                );
+              }
+            )}
+
+          </div>
 
         </div>
 
-        {/* BUTTON */}
+        {/* FEES */}
+        <div className="glass-card mt-8">
+
+          <h2 className="text-2xl font-bold mb-6">
+
+            Fees Configuration
+
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <input
+              type="number"
+              placeholder="Course Fees"
+              value={courseFees}
+              onChange={(e) =>
+                setCourseFees(
+                  e.target.value
+                )
+              }
+              className="input"
+            />
+
+            <input
+              type="number"
+              placeholder="Minimum Fees"
+              value={minimumFees}
+              onChange={(e) =>
+                setMinimumFees(
+                  e.target.value
+                )
+              }
+              className="input"
+            />
+
+          </div>
+
+        </div>
+
+        {/* SAVE */}
         <button
           onClick={saveCourse}
-          className="w-full mt-6 bg-orange-500 hover:bg-orange-600 transition py-3 rounded-lg font-semibold text-black shadow-lg text-sm sm:text-base"
+          disabled={loading}
+          className="save-btn mt-8"
         >
-          Save Course
+
+          {loading
+            ? "Saving..."
+            : "💾 Save Course"}
+
         </button>
 
       </div>
+
+      <style jsx>{`
+
+        .glass-card {
+          background:
+            rgba(255,255,255,0.06);
+
+          backdrop-filter:
+            blur(18px);
+
+          border:
+            1px solid rgba(255,255,255,0.08);
+
+          border-radius: 24px;
+
+          padding: 22px;
+
+          box-shadow:
+            0 8px 32px rgba(0,0,0,0.35);
+        }
+
+        .subject-card {
+          background:
+            rgba(255,255,255,0.04);
+
+          border:
+            1px solid rgba(255,255,255,0.06);
+
+          padding: 20px;
+
+          border-radius: 20px;
+
+          cursor: pointer;
+
+          transition: 0.3s;
+        }
+
+        .subject-card:hover {
+          transform:
+            translateY(-3px);
+
+          border-color:
+            rgba(249,115,22,0.2);
+        }
+
+        .active-card {
+          border-color:
+            rgba(249,115,22,0.4);
+
+          box-shadow:
+            0 0 35px rgba(249,115,22,0.15);
+        }
+
+        .checkbox {
+          width: 30px;
+
+          height: 30px;
+
+          border-radius: 10px;
+
+          border:
+            1px solid rgba(255,255,255,0.1);
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content: center;
+
+          font-weight: 700;
+        }
+
+        .checkbox-active {
+          background:
+            linear-gradient(
+              135deg,
+              #f97316,
+              #ec4899
+            );
+
+          border: none;
+        }
+
+        .input {
+          width: 100%;
+
+          background:
+            rgba(255,255,255,0.06);
+
+          border:
+            1px solid rgba(255,255,255,0.08);
+
+          padding: 15px;
+
+          border-radius: 16px;
+
+          color: white;
+
+          outline: none;
+        }
+
+        .input:focus {
+          border-color:
+            #f97316;
+
+          box-shadow:
+            0 0 20px rgba(249,115,22,0.25);
+        }
+
+        .info-box {
+          background:
+            rgba(255,255,255,0.04);
+
+          border:
+            1px solid rgba(255,255,255,0.06);
+
+          border-radius: 18px;
+
+          padding: 18px;
+
+          display: flex;
+
+          flex-direction: column;
+
+          gap: 10px;
+        }
+
+        .label {
+          color: #9ca3af;
+
+          font-size: 13px;
+        }
+
+        .value {
+          font-size: 20px;
+
+          font-weight: 700;
+        }
+
+        .orange {
+          color: #fb923c;
+        }
+
+        .blue {
+          color: #93c5fd;
+        }
+
+        .selected-box {
+          background:
+            rgba(249,115,22,0.15);
+
+          border:
+            1px solid rgba(249,115,22,0.2);
+
+          color: #fdba74;
+
+          padding: 10px 14px;
+
+          border-radius: 14px;
+
+          font-weight: 700;
+        }
+
+        .save-btn {
+          width: 100%;
+
+          background:
+            linear-gradient(
+              135deg,
+              #f97316,
+              #ec4899
+            );
+
+          padding: 18px;
+
+          border-radius: 18px;
+
+          font-size: 18px;
+
+          font-weight: 700;
+
+          transition: 0.3s;
+
+          box-shadow:
+            0 0 35px rgba(249,115,22,0.35);
+        }
+
+        .save-btn:hover {
+          transform:
+            translateY(-3px);
+        }
+
+      `}</style>
 
     </div>
   );
