@@ -164,15 +164,15 @@ export default function AuroraHero() {
           <div className="w-full max-w-5xl relative right-[-120px]">
             
             <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-full object-cover rounded-3xl shadow-2xl"
-            >
-              <source src="/video.mov" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+  autoPlay
+  muted
+  loop
+  playsInline
+  preload="auto"
+  className="w-full h-full object-cover rounded-3xl shadow-2xl"
+>
+  <source src="/video.mp4" type="video/mp4" />
+</video>
 
           </div>
 
