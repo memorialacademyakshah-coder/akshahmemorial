@@ -25,78 +25,6 @@ const COLLECTION = "website";
 
 const COLORS_TOP = ["#13FFAA", "#1E67C6", "#CE84CF", "#DD335C"];
 
-/* ================= GRID ================= */
-const ShuffleGrid = ({ images }) => {
-  const [grid, setGrid] = useState([]);
-
-  useEffect(() => {
-    if (!images.length) return;
-
-    setGrid(images);
-
-    const interval = setInterval(() => {
-      setGrid((prev) => {
-        const newArr = [...prev];
-
-        const count = Math.min(6, newArr.length);
-
-        const indexes = [];
-        while (indexes.length < count) {
-          const rand = Math.floor(Math.random() * newArr.length);
-          if (!indexes.includes(rand)) indexes.push(rand);
-        }
-
-        const temp = newArr[indexes[0]];
-        for (let i = 0; i < indexes.length - 1; i++) {
-          newArr[indexes[i]] = newArr[indexes[i + 1]];
-        }
-        newArr[indexes[indexes.length - 1]] = temp;
-
-        return newArr;
-      });
-    }, 1400);
-
-    return () => clearInterval(interval);
-  }, [images]);
-
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      {grid.map((item) => (
-        <motion.div
-          key={item.id}
-          layout
-          transition={{
-            type: "spring",
-            stiffness: 90,
-            damping: 20,
-          }}
-          className="relative w-full h-24 md:h-28 rounded-xl overflow-hidden group cursor-pointer"
-        >
-          {/* IMAGE */}
-          <div
-            className="w-full h-full bg-cover bg-center transition duration-500 group-hover:scale-110"
-            style={{ backgroundImage: `url(${item.src})` }}
-          />
-
-          {/* HOVER CARD */}
-          <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
-            <motion.div
-              initial={{ y: 30, opacity: 0, scale: 0.9 }}
-              whileHover={{ y: 0, opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="backdrop-blur-md bg-white/10 border border-white/20 px-4 py-2 rounded-lg text-center shadow-lg"
-            >
-              <p className="text-white text-xs md:text-sm font-semibold">
-                {item.title}
-              </p>
-            </motion.div>
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
-};
-
 /* ================= CAMERA ================= */
 function CameraParallax({ mouse }) {
   useFrame((state) => {
@@ -116,7 +44,6 @@ export default function AuroraHero() {
   const color = useMotionValue(COLORS_TOP[0]);
 
   const [texts, setTexts] = useState([]);
-  const [images, setImages] = useState([]);
 
   /* ================= FETCH ================= */
   useEffect(() => {
@@ -129,17 +56,7 @@ export default function AuroraHero() {
           .filter((d) => d.type === "text")
           .map((d) => d.text);
 
-        /* IMAGES */
-        const imageData = res.documents
-          .filter((d) => d.type === "image")
-          .map((d) => ({
-            id: d.$id,
-            src: d.image,
-            title: d.title || "Course",
-          }));
-
         setTexts(textData);
-        setImages(imageData);
       } catch (error) {
         console.error("CMS Fetch Error:", error);
       }
@@ -218,27 +135,47 @@ export default function AuroraHero() {
       className="relative min-h-screen flex items-center justify-center text-white px-6 overflow-hidden"
     >
       {/* CONTENT */}
-      <div className="relative z-10 grid md:grid-cols-2 gap-16 max-w-7xl w-full items-center">
+      <div className="relative z-10 grid md:grid-cols-2 gap-2 max-w-[1600px] w-full items-center">
+        
         {/* LEFT */}
-        <div>
-          <h1 className="text-4xl md:text-6xl font-semibold leading-tight">
+        <div className="pl-4 md:pl-16">
+          <h1 className="text-5xl md:text-7xl font-bold leading-tight">
             {displayText}
           </h1>
 
-          <p className="mt-6 text-gray-300 max-w-md">
-             BNMI  is a leading educational institution dedicated to providing high-quality education and fostering a nurturing learning environment. This is the indias no. 1 franchise provider in the field of education. 
+          <p className="mt-6 text-gray-300 max-w-xl text-lg leading-8">
+            BNMI is a leading educational institution dedicated to
+            providing high-quality education and fostering a nurturing
+            learning environment. This is the India's no. 1 franchise
+            provider in the field of education.
           </p>
 
-          <Link href="/franchise/signup" className="mt-6 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center gap-2 hover:scale-105 transition w-[150px]">
+          <Link
+            href="/franchise/signup"
+            className="mt-8 px-8 py-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center gap-2 hover:scale-105 transition w-[180px] text-lg font-semibold shadow-2xl"
+          >
             Apply Now <FiArrowRight />
           </Link>
         </div>
 
-        {/* RIGHT */}
-        <div className="flex justify-center md:justify-end">
-          <div className="w-full max-w-md backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-xl">
-            <ShuffleGrid images={images} />
+        {/* RIGHT VIDEO */}
+        <div className="flex justify-end w-full">
+          
+          <div className="w-full max-w-5xl relative right-[-120px]">
+            
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover rounded-3xl shadow-2xl"
+            >
+              <source src="/video.mov" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+
           </div>
+
         </div>
       </div>
 
@@ -249,7 +186,7 @@ export default function AuroraHero() {
 
           <Stars
             radius={50}
-            count={2000}
+            count={2500}
             factor={4}
             fade
             speed={2}
