@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { databases, storage } from "@/lib/appwrite";
 import { Query } from "appwrite";
@@ -17,42 +17,6 @@ export default function TeamSlider() {
   const [team, setTeam] = useState([]);
   const [isPaused, setIsPaused] =
     useState(false);
-
-  const [currentIndex, setCurrentIndex] =
-    useState(0);
-
-  const [itemsPerView, setItemsPerView] =
-    useState(3);
-
-  const startX = useRef(0);
-  const isDragging = useRef(false);
-
-  /* ================= RESPONSIVE ================= */
-
-  useEffect(() => {
-    const updateView = () => {
-      if (window.innerWidth < 640) {
-        setItemsPerView(1);
-      } else if (window.innerWidth < 1024) {
-        setItemsPerView(2);
-      } else {
-        setItemsPerView(3);
-      }
-    };
-
-    updateView();
-
-    window.addEventListener(
-      "resize",
-      updateView
-    );
-
-    return () =>
-      window.removeEventListener(
-        "resize",
-        updateView
-      );
-  }, []);
 
   /* ================= FETCH TEAM ================= */
 
@@ -75,23 +39,7 @@ export default function TeamSlider() {
     fetchTeam();
   }, []);
 
-  /* ================= AUTO SLIDE ================= */
-
-  useEffect(() => {
-    if (isPaused || team.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) =>
-        prev === team.length - 1
-          ? 0
-          : prev + 1
-      );
-    }, 2500);
-
-    return () => clearInterval(interval);
-  }, [isPaused, team]);
-
-  /* ================= IMAGE ================= */
+  /* ================= IMAGE URL ================= */
 
   const getImageUrl = (image) => {
     if (!image) return "/placeholder.png";
@@ -131,16 +79,7 @@ export default function TeamSlider() {
     }
   };
 
-  /* ================= WIDTH ================= */
-
-  const slideWidth =
-    itemsPerView === 1
-      ? 100
-      : itemsPerView === 2
-      ? 50
-      : 33.333;
-
-  /* ================= UI ================= */
+  /* ================= LOADING ================= */
 
   if (!team.length) {
     return (
@@ -151,199 +90,153 @@ export default function TeamSlider() {
   }
 
   return (
-    <section className="py-16 bg-[#1e1e1e] text-white overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 text-center">
+    <section className="relative overflow-hidden bg-[#1e1e1e] py-20 text-white">
 
-        <h2 className="text-3xl font-bold mb-10">
-          Our{" "}
-          <span className="text-cyan-400">
-            Team
-          </span>
-        </h2>
+      {/* BACKGROUND */}
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.12),transparent_65%)]" />
+
+      <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-[140px]" />
+
+      {/* CONTENT */}
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4">
+
+        {/* HEADING */}
+
+        <div className="text-center mb-14">
+
+          <h2 className="text-4xl md:text-5xl font-bold">
+            Our{" "}
+            <span className="text-cyan-400">
+              Team
+            </span>
+          </h2>
+
+          <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
+            Meet the creative minds and skilled professionals
+            powering our vision forward.
+          </p>
+        </div>
+
+        {/* LEFT FADE */}
+
+        <div className="absolute left-0 top-0 z-20 h-full w-32 bg-gradient-to-r from-[#1e1e1e] to-transparent pointer-events-none" />
+
+        {/* RIGHT FADE */}
+
+        <div className="absolute right-0 top-0 z-20 h-full w-32 bg-gradient-to-l from-[#1e1e1e] to-transparent pointer-events-none" />
+
+        {/* ================= SLIDER ================= */}
 
         <div
-          className="relative overflow-hidden"
+          className="overflow-hidden"
           onMouseEnter={() =>
             setIsPaused(true)
           }
           onMouseLeave={() =>
             setIsPaused(false)
           }
-          onTouchStart={(e) => {
-            startX.current =
-              e.touches[0].clientX;
-            isDragging.current = true;
-          }}
-          onTouchEnd={(e) => {
-            if (!isDragging.current)
-              return;
-
-            const endX =
-              e.changedTouches[0].clientX;
-
-            const diff =
-              startX.current - endX;
-
-            if (diff > 50) {
-              setCurrentIndex((prev) =>
-                prev === team.length - 1
-                  ? 0
-                  : prev + 1
-              );
-            }
-
-            if (diff < -50) {
-              setCurrentIndex((prev) =>
-                prev === 0
-                  ? team.length - 1
-                  : prev - 1
-              );
-            }
-
-            isDragging.current = false;
-          }}
         >
-
-          {/* LEFT BUTTON */}
-
-          <button
-            onClick={() =>
-              setCurrentIndex((prev) =>
-                prev === 0
-                  ? team.length - 1
-                  : prev - 1
-              )
-            }
-            className="
-              absolute
-              left-2
-              top-1/2
-              -translate-y-1/2
-              z-30
-              w-10
-              h-10
-              md:w-12
-              md:h-12
-              rounded-full
-              bg-black/60
-              border
-              border-white/20
-              text-white
-              text-xl
-              hover:bg-cyan-500
-              transition
-            "
-          >
-            ←
-          </button>
-
-          {/* RIGHT BUTTON */}
-
-          <button
-            onClick={() =>
-              setCurrentIndex((prev) =>
-                prev === team.length - 1
-                  ? 0
-                  : prev + 1
-              )
-            }
-            className="
-              absolute
-              right-2
-              top-1/2
-              -translate-y-1/2
-              z-30
-              w-10
-              h-10
-              md:w-12
-              md:h-12
-              rounded-full
-              bg-black/60
-              border
-              border-white/20
-              text-white
-              text-xl
-              hover:bg-cyan-500
-              transition
-            "
-          >
-            →
-          </button>
-
-          {/* SLIDER */}
 
           <motion.div
             animate={{
-              x: `-${currentIndex * slideWidth}%`,
+              x: isPaused
+                ? undefined
+                : ["0%", "-50%"],
             }}
             transition={{
-              duration: 0.7,
-              ease: "easeInOut",
+              repeat: Infinity,
+              duration: 35,
+              ease: "linear",
             }}
-            className="flex"
+            className="
+              flex
+              min-w-max
+              items-center
+              gap-8
+              pr-8
+            "
           >
-            {team.map((member, index) => (
-              <div
-                key={index}
-                style={{
-                  minWidth: `${slideWidth}%`,
-                }}
-                className="p-3"
-              >
+
+            {[...team, ...team].map(
+              (member, index) => (
                 <motion.div
+                  key={index}
                   whileHover={{
-                    y: -8,
+                    y: -10,
                     scale: 1.03,
                   }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 220,
+                    damping: 16,
+                  }}
                   className="
-                    bg-black
-                    rounded-2xl
+                    relative
                     overflow-hidden
+                    rounded-[32px]
                     border
                     border-white/10
-                    shadow-lg
+                    bg-black
+                    shadow-[0_10px_60px_rgba(0,0,0,0.45)]
+                    w-[320px]
+                    flex-shrink-0
                   "
                 >
 
-                  <div className="relative overflow-hidden">
+                  {/* GLOW */}
+
+                  <div className="absolute inset-0 opacity-0 transition duration-700 hover:opacity-100">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-cyan-500/20 blur-3xl" />
+                  </div>
+
+                  {/* IMAGE */}
+
+                  <div className="relative overflow-hidden p-3">
 
                     <img
                       src={getImageUrl(
                         member.imageUrl
                       )}
                       alt={member.name}
+                      draggable={false}
                       className="
                         w-full
                         h-[260px]
                         md:h-[320px]
-                        object-contain
+                        object-cover
+                        rounded-[26px]
                         transition-transform
                         duration-500
                         hover:scale-105
                       "
                     />
 
-                    <div className="absolute inset-0 bg-cyan-500/0 hover:bg-cyan-500/10 transition duration-500" />
+                    <div className="absolute inset-0 rounded-[26px] bg-cyan-500/0 hover:bg-cyan-500/10 transition duration-500" />
                   </div>
 
-                  <div className="p-5 text-center">
+                  {/* CONTENT */}
 
-                    <h4 className="font-bold text-lg">
+                  <div className="p-5 text-center relative z-10">
+
+                    <h4 className="font-bold text-xl">
                       {member.name}
                     </h4>
 
-                    <p className="text-cyan-400 text-sm mt-1">
+                    <p className="text-cyan-400 text-sm mt-2">
                       {member.role}
                     </p>
 
-                    <p className="text-gray-400 text-xs mt-2">
+                    <p className="text-gray-400 text-xs mt-3 leading-relaxed">
                       {member.experience}
                     </p>
 
                   </div>
                 </motion.div>
-              </div>
-            ))}
+              )
+            )}
+
           </motion.div>
         </div>
       </div>
