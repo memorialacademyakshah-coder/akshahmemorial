@@ -1,145 +1,162 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { databases, storage } from '@/lib/appwrite'
+import {
+  databases,
+  storage,
+} from '@/lib/appwrite'
+
 import { ID, Query } from 'appwrite'
 
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+import {
+  Trash2,
+  Pencil,
+  ImagePlus,
+} from 'lucide-react'
+
+const DATABASE_ID =
+  process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+
 const COLLECTION_ID = 'services'
-const BUCKET_ID = '6986e8a4001925504f6b'
+
+const BUCKET_ID =
+  process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID
 
 export default function ServicesCMS() {
-  const [services, setServices] = useState([])
-  const [uploading, setUploading] = useState(false)
-  const [editingId, setEditingId] = useState(null)
 
-  const [newService, setNewService] = useState({
+  const [services, setServices] = useState([])
+
+  const [editingId, setEditingId] =
+    useState(null)
+
+  const [uploading, setUploading] =
+    useState(false)
+
+  const [form, setForm] = useState({
     title: '',
-    state: '',
-    imageUrl: '',
     description: '',
+    imageUrl: '',
+    state: '',
   })
 
-  /* ---------------- FETCH ---------------- */
+  /* ================= FETCH ================= */
+
   const fetchServices = async () => {
+
     try {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [Query.orderAsc('order')]
-      )
+
+      const res =
+        await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTION_ID,
+          [
+            Query.orderAsc('order'),
+          ]
+        )
+
       setServices(res.documents)
-    } catch (error) {
-      console.error('Fetch services failed:', error)
+
+    } catch (err) {
+
+      console.log(err)
+
     }
   }
 
   useEffect(() => {
+
     fetchServices()
+
   }, [])
 
-  /* ---------------- IMAGE UPLOAD ---------------- */
+  /* ================= IMAGE ================= */
+
   const uploadImage = async (file) => {
+
     if (!file) return
 
-    setUploading(true)
-
     try {
-      const uploaded = await storage.createFile(
-        BUCKET_ID,
-        ID.unique(),
-        file
-      )
 
-      const url = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+      setUploading(true)
 
-      setNewService(prev => ({
+      const uploaded =
+        await storage.createFile(
+          BUCKET_ID,
+          ID.unique(),
+          file
+        )
+
+      const url =
+        storage.getFileView(
+          BUCKET_ID,
+          uploaded.$id
+        )
+
+      setForm((prev) => ({
         ...prev,
-        imageUrl: url
+        imageUrl: url,
       }))
-    } catch (error) {
-      console.error('Upload failed:', error)
-      alert('Image upload failed')
+
+    } catch (err) {
+
+      console.log(err)
+
     }
 
     setUploading(false)
   }
 
-  /* ---------------- ADD / UPDATE ---------------- */
+  /* ================= SAVE ================= */
+
   const saveService = async () => {
-    if (!newService.title || !newService.state) {
-      alert('Title & State are required')
-      return
-    }
 
     try {
+
+      if (!form.title) {
+        alert('Title required')
+        return
+      }
+
       if (editingId) {
-        // UPDATE
+
         await databases.updateDocument(
           DATABASE_ID,
           COLLECTION_ID,
           editingId,
-          {
-            ...newService
-          }
+          form
         )
 
-        alert('Service updated successfully')
       } else {
-        // ADD
+
         await databases.createDocument(
           DATABASE_ID,
           COLLECTION_ID,
           ID.unique(),
           {
-            ...newService,
+            ...form,
             order: services.length + 1,
           }
         )
 
-        alert('Service added successfully')
       }
 
       resetForm()
+
       fetchServices()
 
-    } catch (error) {
-      console.error('Save failed:', error)
+    } catch (err) {
+
+      console.log(err)
+
     }
   }
 
-  /* ---------------- EDIT ---------------- */
-  const editService = (service) => {
-    setEditingId(service.$id)
+  /* ================= DELETE ================= */
 
-    setNewService({
-      title: service.title || '',
-      state: service.state || '',
-      imageUrl: service.imageUrl || '',
-      description: service.description || '',
-    })
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    })
-  }
-
-  /* ---------------- RESET ---------------- */
-  const resetForm = () => {
-    setEditingId(null)
-
-    setNewService({
-      title: '',
-      state: '',
-      imageUrl: '',
-      description: '',
-    })
-  }
-
-  /* ---------------- DELETE ---------------- */
   const deleteService = async (id) => {
+
     try {
+
       await databases.deleteDocument(
         DATABASE_ID,
         COLLECTION_ID,
@@ -147,176 +164,429 @@ export default function ServicesCMS() {
       )
 
       fetchServices()
-    } catch (error) {
-      console.error('Delete failed:', error)
+
+    } catch (err) {
+
+      console.log(err)
+
     }
   }
 
+  /* ================= EDIT ================= */
+
+  const editService = (item) => {
+
+    setEditingId(item.$id)
+
+    setForm({
+      title: item.title || '',
+      description:
+        item.description || '',
+      imageUrl: item.imageUrl || '',
+      state: item.state || '',
+    })
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+
+  /* ================= RESET ================= */
+
+  const resetForm = () => {
+
+    setEditingId(null)
+
+    setForm({
+      title: '',
+      description: '',
+      imageUrl: '',
+      state: '',
+    })
+  }
+
   return (
-    <div className="max-w-6xl mx-auto p-8 space-y-10">
+    <div className="min-h-screen bg-[#f5f7ff] p-6 md:p-10">
 
-      <h1 className="text-3xl font-bold tracking-tight">
-        Services CMS
-      </h1>
+      {/* HEADER */}
+      <div className="mb-10">
 
-      {/* ================= FORM ================= */}
-      <div className="bg-white/70 backdrop-blur-xl border border-gray-200 shadow-xl rounded-2xl p-8 space-y-6">
+        <h1
+          className="
+            text-4xl
+            font-black
+            text-[#08104d]
+          "
+        >
+          Course Categories CMS
+        </h1>
 
-        <h2 className="text-xl font-semibold">
-          {editingId ? 'Edit Service' : 'Add New Service'}
+        <p className="text-gray-500 mt-2">
+          Manage categories & courses
+        </p>
+
+      </div>
+
+      {/* FORM */}
+      <div
+        className="
+          bg-white
+          rounded-3xl
+          p-8
+          shadow-sm
+          border
+          border-gray-100
+        "
+      >
+
+        <h2
+          className="
+            text-2xl
+            font-bold
+            text-[#08104d]
+            mb-8
+          "
+        >
+          {editingId
+            ? 'Update Category'
+            : 'Add New Category'}
         </h2>
 
-        <div className="grid md:grid-cols-2 gap-5">
+        {/* INPUTS */}
+        <div className="grid md:grid-cols-2 gap-6">
 
-          <input
-            className="border rounded-xl p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Service Title"
-            value={newService.title}
+          <div>
+
+            <label className="font-semibold text-[#08104d]">
+              Category Name
+            </label>
+
+            <input
+              value={form.title}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  title: e.target.value,
+                })
+              }
+              placeholder="Graphic Design"
+              className="
+                mt-2
+                w-full
+                border
+                border-gray-200
+                rounded-2xl
+                p-4
+                outline-none
+              "
+            />
+
+          </div>
+
+          <div>
+
+            <label className="font-semibold text-[#08104d]">
+              State
+            </label>
+
+            <input
+              value={form.state}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  state: e.target.value,
+                })
+              }
+              placeholder="India"
+              className="
+                mt-2
+                w-full
+                border
+                border-gray-200
+                rounded-2xl
+                p-4
+                outline-none
+              "
+            />
+
+          </div>
+
+        </div>
+
+        {/* DESCRIPTION */}
+        <div className="mt-6">
+
+          <label className="font-semibold text-[#08104d]">
+            Description
+          </label>
+
+          <textarea
+            rows={5}
+            value={form.description}
             onChange={(e) =>
-              setNewService({
-                ...newService,
-                title: e.target.value
+              setForm({
+                ...form,
+                description: e.target.value,
               })
             }
-          />
-
-          <input
-            className="border rounded-xl p-3 w-full focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="State"
-            value={newService.state}
-            onChange={(e) =>
-              setNewService({
-                ...newService,
-                state: e.target.value
-              })
-            }
+            placeholder="Category description"
+            className="
+              mt-2
+              w-full
+              border
+              border-gray-200
+              rounded-2xl
+              p-4
+              outline-none
+            "
           />
 
         </div>
 
-        <textarea
-          className="border rounded-xl p-3 w-full h-28 focus:ring-2 focus:ring-blue-500 outline-none"
-          placeholder="Description"
-          value={newService.description}
-          onChange={(e) =>
-            setNewService({
-              ...newService,
-              description: e.target.value
-            })
-          }
-        />
-
         {/* IMAGE */}
-        <div className="space-y-2">
+        <div className="mt-8">
 
-          <input
-            type="file"
-            accept="image/*"
-            className="border rounded-xl p-3 w-full"
-            onChange={(e) =>
-              uploadImage(e.target.files[0])
-            }
-          />
+          <label className="font-semibold text-[#08104d]">
+            Category Icon
+          </label>
+
+          <label
+            className="
+              mt-3
+              border-2
+              border-dashed
+              border-gray-300
+              rounded-3xl
+              h-[220px]
+              flex
+              items-center
+              justify-center
+              cursor-pointer
+              overflow-hidden
+              bg-[#fafafa]
+            "
+          >
+
+            {form.imageUrl ? (
+
+              <img
+                src={form.imageUrl}
+                className="
+                  w-full
+                  h-full
+                  object-cover
+                "
+              />
+
+            ) : (
+
+              <div className="text-center">
+
+                <ImagePlus
+                  size={40}
+                  className="mx-auto text-gray-400"
+                />
+
+                <p className="mt-4 text-gray-500">
+                  Upload category icon
+                </p>
+
+              </div>
+
+            )}
+
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={(e) =>
+                uploadImage(
+                  e.target.files[0]
+                )
+              }
+            />
+
+          </label>
 
           {uploading && (
-            <p className="text-sm text-gray-500">
-              Uploading image...
+            <p className="mt-3 text-gray-500">
+              Uploading...
             </p>
           )}
 
-          {newService.imageUrl && (
-            <img
-              src={newService.imageUrl}
-              className="h-24 rounded-xl border mt-2 shadow"
-            />
-          )}
-
         </div>
 
-        <div className="flex gap-3">
+        {/* BUTTONS */}
+        <div className="flex gap-4 mt-10">
 
           <button
             onClick={saveService}
-            className="flex-1 bg-black text-white py-3 rounded-xl hover:bg-gray-900 transition font-medium"
+            className="
+              bg-[#5865F2]
+              hover:bg-[#4452eb]
+              text-white
+              px-10
+              py-5
+              rounded-2xl
+              font-semibold
+              transition-all
+            "
           >
-            {editingId ? 'Update Service' : 'Add Service'}
+            {editingId
+              ? 'Update Category'
+              : 'Add Category'}
           </button>
 
           {editingId && (
+
             <button
               onClick={resetForm}
-              className="px-6 bg-gray-200 rounded-xl hover:bg-gray-300"
+              className="
+                px-8
+                py-5
+                rounded-2xl
+                bg-gray-100
+                font-semibold
+              "
             >
               Cancel
             </button>
+
           )}
 
         </div>
 
       </div>
 
-      {/* ================= LIST ================= */}
-      <div className="space-y-5">
+      {/* CATEGORY LIST */}
+      <div className="mt-14">
 
-        <h2 className="text-xl font-semibold">
-          Existing Services
+        <h2
+          className="
+            text-3xl
+            font-black
+            text-[#08104d]
+            mb-8
+          "
+        >
+          Existing Categories
         </h2>
 
-        {services.map((service) => (
+        <div className="grid lg:grid-cols-3 gap-8">
 
-          <div
-            key={service.$id}
-            className="bg-white border rounded-2xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition"
-          >
+          {services.map((item) => (
 
-            <div className="flex items-center gap-4">
+            <div
+              key={item.$id}
+              className="
+                bg-white
+                rounded-3xl
+                p-6
+                border
+                border-gray-100
+                shadow-sm
+              "
+            >
 
-              {service.imageUrl && (
-                <img
-                  src={service.imageUrl}
-                  className="h-16 w-16 object-cover rounded-xl"
-                />
-              )}
+              <div className="flex items-center gap-5">
 
-              <div>
+                <div
+                  className="
+                    w-20
+                    h-20
+                    rounded-full
+                    overflow-hidden
+                    bg-[#f5f5ff]
+                    shrink-0
+                  "
+                >
 
-                <h3 className="font-semibold text-lg">
-                  {service.title}
-                </h3>
+                  <img
+                    src={item.imageUrl}
+                    className="
+                      w-full
+                      h-full
+                      object-cover
+                    "
+                  />
 
-                <span className="inline-block mt-1 px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-600 font-medium">
-                  {service.state}
-                </span>
+                </div>
 
-                <p className="text-sm text-gray-500 mt-2 max-w-md">
-                  {service.description}
-                </p>
+                <div>
+
+                  <h3
+                    className="
+                      text-xl
+                      font-bold
+                      text-[#08104d]
+                    "
+                  >
+                    {item.title}
+                  </h3>
+
+                  <p className="text-gray-500 mt-1">
+                    {item.state}
+                  </p>
+
+                </div>
+
+              </div>
+
+              <p className="mt-5 text-gray-500 leading-8">
+                {item.description}
+              </p>
+
+              {/* BUTTONS */}
+              <div className="flex gap-3 mt-6">
+
+                <button
+                  onClick={() =>
+                    editService(item)
+                  }
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    bg-blue-100
+                    text-blue-600
+                    px-5
+                    py-3
+                    rounded-xl
+                    font-medium
+                  "
+                >
+                  <Pencil size={18} />
+                  Edit
+                </button>
+
+                <button
+                  onClick={() =>
+                    deleteService(item.$id)
+                  }
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    bg-red-100
+                    text-red-600
+                    px-5
+                    py-3
+                    rounded-xl
+                    font-medium
+                  "
+                >
+                  <Trash2 size={18} />
+                  Delete
+                </button>
 
               </div>
 
             </div>
 
-            <div className="flex gap-2">
+          ))}
 
-              <button
-                onClick={() => editService(service)}
-                className="px-4 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition font-medium"
-              >
-                Edit
-              </button>
-
-              <button
-                onClick={() => deleteService(service.$id)}
-                className="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition font-medium"
-              >
-                Delete
-              </button>
-
-            </div>
-
-          </div>
-
-        ))}
+        </div>
 
       </div>
 

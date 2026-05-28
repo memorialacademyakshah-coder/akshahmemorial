@@ -1,26 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Dropdown from '../component/dropdown'
 import { databases } from '@/lib/appwrite'
 import Link from 'next/link'
 import { Query } from 'appwrite'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ChevronDown, GraduationCap } from 'lucide-react'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 const WEBSITE_COLLECTION = 'website'
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
   const [navbarData, setNavbarData] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
-
-  /* ---------------- SCROLL EFFECT ---------------- */
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 120)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   /* ---------------- FETCH CMS DATA ---------------- */
   useEffect(() => {
@@ -46,88 +37,208 @@ export default function Navbar() {
   }, [])
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 shadow-lg">
-      <div className=" px-4 md:px-10 py-4">
-        
+    <header className="fixed top-0 left-0 w-full z-50 bg-[#f5f5f5] border-b border-gray-200">
+      <div className="max-w-[1800px] mx-auto px-6 lg:px-16 py-5">
+
         <div className="flex items-center justify-between">
 
-          {/* LOGO */}
-       {/* LOGO - HIDE IN MOBILE */}
-<div className="hidden lg:flex items-center gap-3">
-  {navbarData?.logoUrl ? (
-    <img
-      src={navbarData.logoUrl}
-      alt="Logo"
-      className="h-10 md:h-14 object-contain"
-    />
-  ) : (
-    <div className="text-white font-bold text-lg md:text-xl">
-      {navbarData?.siteName || 'LOGO'}
-    </div>
-  )}
-</div>
+          {/* ================= LOGO ================= */}
+          <Link href="/" className="flex items-center gap-3">
 
-          {/* DESKTOP MENU */}
-          <nav className="hidden lg:flex gap-8 text-white font-semibold">
-            <Link href="/">HOME</Link>
-            <Link href="/aboutus">ABOUT US</Link>
-<Link href="/#courses">COURSES</Link>
-            <Link href="/certificate-demo">CERTIFICATION</Link>
-            <Link href="/verify/verification">VERIFICATION</Link>
+            {navbarData?.logoUrl ? (
+              <img
+                src={navbarData.logoUrl}
+                alt="logo"
+                className="h-12 object-contain"
+              />
+            ) : (
+              <>
+                <div className="w-12 h-12 rounded-full bg-[#5865F2] flex items-center justify-center">
+                  <GraduationCap className="text-white w-7 h-7" />
+                </div>
+
+                <h1 className="text-[34px] font-extrabold text-[#0A1551] tracking-tight">
+                  {navbarData?.siteName || 'Edulab'}
+                </h1>
+              </>
+            )}
+
+          </Link>
+
+          {/* ================= DESKTOP MENU ================= */}
+          <nav className="hidden lg:flex items-center gap-10">
+
+            <NavItem title="HOME" href="/" />
+            <NavItem title="ABOUT" href="/aboutus" />
+
+            <NavDropdown title="COURSE" href="/#courses" />
+
+            <NavDropdown
+              title="CERTIFICATION"
+              href="/certificate-demo"
+            />
+
+            <NavDropdown
+              title="VERIFICATION"
+              href="/verify/verification"
+            />
+
+            <NavItem title="CONTACT" href="/contact" />
+
           </nav>
 
-          {/* DESKTOP BUTTONS */}
-          <div className="hidden lg:flex gap-3">
-            <Link href="/contact"><CTAButton text="CONTACT" /></Link>
-            <Link href="/franchise/signup"><CTAButton text="FRANCHISE FORM" /></Link>
-            <Link href="/login/institute"><CTAButton text="LOGIN" /></Link>
-            <Link href="/student/login"><CTAButton text="STUDENT LOGIN" /></Link>
+          {/* ================= RIGHT BUTTONS ================= */}
+          <div className="hidden lg:flex items-center gap-8">
+
+            <Link
+              href="/login/institute"
+              className="text-[#0A1551] font-semibold text-[18px] hover:text-[#5865F2] transition-all duration-300"
+            >
+              Login
+            </Link>
+
+            <Link href="/student/login">
+              <button
+                className="
+                  bg-[#5865F2]
+                  hover:bg-[#4654e8]
+                  text-white
+                  font-semibold
+                  px-8
+                  py-4
+                  rounded-none
+                  transition-all
+                  duration-300
+                  shadow-md
+                "
+              >
+                Student Login
+              </button>
+            </Link>
+
           </div>
 
-          {/* MOBILE MENU BUTTON */}
-          <div className="lg:hidden text-white">
-            <button onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <X size={28} /> : <Menu size={28} />}
-            </button>
-          </div>
+          {/* ================= MOBILE BUTTON ================= */}
+          <button
+            className="lg:hidden text-[#0A1551]"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <X size={30} /> : <Menu size={30} />}
+          </button>
 
         </div>
 
-        {/* MOBILE MENU */}
+        {/* ================= MOBILE MENU ================= */}
         {menuOpen && (
-          <div className="lg:hidden mt-4 bg-white rounded-xl p-4 flex flex-col gap-4 shadow-lg">
-            
-            <Link href="/" onClick={() => setMenuOpen(false)}>HOME</Link>
-            <Link href="/about" onClick={() => setMenuOpen(false)}>ABOUT US</Link>
-            <Link href="/courses" onClick={() => setMenuOpen(false)}>COURSES</Link>
-            <Link href="/certificate-demo" onClick={() => setMenuOpen(false)}>CERTIFICATION</Link>
-            <Link href="/verify/verification" onClick={() => setMenuOpen(false)}>VERIFICATION</Link>
+          <div className="lg:hidden mt-6 bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-5">
 
-            <div className="flex flex-col gap-3 mt-3">
-              <Link href="/contact"><CTAButton text="CONTACT" /></Link>
-              <Link href="/franchise/signup"><CTAButton text="FRANCHISE FORM" /></Link>
-              <Link href="/login/institute"><CTAButton text="LOGIN" /></Link>
-              <Link href="/login/student/login"><CTAButton text="STUDENT LOGIN" /></Link>
+            <MobileNav href="/" title="HOME" />
+            <MobileNav href="/aboutus" title="ABOUT" />
+            <MobileNav href="/#courses" title="COURSE" />
+            <MobileNav href="/certificate-demo" title="CERTIFICATION" />
+            <MobileNav href="/verify/verification" title="VERIFICATION" />
+            <MobileNav href="/contact" title="CONTACT" />
+
+            <div className="border-t pt-5 flex flex-col gap-4">
+
+              <Link
+                href="/login/institute"
+                className="
+                  w-full
+                  border
+                  border-[#5865F2]
+                  text-[#5865F2]
+                  text-center
+                  py-3
+                  font-semibold
+                "
+              >
+                Login
+              </Link>
+
+              <Link href="/student/login">
+                <button
+                  className="
+                    w-full
+                    bg-[#5865F2]
+                    text-white
+                    py-3
+                    font-semibold
+                  "
+                >
+                  Student Login
+                </button>
+              </Link>
+
             </div>
 
           </div>
         )}
+
       </div>
     </header>
   )
 }
 
-/* ---------------- CTA BUTTON ---------------- */
-function CTAButton({ text }) {
+/* ================= NAV ITEM ================= */
+function NavItem({ title, href }) {
   return (
-    <div className="relative w-full">
-      <div className="absolute -bottom-2 -left-2 w-full h-full bg-gray-600"></div>
-      <button
-        className="relative w-full text-center bg-white text-black px-4 py-2 md:px-6 md:py-3 font-semibold
-        hover:bg-black hover:text-white transition-all duration-300 whitespace-nowrap"
-      >
-        {text}
-      </button>
-    </div>
+    <Link
+      href={href}
+      className="
+        text-[#0A1551]
+        font-bold
+        text-[15px]
+        tracking-wide
+        hover:text-[#5865F2]
+        transition-all
+        duration-300
+      "
+    >
+      {title}
+    </Link>
+  )
+}
+
+/* ================= DROPDOWN STYLE ITEM ================= */
+function NavDropdown({ title, href }) {
+  return (
+    <Link
+      href={href}
+      className="
+        flex
+        items-center
+        gap-1
+        text-[#0A1551]
+        font-bold
+        text-[15px]
+        tracking-wide
+        hover:text-[#5865F2]
+        transition-all
+        duration-300
+      "
+    >
+      {title}
+      <ChevronDown size={16} strokeWidth={2.5} />
+    </Link>
+  )
+}
+
+/* ================= MOBILE NAV ================= */
+function MobileNav({ title, href }) {
+  return (
+    <Link
+      href={href}
+      className="
+        text-[#0A1551]
+        font-semibold
+        text-[16px]
+        border-b
+        border-gray-100
+        pb-3
+      "
+    >
+      {title}
+    </Link>
   )
 }

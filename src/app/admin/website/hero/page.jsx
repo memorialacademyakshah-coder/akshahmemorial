@@ -1,32 +1,58 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { databases, storage, ID } from "@/lib/appwrite";
+import { Trash2, Pencil, ImagePlus } from "lucide-react";
 
 const DB = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION = "website";
 const BUCKET = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 
-export default function CMSPage() {
-  const [texts, setTexts] = useState([]);
-  const [images, setImages] = useState([]);
+export default function HeroCMSPage() {
 
-  const [textInput, setTextInput] = useState("");
-  const [titleInput, setTitleInput] = useState("");
+  /* ================= STATES ================= */
 
-  const [imageFile, setImageFile] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [heroType, setHeroType] = useState("banner");
 
-  const [editingTextId, setEditingTextId] = useState(null);
-  const [editingImageId, setEditingImageId] = useState(null);
+  const [slides, setSlides] = useState([]);
+
+  const [title, setTitle] = useState("");
+  const [blueText, setBlueText] = useState("");
+  const [description, setDescription] = useState("");
+
+  const [bgFile, setBgFile] = useState(null);
+  const [studentFile, setStudentFile] = useState(null);
+
+  const [bgPreview, setBgPreview] = useState("");
+  const [studentPreview, setStudentPreview] = useState("");
+
+  const [editingId, setEditingId] = useState(null);
 
   /* ================= FETCH ================= */
-  const fetchData = async () => {
-    try {
-      const res = await databases.listDocuments(DB, COLLECTION);
 
-      setTexts(res.documents.filter((d) => d.type === "text"));
-      setImages(res.documents.filter((d) => d.type === "image"));
+  const fetchData = async () => {
+
+    try {
+
+      const res = await databases.listDocuments(
+        DB,
+        COLLECTION
+      );
+
+      const heroSlides = res.documents.filter(
+        (d) => d.type === "hero"
+      );
+
+      const settings = res.documents.find(
+        (d) => d.type === "hero_settings"
+      );
+
+      setSlides(heroSlides);
+
+      if (settings) {
+        setHeroType(settings.heroType);
+      }
+
     } catch (err) {
       console.log(err);
     }
@@ -36,260 +62,721 @@ export default function CMSPage() {
     fetchData();
   }, []);
 
-  /* ================= IMAGE ================= */
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  /* ================= FILE UPLOAD ================= */
 
-    if (!file) return;
+  const uploadFile = async (file) => {
 
-    if (file.size > 3 * 1024 * 1024) {
-      alert("Max 3MB");
-      return;
-    }
+    if (!file) return null;
 
-    setImageFile(file);
-    setPreview(URL.createObjectURL(file));
-  };
-
-  const uploadImage = async () => {
-    if (!imageFile) return null;
-
-    const file = await storage.createFile(
+    const uploaded = await storage.createFile(
       BUCKET,
       ID.unique(),
-      imageFile
+      file
     );
 
-    return storage.getFileView(BUCKET, file.$id);
+    return storage.getFileView(
+      BUCKET,
+      uploaded.$id
+    );
   };
 
-  /* ================= TEXT ================= */
-  const addText = async () => {
-    if (!textInput) return;
+  /* ================= SAVE SETTINGS ================= */
 
-    await databases.createDocument(DB, COLLECTION, ID.unique(), {
-      type: "text",
-      text: textInput,
-    });
+  const saveHeroType = async () => {
 
-    reset();
-    fetchData();
-  };
+    try {
 
-  const deleteText = async (id) => {
-    await databases.deleteDocument(DB, COLLECTION, id);
-    fetchData();
-  };
+      const res = await databases.listDocuments(
+        DB,
+        COLLECTION
+      );
 
-  const updateText = async () => {
-    await databases.updateDocument(DB, COLLECTION, editingTextId, {
-      text: textInput,
-    });
+      const existing = res.documents.find(
+        (d) => d.type === "hero_settings"
+      );
 
-    reset();
-    fetchData();
-  };
+      if (existing) {
 
-  const startEditText = (t) => {
-    setEditingTextId(t.$id);
-    setTextInput(t.text);
-  };
+        await databases.updateDocument(
+          DB,
+          COLLECTION,
+          existing.$id,
+          {
+            heroType,
+          }
+        );
 
-  /* ================= IMAGE ================= */
-  const addImage = async () => {
-    if (!imageFile) return;
+      } else {
 
-    const url = await uploadImage();
+        await databases.createDocument(
+          DB,
+          COLLECTION,
+          ID.unique(),
+          {
+            type: "hero_settings",
+            heroType,
+          }
+        );
+      }
 
-    await databases.createDocument(DB, COLLECTION, ID.unique(), {
-      type: "image",
-      image: url,
-      title: titleInput,
-    });
+      alert("Hero type updated");
 
-    reset();
-    fetchData();
-  };
-
-  const deleteImage = async (id) => {
-    await databases.deleteDocument(DB, COLLECTION, id);
-    fetchData();
-  };
-
-  const updateImage = async () => {
-    let url = preview;
-
-    if (imageFile) {
-      url = await uploadImage();
+    } catch (err) {
+      console.log(err);
     }
-
-    await databases.updateDocument(DB, COLLECTION, editingImageId, {
-      image: url,
-      title: titleInput,
-    });
-
-    reset();
-    fetchData();
   };
 
-  const startEditImage = (img) => {
-    setEditingImageId(img.$id);
-    setTitleInput(img.title || "");
-    setPreview(img.image);
+  /* ================= ADD HERO ================= */
+
+  const addHero = async () => {
+
+    try {
+
+      const bgUrl = await uploadFile(bgFile);
+      const studentUrl = await uploadFile(studentFile);
+
+      await databases.createDocument(
+        DB,
+        COLLECTION,
+        ID.unique(),
+        {
+          type: "hero",
+          title,
+          blueText,
+          description,
+          image: bgUrl,
+          studentImage: studentUrl,
+        }
+      );
+
+      reset();
+
+      fetchData();
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  /* ================= UPDATE HERO ================= */
+
+  const updateHero = async () => {
+
+    try {
+
+      let bgUrl = bgPreview;
+      let studentUrl = studentPreview;
+
+      if (bgFile) {
+        bgUrl = await uploadFile(bgFile);
+      }
+
+      if (studentFile) {
+        studentUrl = await uploadFile(studentFile);
+      }
+
+      await databases.updateDocument(
+        DB,
+        COLLECTION,
+        editingId,
+        {
+          title,
+          blueText,
+          description,
+          image: bgUrl,
+          studentImage: studentUrl,
+        }
+      );
+
+      reset();
+
+      fetchData();
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  /* ================= DELETE ================= */
+
+  const deleteHero = async (id) => {
+
+    try {
+
+      await databases.deleteDocument(
+        DB,
+        COLLECTION,
+        id
+      );
+
+      fetchData();
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  /* ================= EDIT ================= */
+
+  const editHero = (item) => {
+
+    setEditingId(item.$id);
+
+    setTitle(item.title || "");
+    setBlueText(item.blueText || "");
+    setDescription(item.description || "");
+
+    setBgPreview(item.image || "");
+    setStudentPreview(item.studentImage || "");
   };
 
   /* ================= RESET ================= */
-  const reset = () => {
-    setTextInput("");
-    setTitleInput("");
-    setImageFile(null);
-    setPreview(null);
 
-    setEditingTextId(null);
-    setEditingImageId(null);
+  const reset = () => {
+
+    setEditingId(null);
+
+    setTitle("");
+    setBlueText("");
+    setDescription("");
+
+    setBgFile(null);
+    setStudentFile(null);
+
+    setBgPreview("");
+    setStudentPreview("");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#020617] to-[#0f172a] text-white p-10">
+    <div className="min-h-screen bg-[#f5f7ff] p-6 md:p-10">
 
-      {/* HEADER */}
-      <h1 className="text-4xl font-bold mb-10 bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-        Hero CMS Dashboard
-      </h1>
+      {/* ================= HEADER ================= */}
 
-      {/* ================= TEXT SECTION ================= */}
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-10 shadow-xl">
+      <div className="mb-10">
 
-        <h2 className="text-xl mb-4 font-semibold text-purple-300">
-          Typing Text
-        </h2>
+        <h1
+          className="
+            text-4xl
+            font-black
+            text-[#0b0b45]
+          "
+        >
+          Hero Section CMS
+        </h1>
 
-        <div className="flex gap-3 flex-wrap">
-          <input
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder="Enter hero text..."
-            className="p-3 bg-black/40 border border-white/10 rounded-lg w-[300px] focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
+        <p className="text-gray-500 mt-2">
+          Manage Hero Banner & Slider
+        </p>
 
-          <button
-            onClick={editingTextId ? updateText : addText}
-            className={`px-5 py-3 rounded-lg font-medium transition ${
-              editingTextId
-                ? "bg-yellow-500 hover:bg-yellow-600"
-                : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:scale-105"
-            }`}
-          >
-            {editingTextId ? "Update" : "Add"}
-          </button>
-        </div>
-
-        {/* TEXT LIST */}
-        <div className="mt-6 space-y-3">
-          {texts.map((t) => (
-            <div
-              key={t.$id}
-              className="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/10 hover:bg-white/10 transition"
-            >
-              <span>{t.text}</span>
-
-              <div className="flex gap-3 text-sm">
-                <button
-                  onClick={() => startEditText(t)}
-                  className="text-blue-400 hover:underline"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => deleteText(t.$id)}
-                  className="text-red-400 hover:underline"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* ================= IMAGE SECTION ================= */}
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl">
+      {/* ================= SETTINGS ================= */}
 
-        <h2 className="text-xl mb-4 font-semibold text-pink-300">
-          Image Upload
+      <div
+        className="
+          bg-white
+          rounded-3xl
+          p-8
+          shadow-sm
+          border
+          border-gray-100
+          mb-10
+        "
+      >
+
+        <h2
+          className="
+            text-2xl
+            font-bold
+            text-[#0b0b45]
+            mb-6
+          "
+        >
+          Hero Type
         </h2>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="mb-3"
-        />
+        <div className="flex flex-wrap gap-5">
 
-        {/* TITLE INPUT */}
-        <input
-          type="text"
-          placeholder="Enter image title"
-          value={titleInput}
-          onChange={(e) => setTitleInput(e.target.value)}
-          className="p-3 bg-black/40 border border-white/10 rounded-lg w-full mb-3 focus:outline-none focus:ring-2 focus:ring-pink-500"
-        />
+          {/* BANNER */}
+          <button
+            onClick={() => setHeroType("banner")}
+            className={`
+              px-8
+              py-4
+              rounded-2xl
+              font-semibold
+              transition-all
+              duration-300
+              ${
+                heroType === "banner"
+                  ? "bg-[#5865F2] text-white"
+                  : "bg-gray-100 text-gray-700"
+              }
+            `}
+          >
+            Banner
+          </button>
 
-        {preview && (
-          <img
-            src={preview}
-            className="w-32 h-32 rounded-xl object-cover mb-3 border border-white/20"
-          />
-        )}
+          {/* SLIDER */}
+          <button
+            onClick={() => setHeroType("slider")}
+            className={`
+              px-8
+              py-4
+              rounded-2xl
+              font-semibold
+              transition-all
+              duration-300
+              ${
+                heroType === "slider"
+                  ? "bg-[#5865F2] text-white"
+                  : "bg-gray-100 text-gray-700"
+              }
+            `}
+          >
+            Slider
+          </button>
 
-        <button
-          onClick={editingImageId ? updateImage : addImage}
-          className={`px-5 py-3 rounded-lg font-medium transition ${
-            editingImageId
-              ? "bg-yellow-500 hover:bg-yellow-600"
-              : "bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-105"
-          }`}
+          {/* SAVE */}
+          <button
+            onClick={saveHeroType}
+            className="
+              px-8
+              py-4
+              rounded-2xl
+              bg-[#0b0b45]
+              text-white
+              font-semibold
+              hover:scale-105
+              transition-all
+            "
+          >
+            Save Settings
+          </button>
+
+        </div>
+
+      </div>
+
+      {/* ================= FORM ================= */}
+
+      <div
+        className="
+          bg-white
+          rounded-3xl
+          p-8
+          shadow-sm
+          border
+          border-gray-100
+          mb-10
+        "
+      >
+
+        <h2
+          className="
+            text-2xl
+            font-bold
+            text-[#0b0b45]
+            mb-8
+          "
         >
-          {editingImageId ? "Update Image" : "Upload Image"}
-        </button>
+          {editingId
+            ? "Update Hero Slide"
+            : "Add Hero Slide"}
+        </h2>
 
-        {/* IMAGE GRID */}
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {images.map((img) => (
-            <div
-              key={img.$id}
-              className="group relative rounded-xl overflow-hidden border border-white/10"
+        <div className="grid md:grid-cols-2 gap-6">
+
+          {/* BLUE TEXT */}
+          <div>
+
+            <label className="font-semibold text-[#0b0b45]">
+              Blue Text
+            </label>
+
+            <input
+              value={blueText}
+              onChange={(e) =>
+                setBlueText(e.target.value)
+              }
+              placeholder="Smart Study"
+              className="
+                mt-2
+                w-full
+                border
+                border-gray-200
+                rounded-xl
+                p-4
+                outline-none
+              "
+            />
+
+          </div>
+
+          {/* TITLE */}
+          <div>
+
+            <label className="font-semibold text-[#0b0b45]">
+              Main Title
+            </label>
+
+            <input
+              value={title}
+              onChange={(e) =>
+                setTitle(e.target.value)
+              }
+              placeholder="Where Knowledge Meets the Web"
+              className="
+                mt-2
+                w-full
+                border
+                border-gray-200
+                rounded-xl
+                p-4
+                outline-none
+              "
+            />
+
+          </div>
+
+        </div>
+
+        {/* DESCRIPTION */}
+        <div className="mt-6">
+
+          <label className="font-semibold text-[#0b0b45]">
+            Description
+          </label>
+
+          <textarea
+            value={description}
+            onChange={(e) =>
+              setDescription(e.target.value)
+            }
+            rows={5}
+            placeholder="Hero description"
+            className="
+              mt-2
+              w-full
+              border
+              border-gray-200
+              rounded-xl
+              p-4
+              outline-none
+            "
+          />
+
+        </div>
+
+        {/* IMAGE UPLOADS */}
+        <div className="grid md:grid-cols-2 gap-8 mt-8">
+
+          {/* BG IMAGE */}
+          <div>
+
+            <label className="font-semibold text-[#0b0b45]">
+              Background Image
+            </label>
+
+            <label
+              className="
+                mt-3
+                border-2
+                border-dashed
+                border-gray-300
+                rounded-2xl
+                h-[260px]
+                flex
+                flex-col
+                items-center
+                justify-center
+                cursor-pointer
+                overflow-hidden
+                bg-gray-50
+              "
             >
-              <img
-                src={img.image}
-                className="w-full h-32 object-cover group-hover:scale-110 transition duration-500"
+
+              {bgPreview ? (
+
+                <img
+                  src={bgPreview}
+                  className="
+                    w-full
+                    h-full
+                    object-cover
+                  "
+                />
+
+              ) : (
+
+                <>
+                  <ImagePlus
+                    size={40}
+                    className="text-gray-400"
+                  />
+
+                  <p className="mt-4 text-gray-500">
+                    Upload Background
+                  </p>
+                </>
+
+              )}
+
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={(e) => {
+
+                  const file = e.target.files[0];
+
+                  if (!file) return;
+
+                  setBgFile(file);
+
+                  setBgPreview(
+                    URL.createObjectURL(file)
+                  );
+                }}
               />
 
-              {/* TITLE */}
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2 text-center text-sm">
-                {img.title}
-              </div>
+            </label>
 
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition">
-                <button
-                  onClick={() => startEditImage(img)}
-                  className="bg-white text-black px-3 py-1 rounded text-xs"
-                >
-                  Edit
-                </button>
+          </div>
 
-                <button
-                  onClick={() => deleteImage(img.$id)}
-                  className="bg-red-500 px-3 py-1 rounded text-xs"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+          {/* STUDENT IMAGE */}
+          <div>
+
+            <label className="font-semibold text-[#0b0b45]">
+              Student Image
+            </label>
+
+            <label
+              className="
+                mt-3
+                border-2
+                border-dashed
+                border-gray-300
+                rounded-2xl
+                h-[260px]
+                flex
+                flex-col
+                items-center
+                justify-center
+                cursor-pointer
+                overflow-hidden
+                bg-gray-50
+              "
+            >
+
+              {studentPreview ? (
+
+                <img
+                  src={studentPreview}
+                  className="
+                    w-full
+                    h-full
+                    object-cover
+                  "
+                />
+
+              ) : (
+
+                <>
+                  <ImagePlus
+                    size={40}
+                    className="text-gray-400"
+                  />
+
+                  <p className="mt-4 text-gray-500">
+                    Upload Student Image
+                  </p>
+                </>
+
+              )}
+
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={(e) => {
+
+                  const file = e.target.files[0];
+
+                  if (!file) return;
+
+                  setStudentFile(file);
+
+                  setStudentPreview(
+                    URL.createObjectURL(file)
+                  );
+                }}
+              />
+
+            </label>
+
+          </div>
+
         </div>
+
+        {/* BUTTON */}
+        <div className="mt-10">
+
+          <button
+            onClick={
+              editingId
+                ? updateHero
+                : addHero
+            }
+            className="
+              bg-[#5865F2]
+              hover:bg-[#4452eb]
+              text-white
+              px-10
+              py-5
+              rounded-2xl
+              font-semibold
+              transition-all
+              duration-300
+            "
+          >
+            {editingId
+              ? "Update Hero"
+              : "Add Hero"}
+          </button>
+
+        </div>
+
       </div>
+
+      {/* ================= SLIDES ================= */}
+
+      <div>
+
+        <h2
+          className="
+            text-3xl
+            font-black
+            text-[#0b0b45]
+            mb-8
+          "
+        >
+          Hero Slides
+        </h2>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+
+          {slides.map((item) => (
+
+            <div
+              key={item.$id}
+              className="
+                bg-white
+                rounded-3xl
+                overflow-hidden
+                shadow-sm
+                border
+                border-gray-100
+              "
+            >
+
+              {/* IMAGE */}
+              <div className="relative h-[240px]">
+
+                <img
+                  src={item.image}
+                  className="
+                    absolute
+                    inset-0
+                    w-full
+                    h-full
+                    object-cover
+                  "
+                />
+
+              </div>
+
+              {/* CONTENT */}
+              <div className="p-6">
+
+                <h3
+                  className="
+                    text-[#5865F2]
+                    font-bold
+                    text-xl
+                  "
+                >
+                  {item.blueText}
+                </h3>
+
+                <h2
+                  className="
+                    text-2xl
+                    font-black
+                    text-[#0b0b45]
+                    mt-2
+                  "
+                >
+                  {item.title}
+                </h2>
+
+                <p className="text-gray-500 mt-4">
+                  {item.description}
+                </p>
+
+                {/* BUTTONS */}
+                <div className="flex gap-4 mt-6">
+
+                  <button
+                    onClick={() => editHero(item)}
+                    className="
+                      flex
+                      items-center
+                      gap-2
+                      bg-blue-100
+                      text-blue-600
+                      px-5
+                      py-3
+                      rounded-xl
+                      font-medium
+                    "
+                  >
+                    <Pencil size={18} />
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      deleteHero(item.$id)
+                    }
+                    className="
+                      flex
+                      items-center
+                      gap-2
+                      bg-red-100
+                      text-red-600
+                      px-5
+                      py-3
+                      rounded-xl
+                      font-medium
+                    "
+                  >
+                    <Trash2 size={18} />
+                    Delete
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
     </div>
   );
 }
