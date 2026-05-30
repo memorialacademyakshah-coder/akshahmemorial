@@ -14,20 +14,15 @@ const BUCKET_ID =
   process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 
 export default function TeamSlider() {
-
   const [team, setTeam] = useState([]);
-
   const [isPaused, setIsPaused] =
     useState(false);
 
   /* ================= FETCH TEAM ================= */
 
   useEffect(() => {
-
     const fetchTeam = async () => {
-
       try {
-
         const res =
           await databases.listDocuments(
             DATABASE_ID,
@@ -36,26 +31,20 @@ export default function TeamSlider() {
           );
 
         setTeam(res.documents || []);
-
       } catch (err) {
-
         console.error(err);
-
       }
     };
 
     fetchTeam();
-
   }, []);
 
   /* ================= IMAGE URL ================= */
 
   const getImageUrl = (image) => {
-
     if (!image) return "/placeholder.png";
 
     try {
-
       if (
         typeof image === "string" &&
         image.startsWith("http")
@@ -64,80 +53,50 @@ export default function TeamSlider() {
       }
 
       if (typeof image === "string") {
-
         return storage.getFileView(
           BUCKET_ID,
           image
         ).href;
-
       }
 
       if (typeof image === "object") {
-
         const id =
           image.$id ||
           image.fileId ||
           image.id;
 
         if (id) {
-
           return storage.getFileView(
             BUCKET_ID,
             id
           ).href;
-
         }
       }
 
       return "/placeholder.png";
-
     } catch {
-
       return "/placeholder.png";
-
     }
   };
 
   /* ================= LOADING ================= */
 
   if (!team.length) {
-
     return (
-      <section className="py-16 text-center bg-[#f8f7ff] text-[#08104d]">
+      <section className="py-16 text-center text-white bg-[#1e1e1e]">
         Loading team...
       </section>
     );
   }
 
   return (
-    <section
-      className="
-        relative
-        overflow-hidden
-        py-24
-        bg-gradient-to-r
-        from-[#fff4e9]
-        via-[#f9f7ec]
-        to-[#eef0ff]
-      "
-    >
+    <section className="relative overflow-hidden bg-[#1e1e1e] py-20 text-white">
 
-      {/* BG GLOW */}
+      {/* BACKGROUND */}
 
-      <div
-        className="
-          absolute
-          top-0
-          left-1/2
-          -translate-x-1/2
-          w-[700px]
-          h-[700px]
-          bg-[#fff0c7]
-          opacity-40
-          blur-[150px]
-          rounded-full
-        "
-      />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.12),transparent_65%)]" />
+
+      <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-[140px]" />
 
       {/* CONTENT */}
 
@@ -145,72 +104,28 @@ export default function TeamSlider() {
 
         {/* HEADING */}
 
-        <div className="text-center mb-16">
+        <div className="text-center mb-14">
 
-          <h2
-            className="
-              text-4xl
-              md:text-6xl
-              font-black
-              text-[#08104d]
-            "
-          >
+          <h2 className="text-4xl md:text-5xl font-bold">
             Our{" "}
-            <span className="text-[#5865F2]">
+            <span className="text-cyan-400">
               Team
             </span>
           </h2>
 
-          <p
-            className="
-              text-[#5b5f97]
-              mt-5
-              max-w-2xl
-              mx-auto
-              text-lg
-              leading-8
-            "
-          >
-            Meet the creative minds and skilled
-            professionals powering our vision
-            forward.
+          <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
+            Meet the creative minds and skilled professionals
+            powering our vision forward.
           </p>
-
         </div>
 
         {/* LEFT FADE */}
 
-        <div
-          className="
-            absolute
-            left-0
-            top-0
-            z-20
-            h-full
-            w-32
-            bg-gradient-to-r
-            from-[#fff4e9]
-            to-transparent
-            pointer-events-none
-          "
-        />
+        <div className="absolute left-0 top-0 z-20 h-full w-32 bg-gradient-to-r from-[#1e1e1e] to-transparent pointer-events-none" />
 
         {/* RIGHT FADE */}
 
-        <div
-          className="
-            absolute
-            right-0
-            top-0
-            z-20
-            h-full
-            w-32
-            bg-gradient-to-l
-            from-[#eef0ff]
-            to-transparent
-            pointer-events-none
-          "
-        />
+        <div className="absolute right-0 top-0 z-20 h-full w-32 bg-gradient-to-l from-[#1e1e1e] to-transparent pointer-events-none" />
 
         {/* ================= SLIDER ================= */}
 
@@ -246,7 +161,6 @@ export default function TeamSlider() {
 
             {[...team, ...team].map(
               (member, index) => (
-
                 <motion.div
                   key={index}
                   whileHover={{
@@ -263,38 +177,18 @@ export default function TeamSlider() {
                     overflow-hidden
                     rounded-[32px]
                     border
-                    border-[#ececec]
-                    bg-white/90
-                    backdrop-blur-xl
-                    shadow-[0_10px_40px_rgba(0,0,0,0.06)]
+                    border-white/10
+                    bg-black
+                    shadow-[0_10px_60px_rgba(0,0,0,0.45)]
                     w-[320px]
                     flex-shrink-0
                   "
                 >
 
-                  {/* SOFT GLOW */}
+                  {/* GLOW */}
 
-                  <div
-                    className="
-                      absolute
-                      inset-0
-                      opacity-0
-                      hover:opacity-100
-                      transition
-                      duration-700
-                    "
-                  >
-                    <div
-                      className="
-                        absolute
-                        inset-0
-                        bg-gradient-to-r
-                        from-[#5865F2]/10
-                        via-[#8b5cf6]/5
-                        to-[#5865F2]/10
-                        blur-3xl
-                      "
-                    />
+                  <div className="absolute inset-0 opacity-0 transition duration-700 hover:opacity-100">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-cyan-500/20 blur-3xl" />
                   </div>
 
                   {/* IMAGE */}
@@ -308,75 +202,45 @@ export default function TeamSlider() {
                       alt={member.name}
                       draggable={false}
                       className="
-                        w-full
-                        h-[260px]
-                        md:h-[320px]
-                        object-cover
-                        rounded-[26px]
-                        transition-transform
-                        duration-500
-                        hover:scale-105
-                      "
+  w-full
+  h-[260px]
+  md:h-[320px]
+  object-cover
+  object-top
+  rounded-[26px]
+  transition-transform
+  duration-500
+  hover:scale-105
+"
                     />
 
+                    <div className="absolute inset-0 rounded-[26px] bg-cyan-500/0 hover:bg-cyan-500/10 transition duration-500" />
                   </div>
 
                   {/* CONTENT */}
 
-                  <div
-                    className="
-                      p-6
-                      text-center
-                      relative
-                      z-10
-                    "
-                  >
+                  <div className="p-5 text-center relative z-10">
 
-                    <h4
-                      className="
-                        font-black
-                        text-2xl
-                        text-[#08104d]
-                      "
-                    >
+                    <h4 className="font-bold text-xl">
                       {member.name}
                     </h4>
 
-                    <p
-                      className="
-                        text-[#5865F2]
-                        text-sm
-                        mt-2
-                        font-semibold
-                      "
-                    >
+                    <p className="text-cyan-400 text-sm mt-2">
                       {member.role}
                     </p>
 
-                    <p
-                      className="
-                        text-[#6b7280]
-                        text-sm
-                        mt-4
-                        leading-7
-                      "
-                    >
+                    <p className="text-gray-400 text-xs mt-3 leading-relaxed">
                       {member.experience}
                     </p>
 
                   </div>
-
                 </motion.div>
-
               )
             )}
 
           </motion.div>
-
         </div>
-
       </div>
-
     </section>
   );
 }
