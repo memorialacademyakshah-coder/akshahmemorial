@@ -181,7 +181,7 @@ export default function Footer() {
 
               <h2
                 className="
-                  text-4xl
+                  text-2xl
                   font-black
                   text-[#08104d]
                 "
