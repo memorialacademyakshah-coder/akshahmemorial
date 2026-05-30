@@ -186,7 +186,7 @@ export default function Footer() {
                   text-[#08104d]
                 "
               >
-                BNMI
+                ADVANCEINDIAIT
               </h2>
 
               <p
@@ -268,7 +268,7 @@ export default function Footer() {
               mb-8
             "
           >
-            About BNMI
+            About AdvanceindiaIT
           </h3>
 
           <ul
