@@ -58,7 +58,7 @@ export default function Navbar() {
                 </div>
 
                 <h1 className="text-[34px] font-extrabold text-[#0A1551] tracking-tight">
-                  {navbarData?.siteName || 'Edulab'}
+                  {navbarData?.siteName || 'BNMI INDIA'}
                 </h1>
               </>
             )}
