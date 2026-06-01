@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 const COLLECTION_ID = 'marketing_materials'
-const BUCKET_ID = '6986e8a4001925504f6b'
+const BUCKET_ID = '6a1d6a3f00191ec61913'
 
 export default function AddMarketing() {
   const router = useRouter()

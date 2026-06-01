@@ -8,7 +8,7 @@ import { databases, account } from "@/lib/appwrite";
 import { Query } from "appwrite";
 import { useParams } from "next/navigation";
 
-const BUCKET_ID = "6986e8a4001925504f6b";
+const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 
 export default function PrintCertificate() {
 

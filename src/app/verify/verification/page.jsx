@@ -285,7 +285,7 @@ try {
 
         {student.photoId && (
           <img
-            src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/6986e8a4001925504f6b/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
+            src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
             className="w-32 h-32 rounded-full border-4 border-indigo-500 shadow-lg"
           />
         )}
@@ -338,7 +338,7 @@ try {
               src={
                 franchiseData.logo.startsWith("http")
                   ? franchiseData.logo
-                  : `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/6986e8a4001925504f6b/files/${franchiseData.logo}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
+                  : `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${franchiseData.logo}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
               }
               className="w-20 h-20 object-contain drop-shadow-md"
             />

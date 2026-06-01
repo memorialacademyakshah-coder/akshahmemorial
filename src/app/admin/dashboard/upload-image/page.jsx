@@ -6,7 +6,7 @@ import { ID } from 'appwrite'
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 const COLLECTION_ID = 'upload_image'
-const BUCKET_ID = '6986e8a4001925504f6b'
+const BUCKET_ID = '6a1d6a3f00191ec61913'
 
 export default function ManageImagesPage() {
   const [docId, setDocId] = useState(null)

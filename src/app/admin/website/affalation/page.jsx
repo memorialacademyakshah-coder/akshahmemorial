@@ -18,9 +18,10 @@ client
 const databases = new Databases(client);
 const storage = new Storage(client);
 
-const DATABASE_ID = "6986e1c00001cabf9b03";
+
+const DATABASE_ID = "6a182b3d00083605cba6";
 const COLLECTION_ID = "brand_logos";
-const BUCKET_ID = "6986e8a4001925504f6b";
+const BUCKET_ID = "6a1d6a3f00191ec61913";
 
 export default function CMSPage() {
   const [images, setImages] = useState([]);

@@ -10,7 +10,8 @@ import { useRef } from "react";
 import { useParams } from "next/navigation";
 import { Query } from "appwrite";
 
-const BUCKET_ID = "6986e8a4001925504f6b";
+const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
+const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 
 
@@ -585,7 +586,7 @@ export default function PrintCertificate() {
       >
 
         {/* TEMPLATE */}
-        <img src="/beautycerti.png" className="absolute w-full h-full" />
+        <img src="/certi.jpg.jpeg" className="absolute w-full h-full" />
 
         {/* LOGO */}
         {student.logo && (
@@ -618,7 +619,7 @@ export default function PrintCertificate() {
         {/* NAME */}
         <div className="absolute top-[650px] left-[10px] w-full text-center">
 
-          <div className="text-3xl font-bold flex items-center justify-center gap-3 flex-wrap">
+          <div className="text-2xl font-bold flex items-center justify-center gap-3 flex-wrap">
 
             {/* STUDENT NAME */}
             <span>

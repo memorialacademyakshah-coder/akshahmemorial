@@ -7,7 +7,7 @@ import { Query } from "appwrite"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
 const COLLECTION = "course_categories"
-const BUCKET_ID = "6986e8a4001925504f6b" // change if your bucket id is different
+const BUCKET_ID = "6a1d6a3f00191ec61913" // change if your bucket id is different
 
 export default function WorkShowcase() {
 

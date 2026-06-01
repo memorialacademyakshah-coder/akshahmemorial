@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
-const BUCKET_ID = "6986e8a4001925504f6b";
+const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 
 export default function VerifyCertificate() {
 
