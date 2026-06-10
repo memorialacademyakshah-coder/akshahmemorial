@@ -265,7 +265,7 @@ export default function HeroSection() {
                 relative
                 z-10
                 w-full
-                max-w-[650px]
+                max-w-[500px]
                 object-contain
               "
             />

@@ -37,146 +37,197 @@ export default function Navbar() {
   }, [])
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-[#f5f5f5] border-b border-gray-200">
-      <div className="max-w-[1800px] mx-auto px-6 lg:px-16 py-5">
+    <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-sm">
 
-        <div className="flex items-center justify-between">
+{/* TOP LOGO BAR */}
+<div className="border-b border-gray-200 bg-[#f8f8f8]">
 
-          {/* ================= LOGO ================= */}
-          <Link href="/" className="flex items-center gap-3">
+  <div className="max-w-[1800px] mx-auto px-6 py-4">
 
-            {navbarData?.logoUrl ? (
-              <img
-                src={navbarData.logoUrl}
-                alt="logo"
-                className="h-12 object-contain"
-              />
-            ) : (
-              <>
-                <div className="w-12 h-12 rounded-full bg-[#5865F2] flex items-center justify-center">
-                  <GraduationCap className="text-white w-7 h-7" />
-                </div>
+    <div className="flex items-center justify-center gap-8">
 
-                <h1 className="text-[34px] font-extrabold text-[#0A1551] tracking-tight">
-                  {navbarData?.siteName || 'BNMI INDIA'}
-                </h1>
-              </>
-            )}
+      {/* LEFT LOGO */}
 
+      {navbarData?.logoUrl ? (
+        <img
+          src={navbarData.logoUrl}
+          alt="logo"
+          className="h-24 w-auto object-contain"
+        />
+      ) : (
+        <div className="w-20 h-20 rounded-full bg-[#5865F2] flex items-center justify-center">
+          <GraduationCap className="text-white w-10 h-10" />
+        </div>
+      )}
+
+      {/* CENTER NAME */}
+
+      <div className="text-center">
+
+        <h1
+          className="
+            text-3xl
+            md:text-4xl
+            lg:text-5xl
+            font-extrabold
+            text-[#0A1551]
+            uppercase
+            tracking-wide
+          "
+        >
+          {navbarData?.topBarText || 'BNMI INDIA'}
+        </h1>
+
+      </div>
+
+      {/* RIGHT LOGO */}
+
+      {navbarData?.logoUrl ? (
+        <img
+          src={navbarData.logoUrl}
+          alt="logo"
+          className="h-24 w-auto object-contain"
+        />
+      ) : (
+        <div className="w-20 h-20 rounded-full bg-[#5865F2] flex items-center justify-center">
+          <GraduationCap className="text-white w-10 h-10" />
+        </div>
+      )}
+
+    </div>
+
+  </div>
+
+</div>
+
+  {/* MENU BAR */}
+  <div className="bg-white">
+    <div className="max-w-[1800px] mx-auto px-8">
+
+      <div className="flex items-center justify-between h-[72px]">
+
+        {/* NAVIGATION */}
+        <nav className="hidden lg:flex items-center gap-10">
+
+          <NavItem title="HOME" href="/" />
+          <NavItem title="ABOUT" href="/aboutus" />
+
+          <NavItem title="COURSE" href="/#courses" />
+
+          <NavItem
+            title="CERTIFICATION"
+            href="/certificate-demo"
+          />
+
+          <NavItem
+            title="VERIFICATION"
+            href="/verify/verification"
+          />
+
+          <NavItem title="CONTACT" href="/contact" />
+
+        </nav>
+
+        {/* RIGHT SIDE */}
+        <div className="hidden lg:flex items-center gap-6">
+
+          <Link
+            href="/login/institute"
+            className="
+              flex
+              items-center
+              text-gray-700
+              font-medium
+              hover:text-[#5865F2]
+            "
+          >
+            Login
           </Link>
 
-          {/* ================= DESKTOP MENU ================= */}
-          <nav className="hidden lg:flex items-center gap-10">
-
-            <NavItem title="HOME" href="/" />
-            <NavItem title="ABOUT" href="/aboutus" />
-
-            <NavDropdown title="COURSE" href="/#courses" />
-
-            <NavDropdown
-              title="CERTIFICATION"
-              href="/certificate-demo"
-            />
-
-            <NavDropdown
-              title="VERIFICATION"
-              href="/verify/verification"
-            />
-
-            <NavItem title="CONTACT" href="/contact" />
-
-          </nav>
-
-          {/* ================= RIGHT BUTTONS ================= */}
-          <div className="hidden lg:flex items-center gap-8">
-
-            <Link
-              href="/login/institute"
-              className="text-[#0A1551] font-semibold text-[18px] hover:text-[#5865F2] transition-all duration-300"
+          <Link href="/student/login">
+            <button
+              className="
+                border-2
+                border-[#5865F2]
+                text-[#5865F2]
+                px-7
+                py-2.5
+                rounded-full
+                font-semibold
+                hover:bg-[#5865F2]
+                hover:text-white
+                transition
+              "
             >
-              Login
-            </Link>
-
-            <Link href="/student/login">
-              <button
-                className="
-                  bg-[#5865F2]
-                  hover:bg-[#4654e8]
-                  text-white
-                  font-semibold
-                  px-8
-                  py-4
-                  rounded-none
-                  transition-all
-                  duration-300
-                  shadow-md
-                "
-              >
-                Student Login
-              </button>
-            </Link>
-
-          </div>
-
-          {/* ================= MOBILE BUTTON ================= */}
-          <button
-            className="lg:hidden text-[#0A1551]"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? <X size={30} /> : <Menu size={30} />}
-          </button>
+              Student Login
+            </button>
+          </Link>
 
         </div>
 
-        {/* ================= MOBILE MENU ================= */}
-        {menuOpen && (
-          <div className="lg:hidden mt-6 bg-white rounded-2xl shadow-2xl p-6 flex flex-col gap-5">
-
-            <MobileNav href="/" title="HOME" />
-            <MobileNav href="/aboutus" title="ABOUT" />
-            <MobileNav href="/#courses" title="COURSE" />
-            <MobileNav href="/certificate-demo" title="CERTIFICATION" />
-            <MobileNav href="/verify/verification" title="VERIFICATION" />
-            <MobileNav href="/contact" title="CONTACT" />
-
-            <div className="border-t pt-5 flex flex-col gap-4">
-
-              <Link
-                href="/login/institute"
-                className="
-                  w-full
-                  border
-                  border-[#5865F2]
-                  text-[#5865F2]
-                  text-center
-                  py-3
-                  font-semibold
-                "
-              >
-                Login
-              </Link>
-
-              <Link href="/student/login">
-                <button
-                  className="
-                    w-full
-                    bg-[#5865F2]
-                    text-white
-                    py-3
-                    font-semibold
-                  "
-                >
-                  Student Login
-                </button>
-              </Link>
-
-            </div>
-
-          </div>
-        )}
+        {/* MOBILE MENU */}
+        <button
+          className="lg:hidden text-[#0A1551]"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? <X size={30} /> : <Menu size={30} />}
+        </button>
 
       </div>
-    </header>
+
+    </div>
+  </div>
+
+  {/* MOBILE MENU */}
+  {menuOpen && (
+    <div className="lg:hidden bg-white border-t shadow-xl">
+      <div className="p-6 flex flex-col gap-5">
+
+        <MobileNav href="/" title="HOME" />
+        <MobileNav href="/aboutus" title="ABOUT" />
+        <MobileNav href="/#courses" title="COURSE" />
+        <MobileNav href="/certificate-demo" title="CERTIFICATION" />
+        <MobileNav href="/verify/verification" title="VERIFICATION" />
+        <MobileNav href="/contact" title="CONTACT" />
+
+        <div className="pt-4 border-t flex flex-col gap-3">
+
+          <Link
+            href="/login/institute"
+            className="
+              border
+              border-gray-300
+              text-center
+              py-3
+              rounded-lg
+              font-medium
+            "
+          >
+            Login
+          </Link>
+
+          <Link href="/student/login">
+            <button
+              className="
+                w-full
+                bg-[#5865F2]
+                text-white
+                py-3
+                rounded-lg
+                font-semibold
+              "
+            >
+              Student Login 
+            </button>
+          </Link>
+
+        </div>
+
+      </div>
+    </div>
+  )}
+
+</header>
   )
 }
 
@@ -186,13 +237,11 @@ function NavItem({ title, href }) {
     <Link
       href={href}
       className="
-        text-[#0A1551]
-        font-bold
         text-[15px]
-        tracking-wide
+        font-medium
+        text-gray-700
         hover:text-[#5865F2]
         transition-all
-        duration-300
       "
     >
       {title}
