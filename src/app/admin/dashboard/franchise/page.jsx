@@ -53,7 +53,7 @@ export default function Dashboard() {
     const checkSession = async () => {
       try {
         const user = await account.get()
-        if (user.email !== 'bnmiindia@gmail.com') {
+        if (user.email !== 'memorialacademyakshah@gmail.com') {
           router.replace('/login')
         }
       } catch {

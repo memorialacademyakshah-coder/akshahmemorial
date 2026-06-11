@@ -51,17 +51,18 @@ export default function InstituteLogin() {
     // CREATE NEW SESSION
     await account.createEmailPasswordSession(email, password);
 
+   
     /* ---------------- ADMIN LOGIN ---------------- */
-    if (email === "bnmiindia@gmail.com") {
+if (email === "memorialacademyakshah@gmail.com") {
 
-      localStorage.setItem("adminAuth", "true");
+  localStorage.setItem("adminAuth", "true");
 
-      setTimeout(() => {
-        router.push("/admin");
-      }, 500);
+  setTimeout(() => {
+    router.push("/admin");
+  }, 500);
 
-      return;
-    }
+  return;
+}
 
     /* ---------------- FRANCHISE CHECK ---------------- */
     const res = await databases.listDocuments(
@@ -99,120 +100,156 @@ export default function InstituteLogin() {
 };
 
   return (
+  <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-200 px-4">
+    <div className="w-full max-w-6xl bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col lg:flex-row">
 
-      <div className="w-full max-w-6xl bg-white rounded-3xl overflow-hidden shadow-xl flex flex-col md:flex-row">
+      {/* LEFT PANEL */}
+      <div className="lg:w-1/2 relative bg-gradient-to-br from-blue-900 via-blue-700 to-sky-500 text-white">
 
-        {/* ================= LEFT SIDE ================= */}
-        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#2b4ea2] to-[#5fa0ff] items-center justify-center relative p-10">
+        <div className="absolute inset-0 bg-black/20"></div>
 
-          {/* circles */}
-          <div className="absolute top-10 right-10 w-40 h-40 bg-white/10 rounded-full"></div>
+        <div className="relative z-10 h-full flex flex-col justify-center p-10 lg:p-14">
 
-          <div className="absolute bottom-10 left-10 w-52 h-52 bg-white/10 rounded-full"></div>
+          <img
+            src="/campas.png"
+            alt="Academy Logo"
+            className="w-28 mb-8"
+          />
 
-          {/* logo */}
-          <div className="z-10 text-center">
+          <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
+            AK Shah Memorial Academy Portal
+          </h1>
 
-            <img
-              src="/logo.png"
-              alt="logo"
-              className="w-64 mx-auto"
-            />
+          <p className="text-lg text-blue-100 mb-10">
+            Access your institute dashboard, manage courses,
+            monitor students and stay connected with your academy.
+          </p>
+
+          <div className="space-y-5">
+
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-white"></div>
+              <span>Institute Management Dashboard</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-white"></div>
+              <span>Student & Franchise Records</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-white"></div>
+              <span>Course & Certificate Access</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div className="lg:w-1/2 flex items-center justify-center p-8 sm:p-12">
+
+        <div className="w-full max-w-md">
+
+          <div className="mb-8">
+
+            <h2 className="text-3xl font-bold text-gray-800">
+              Sign In
+            </h2>
+
+            <p className="text-gray-500 mt-2">
+              Login to continue to your institute account
+            </p>
 
           </div>
 
-        </div>
-
-        {/* ================= RIGHT SIDE ================= */}
-        <div className="w-full md:w-1/2 p-8 sm:p-12">
-
-          <h2 className="text-3xl font-bold mb-2 text-gray-800">
-            Welcome Back
-          </h2>
-
-          <p className="text-gray-500 mb-8">
-            Please login to your account to continue
-          </p>
-
-          <form onSubmit={login} className="space-y-6">
+          <form onSubmit={login} className="space-y-5">
 
             {/* EMAIL */}
             <div>
 
-              <label className="text-sm text-gray-600 block mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
               </label>
 
               <input
                 type="email"
-                placeholder="youremail@gmail.com"
-                className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
                 required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
 
             </div>
 
             {/* PASSWORD */}
-            <div className="relative">
+            <div>
 
-              <label className="text-sm text-gray-600 block mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
 
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
 
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[42px] text-gray-500"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl pr-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+
+              </div>
 
             </div>
 
-            {/* BUTTON */}
+            {/* LOGIN BUTTON */}
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3 rounded-xl font-semibold text-white transition ${
+              className={`w-full py-3 rounded-xl text-white font-semibold transition ${
                 loading
                   ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:opacity-90'
+                  : 'bg-blue-700 hover:bg-blue-800'
               }`}
             >
-              {loading ? 'Logging in...' : 'SIGN IN'}
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
 
           </form>
 
-          {/* DIVIDER */}
-          <div className="my-8 border-t border-dashed"></div>
+          {/* PWA CARD */}
+          <div className="mt-8 p-5 bg-slate-50 border rounded-2xl">
 
-          {/* PWA SECTION */}
-          <div className="text-center">
+            <h3 className="font-semibold text-gray-800 mb-2">
+              📱 Student Mobile App
+            </h3>
 
-            <p className="font-semibold text-gray-700 mb-2">
-              📱 Install as Progressive Web App (Mobile App) for Students
+            <p className="text-sm text-gray-600 mb-4">
+              Install the academy application and access courses
+              anytime from your mobile device.
             </p>
 
-            <p className="text-sm text-gray-500 mb-4">
-              Access your courses anytime, anywhere with our mobile app experience
-            </p>
-
-            <button className="w-full border border-blue-500 text-blue-600 py-3 rounded-xl font-medium hover:bg-blue-50 transition">
-              📲 App is under progress (Coming soon)
+            <button
+              type="button"
+              className="w-full border border-blue-600 text-blue-700 py-3 rounded-xl hover:bg-blue-50 transition"
+            >
+              Coming Soon
             </button>
 
           </div>
@@ -223,5 +260,6 @@ export default function InstituteLogin() {
 
     </div>
 
-  )
+  </div>
+)
 }

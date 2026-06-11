@@ -257,7 +257,7 @@ export default function PrintCertificate() {
 
         const user = await account.get();
 
-        if (user.email === "bnmiindia@gmail.com") {
+        if (user.email === "memorialacademyakshah@gmail.com") {
           setIsAdmin(true);
         }
 
