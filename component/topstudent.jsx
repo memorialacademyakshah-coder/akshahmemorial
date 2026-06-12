@@ -35,25 +35,14 @@ export default function TopStudents() {
     fetchStudents();
   }, []);
 
-  const getImageUrl = (image) => {
-    if (!image) return "/placeholder.png";
+const getImageUrl = (fileId) => {
+  if (!fileId) return "/placeholder.png";
 
-    try {
-      if (
-        typeof image === "string" &&
-        image.startsWith("http")
-      ) {
-        return image;
-      }
-
-      return storage.getFileView(
-        BUCKET_ID,
-        image
-      ).href;
-    } catch {
-      return "/placeholder.png";
-    }
-  };
+  return storage.getFileView(
+    BUCKET_ID,
+    fileId
+  ).toString();
+};
 
   if (!students.length) {
     return (
@@ -184,22 +173,27 @@ export default function TopStudents() {
                   <div className="relative p-4">
 
                     <img
-                      src={getImageUrl(
-                        student.imageUrl
-                      )}
-                      alt={student.name}
-                      draggable={false}
-                      className="
-                        h-[320px]
-                        w-full
-                        rounded-[28px]
-                        object-cover
-                        object-top
-                        transition-transform
-                        duration-500
-                        hover:scale-105
-                      "
-                    />
+  src={getImageUrl(student.imageUrl)}
+  alt={student.name || "Student"}
+  draggable={false}
+  onError={(e) => {
+    console.log(
+      "Failed Image:",
+      student.imageUrl
+    );
+    e.target.src = "/placeholder.png";
+  }}
+  className="
+    h-[320px]
+    w-full
+    rounded-[28px]
+    object-cover
+    object-top
+    transition-transform
+    duration-500
+    hover:scale-105
+  "
+/>
 
                   </div>
 
@@ -212,7 +206,7 @@ export default function TopStudents() {
                     </h3>
 
                     <p className="mt-2 text-cyan-400 font-medium">
-                      {student.studentClass}
+                      {student.class}
                     </p>
 
                     {/* Stats */}

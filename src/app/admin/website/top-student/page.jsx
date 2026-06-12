@@ -61,52 +61,48 @@ export default function TopStudentsCMS() {
 
   /* ================= IMAGE ================= */
 
-  const uploadImage = async (
-    file,
-    isEdit = false
-  ) => {
-    if (!file) return;
+const uploadImage = async (
+  file,
+  isEdit = false
+) => {
+  if (!file) return;
 
-    try {
-      const uploaded =
-        await storage.createFile(
-          BUCKET_ID,
-          ID.unique(),
-          file
-        );
+  try {
+    const uploaded = await storage.createFile(
+      BUCKET_ID,
+      ID.unique(),
+      file
+    );
 
-      const imageId = uploaded.$id;
+    const fileId = uploaded.$id;
 
-      if (isEdit) {
-        setEditingStudent((prev) => ({
-          ...prev,
-          imageUrl: imageId,
-        }));
-      } else {
-        setNewStudent((prev) => ({
-          ...prev,
-          imageUrl: imageId,
-        }));
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Image upload failed");
+    console.log("Uploaded File ID:", fileId);
+
+    if (isEdit) {
+      setEditingStudent((prev) => ({
+        ...prev,
+        imageUrl: fileId,
+      }));
+    } else {
+      setNewStudent((prev) => ({
+        ...prev,
+        imageUrl: fileId,
+      }));
     }
-  };
+  } catch (error) {
+    console.error(error);
+    alert("Image Upload Failed");
+  }
+};
 
-  const getImageUrl = (fileId) => {
-    if (!fileId) return "";
+const getImageUrl = (fileId) => {
+  if (!fileId) return "/placeholder.png";
 
-    try {
-      return storage.getFileView(
-        BUCKET_ID,
-        fileId
-      ).href;
-    } catch {
-      return "";
-    }
-  };
-
+  return storage.getFileView(
+    BUCKET_ID,
+    fileId
+  ).toString();
+};
   /* ================= ADD ================= */
 
   const addStudent = async () => {
