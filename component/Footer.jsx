@@ -485,7 +485,7 @@ export default function Footer() {
           text-sm
         "
       >
-        © Copyright 2026 AKSMA. All Rights Reserved.
+        © Copyright 2026 ASMA. All Rights Reserved.
       </div>
 
     </footer>

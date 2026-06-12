@@ -22,7 +22,7 @@ export default function AdminSelect() {
       <div className="relative w-full max-w-5xl z-10">
 
         <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-10 text-gray-800">
-          AKSMA Administration
+          ASMA Administration
         </h1>
 
         <div className="grid md:grid-cols-2 gap-8">

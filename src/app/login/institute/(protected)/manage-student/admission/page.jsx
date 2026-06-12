@@ -26,14 +26,14 @@ export default function AdmissionList() {
     const user = await account.get();
 
     const res = await databases.listDocuments(
-      DATABASE_ID,
-      COLLECTION_ID,
-      [
-        Query.equal("createdById", user.$id),
-        Query.orderDesc("createdAt")
-
-      ]
-    );
+  DATABASE_ID,
+  COLLECTION_ID,
+  [
+    Query.equal("createdById", user.$id),
+    Query.orderAsc("createdAt"),
+    Query.limit(500)
+  ]
+);
 
     setStudents(res.documents);
 

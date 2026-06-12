@@ -153,17 +153,17 @@ export default function PremiumBrandSlider() {
                   text-[#08104d]
                 "
               >
-                BNMIINDIA.COM{" "}
+               www.akshahmemorailacademy.in{" "}
 
                 <span
                   className="
                     text-[#5865F2]
                   "
                 >
-                  BNMIINDIA.ORG
+                  akshahmemorailacademy.in
                 </span>{" "}
 
-                ADVANCEINDIAIT.IN
+                
               </h2>
 
             </div>

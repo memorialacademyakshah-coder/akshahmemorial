@@ -128,7 +128,7 @@ export default function CertificatePage() {
             grade: student.grade,
             examMode: student.examMode || "OFFLINE",
             examDate: student.examDate || "",
-            certificateNo: "AKSMA-" + Date.now(),
+            certificateNo: "ASMA-" + Date.now(),
             status: "pending",
             createdById: student.createdById,
             createdAt: new Date().toISOString()

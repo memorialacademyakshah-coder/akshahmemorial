@@ -25,7 +25,7 @@ export default function AdminSidebar() {
       <div className="p-6 border-b flex items-center gap-2">
         <Menu className="text-sky-500" />
         <h1 className="text-xl font-bold text-sky-500">
-          AKSMA Admin
+          ASMA Admin
         </h1>
       </div>
 

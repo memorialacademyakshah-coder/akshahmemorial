@@ -61,6 +61,7 @@ courseName: "",
   String(row["Father's Adhaar No"] || ""),
     }));
 
+    console.log("DOB VALUE:", row["DOB"]);
     setStudents(formatted);
   };
 
@@ -216,10 +217,13 @@ className:
           );
 
           imported++;
-        } catch (err) {
-            console.log("IMPORT ERROR:", err);
+        }catch (err) {
+  console.error("IMPORT ERROR:", err);
 
-        }
+  alert(
+    `Error: ${err.message}\nCode: ${err.code}`
+  );
+}
       }
 
       alert(

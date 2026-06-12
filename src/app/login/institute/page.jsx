@@ -234,7 +234,7 @@ if (email === "memorialacademyakshah@gmail.com") {
           </form>
 
           {/* PWA CARD */}
-          <div className="mt-8 p-5 bg-slate-50 border rounded-2xl">
+          {/* <div className="mt-8 p-5 bg-slate-50 border rounded-2xl">
 
             <h3 className="font-semibold text-gray-800 mb-2">
               📱 Student Mobile App
@@ -252,7 +252,7 @@ if (email === "memorialacademyakshah@gmail.com") {
               Coming Soon
             </button>
 
-          </div>
+          </div> */}
 
         </div>
 

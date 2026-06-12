@@ -44,7 +44,7 @@ export default function Dashboard() {
     <div className="p-8 bg-gray-100 min-h-screen">
 
       <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
-      <p className="text-gray-500 mb-8">Welcome To AKSMA Dashboard</p>
+      <p className="text-gray-500 mb-8">Welcome To ASMA Dashboard</p>
 
 
       {/* Top Cards */}

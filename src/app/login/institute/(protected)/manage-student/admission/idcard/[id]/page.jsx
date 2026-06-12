@@ -157,7 +157,7 @@ export default function IDCard() {
       >
 
         {/* TEMPLATE */}
-        <img src="/ID.png" className="w-full" />
+        <img src="/ID.jpeg" className="w-full" />
 
         {/* FRANCHISE LOGO */}
       {franchise?.logo && (
@@ -171,9 +171,9 @@ export default function IDCard() {
 )}
 
         {/* INSTITUTE NAME */}
-        <div className="absolute top-[95px] left-[5px] text-center w-full text-lg font-semibold">
+        {/* <div className="absolute top-[95px] left-[5px] text-center w-full text-lg font-semibold">
           {franchise?.instituteName || ""}
-        </div>
+        </div> */}
 
         {/* PHOTO */}
         <img

@@ -212,7 +212,7 @@ const loadDashboard = async () => {
         </h1>
 
         <p className="text-gray-500">
-          Welcome to AKSMA Dashboard
+          Welcome to ASMA Dashboard
         </p>
 
       </div>
