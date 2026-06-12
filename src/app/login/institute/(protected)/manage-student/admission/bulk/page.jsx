@@ -57,8 +57,8 @@ courseName: "",
       mobile:
         String(row["Contact No"] || ""),
 
-      fatherAadhar:
-        String(row["Father's Aadhaar"] || ""),
+     fatherAadhar:
+  String(row["Father's Adhaar No"] || ""),
     }));
 
     setStudents(formatted);
@@ -149,7 +149,7 @@ courseName: "",
   student.courseName,
 
 className:
-  student.courseName,
+  student.className,
 
               address:
                 student.address,
@@ -396,10 +396,9 @@ className:
                     {student.fatherName}
                   </td>
 
-                  <td className="p-4">
-                    {student.courseName}
-                  </td>
-
+            <td className="p-4">
+  {student.className}
+</td>
                   <td className="p-4">
                     {student.rollNumber}
                   </td>

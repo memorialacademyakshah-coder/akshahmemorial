@@ -148,7 +148,7 @@ export default function CertificatePage() {
             marksArray: fullResult.marksArray,
             courseType: fullResult.courseType,
             certificateNo:
-              "BNMI-" + Date.now(),
+              "AKSMA-" + Date.now(),
             status: "pending",
             createdAt:
               new Date().toISOString()

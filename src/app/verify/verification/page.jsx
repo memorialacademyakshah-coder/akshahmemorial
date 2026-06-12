@@ -139,7 +139,7 @@ try {
         {/* HEADER */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800">
-            BNMI Verification Portal
+            AKSMA Verification Portal
           </h1>
           <p className="text-gray-600 mt-2">
             Verify Franchise & Student Credentials
@@ -276,7 +276,7 @@ try {
           ✔ Verified Student
         </h2>
         <p className="text-gray-500 text-sm">
-          Official BNMI Verification
+          Official AKSMA Verification
         </p>
       </div>
 
