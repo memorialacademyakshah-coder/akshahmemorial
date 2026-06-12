@@ -8,6 +8,7 @@ import StagesSection from '../../component/StagesSection'
 import WorkShowcase from '../../component/WorkShowcase'
 import TeamSection from '../../component/TeamSection'
 import BrandSlider from '../../component/brandlogo'
+import TopStudents from '../../component/topstudent'
 
 export default function Page() {
   return (
@@ -15,6 +16,7 @@ export default function Page() {
       <Navbar />
 
       <Hero />
+ <TopStudents/>
 
       <ServicesSection />
 

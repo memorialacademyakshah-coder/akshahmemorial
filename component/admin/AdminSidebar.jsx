@@ -53,10 +53,17 @@ export default function AdminSidebar() {
           label="Banner Section"
           href="/admin/website/hero"
         />
+        <MenuItem
+          icon={<Image size={18} />}
+          label="Top Student"
+          href="/admin/website/top-student"
+        />
+
+
 
         <MenuItem
           icon={<Image size={18} />}
-          label="Top Institute Section"
+          label="course highlight"
           href="/admin/website/services"
         />
 
