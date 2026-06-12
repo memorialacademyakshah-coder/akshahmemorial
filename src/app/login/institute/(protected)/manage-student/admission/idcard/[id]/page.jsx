@@ -151,78 +151,80 @@ export default function IDCard() {
       </div>
 
       {/* ID CARD */}
-      <div
-        ref={printRef}
-        className="relative w-[350px]"
-      >
+{/* ID CARD */}
+<div
+  ref={printRef}
+  className="relative w-[1280px] bg-white"
+>
 
-        {/* TEMPLATE */}
-        <img src="/ID.jpeg" className="w-full" />
+  {/* TEMPLATE */}
+  <img
+    src="/ID.jpeg"
+    className="w-full"
+    alt="ID Card Template"
+  />
 
-        {/* FRANCHISE LOGO */}
-      {franchise?.logo && (
-  <div className="absolute top-[5px] left-[130px] w-[95px] h-[95px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+  {/* STUDENT PHOTO */}
+  {student.photoId && (
     <img
-      src={franchise.logo}
-      className="w-full h-full object-cover rounded-full"
-      alt="Institute Logo"
+      src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
+      className="absolute top-[210px] left-[60px] w-[300px] h-[420px] object-cover rounded-lg"
+      alt="Student"
     />
+  )}
+
+  {/* STUDENT NAME */}
+  <div className="absolute top-[310px] left-[710px] text-[22px] font-semibold text-black">
+    {student.studentName || ""}
   </div>
-)}
 
-        {/* INSTITUTE NAME */}
-        {/* <div className="absolute top-[95px] left-[5px] text-center w-full text-lg font-semibold">
-          {franchise?.instituteName || ""}
-        </div> */}
+  {/* FATHER NAME */}
+  <div className="absolute top-[355px] left-[710px] text-[22px] text-black">
+    {student.fatherName || ""}
+  </div>
 
-        {/* PHOTO */}
-        <img
-          src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
-          className="absolute top-[190px] left-[120px] w-[100px] h-[100px] object-cover"
-        />
+  {/* CLASS */}
+  <div className="absolute top-[405px] left-[750px] text-[22px] text-black">
+    {student.className || ""}
+  </div>
 
-        {/* STUDENT NAME */}
-        <div className="absolute top-[334px] left-[145px] text-lg">
-          {student.studentName}
-        </div>
+  {/* SECTION */}
+  <div className="absolute top-[545px] left-[710px] text-[22px] text-black">
+    {student.section || ""}
+  </div>
 
-        {/* COURSE */}
-        <div className="absolute top-[370px] left-[140px] text-xs">
-          {student.courseName}
-        </div>
+  {/* DATE OF BIRTH */}
+  <div className="absolute top-[500px] left-[710px] text-[22px] text-black">
+    {student.dob || ""}
+  </div>
 
-        {/* MOBILE */}
-        <div className="absolute top-[400px] left-[150px] text-sm">
-          {student.mobile || ""}
-        </div>
+  {/* BLOOD GROUP */}
+  <div className="absolute top-[698px] left-[710px] text-[22px] text-black">
+    {student.bloodGroup || ""}
+  </div>
 
-        {/* ROLL NUMBER */}
-        <div className="absolute top-[427px] left-[150px] text-lg">
-          {student.rollNumber}
-        </div>
+  {/* CONTACT NUMBER */}
+  <div className="absolute top-[595px] left-[710px] text-[22px] text-black">
+    {student.mobile || ""}
+  </div>
 
-        {/* OWNER NAME */}
-        <div className="absolute bottom-[30px] left-[46px] text-xs font-semibold">
-          {franchise?.name || ""}
-        </div>
+  {/* ADDRESS */}
+  <div className="absolute top-[650px] left-[710px] w-[380px] text-[18px] leading-6 text-black">
+    {student.address || ""}
+  </div>
 
-        {/* QR CODE */}
-        <div className="absolute top-[450px] left-[220px] bg-white p-1">
-          <QRCode
-            value={`${window.location.origin}/verify-student/${student.$id}`}
-            size={80}
-          />
-        </div>
+  {/* QR CODE */}
+  {/* <div className="absolute bottom-[40px] right-[60px] bg-white p-2">
+    <QRCode
+      value={`${window.location.origin}/verify-student/${student.$id}`}
+      size={120}
+    />
+  </div> */}
 
-        {/* FRANCHISE SIGNATURE */}
-        {franchise?.signature && (
-          <img
-            src={franchise.signature}
-            className="absolute bottom-[50px] left-[40px] w-[100px] h-[40px] object-contain"
-          />
-        )}
+</div>
+       
 
-      </div>
+
 
     </div>
 
