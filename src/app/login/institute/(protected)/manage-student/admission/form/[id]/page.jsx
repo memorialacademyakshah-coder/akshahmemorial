@@ -160,9 +160,9 @@ export default function AdmissionForm() {
 
                 {/* INSTITUTE NAME */}
 
-                <div className="absolute top-[160px] text-center w-full text-3xl font-bold ">
+                {/* <div className="absolute top-[160px] text-center w-full text-3xl font-bold ">
                     {franchise?.instituteName || ""}
-                </div>
+                </div> */}
 
                  <img
           src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
@@ -182,10 +182,15 @@ export default function AdmissionForm() {
                 </div>
 
                 {/* COURSE NAME */}
+                {/* CLASS NAME */}
+
+<div className="absolute top-[390px] left-[210px] text-lg">
+  {student.className || ""}
+</div>
 
                 <div className="absolute top-[365px] left-[210px] text-lg">
-                    {student.courseName || ""}
-                </div>
+  {student.className || student.courseName || ""}
+</div>
 
                 {/* STUDENT NAME */}
 
@@ -300,21 +305,21 @@ export default function AdmissionForm() {
 
                 {/* FRANCHISE EMAIL */}
 
-                <div className="absolute bottom-[80px] text-center w-full text-lg">
+                {/* <div className="absolute bottom-[80px] text-center w-full text-lg">
                     Email: {franchise?.email || ""}
-                </div>
+                </div> */}
 
                 {/* FRANCHISE ADDRESS */}
 
-                <div className="absolute bottom-[105px]  text-lg text-center w-full">
+                {/* <div className="absolute bottom-[105px]  text-lg text-center w-full">
                     Address: {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
-                </div>
+                </div> */}
 
                 {/* FRANCHISE OWNER */}
 
-                <div className="absolute bottom-[120px] right-[70px] text-lg">
+                {/* <div className="absolute bottom-[120px] right-[70px] text-lg">
                     {franchise?.name || ""}
-                </div>
+                </div> */}
 
             </div>
 

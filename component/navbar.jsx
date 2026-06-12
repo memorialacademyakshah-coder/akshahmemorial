@@ -123,6 +123,10 @@ export default function Navbar() {
             title="VERIFICATION"
             href="/verify/verification"
           />
+          <NavItem
+            title="FRANCHISE FORM"
+            href="/franchise/signup"
+          />
 
           <NavItem title="CONTACT" href="/contact" />
 

@@ -75,12 +75,25 @@ export default function AdmissionList() {
           LIST STUDENT ADMISSION
         </h1>
 
-        <button
-          onClick={() => router.push("/login/institute/manage-student/admission/add")}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          ADD NEW STUDENT
-        </button>
+       <div className="flex gap-3">
+  <button
+    onClick={() =>
+      router.push("/login/institute/manage-student/admission/add")
+    }
+    className="bg-blue-600 text-white px-4 py-2 rounded"
+  >
+    ADD NEW STUDENT
+  </button>
+
+  <button
+    onClick={() =>
+      router.push("/login/institute/manage-student/admission/bulk")
+    }
+    className="bg-green-600 text-white px-4 py-2 rounded"
+  >
+    BULK ADMISSION
+  </button>
+</div>
 
       </div>
 
@@ -95,8 +108,9 @@ export default function AdmissionList() {
             <th className="border p-2">Photo</th>
             <th className="border p-2">Batch</th>
             <th className="border p-2">Student Name</th>
-            <th className="border p-2">Course</th>
+            <th className="border p-2">Class</th>
          <th className="border p-2">Mobile</th>
+         <th className="border p-2">Course</th>
 <th className="border p-2">Username</th>
 <th className="border p-2">Password</th>
 <th className="border p-2">Action</th>
@@ -151,12 +165,15 @@ export default function AdmissionList() {
                 </td>
 
                 <td className="border p-2">
-                  {courseMap[item.courseName] || item.courseName}
+                  {item.className || item.courseName || "-"}
                 </td>
 
                 <td className="border p-2">
                   {item.mobile}
                 </td>
+                <td className="border p-2">
+  {item.courseName || "-"}
+</td>
                 <td className="border p-2">
   {item.username || "-"}
 </td>

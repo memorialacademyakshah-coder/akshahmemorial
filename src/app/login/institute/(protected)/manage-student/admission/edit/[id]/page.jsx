@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
-import { Storage, Client, ID } from "appwrite";
+import { Storage, Client, ID, Query } from "appwrite";
 import { useParams, useRouter } from "next/navigation";
-
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "student_admissions";
 const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
@@ -25,6 +24,7 @@ export default function EditStudent() {
 
   const [photoPreview, setPhotoPreview] = useState("");
   const [signaturePreview, setSignaturePreview] = useState("");
+const [courses, setCourses] = useState([]);
 
   const [form, setForm] = useState({
 
@@ -42,7 +42,7 @@ export default function EditStudent() {
     mobile: "",
     altMobile: "",
     email: "",
-
+className: "",
     dob: "",
     gender: "",
 
@@ -63,6 +63,7 @@ export default function EditStudent() {
     totalFees: 0,
     feesReceived: 0,
     balance: 0,
+    examFees: 0,
 
     batch: "",
     admissionDate: "",
@@ -74,6 +75,26 @@ export default function EditStudent() {
     fetchStudent();
   }, []);
 
+  useEffect(() => {
+  fetchStudent();
+  loadCourses();
+}, []);
+
+const loadCourses = async () => {
+  try {
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "courses_single"
+    );
+
+    setCourses(res.documents);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
   const fetchStudent = async () => {
 
     try {
@@ -84,7 +105,13 @@ export default function EditStudent() {
         id
       );
 
-      setForm(res);
+      setForm({
+  ...res,
+  className:
+    res.className ||
+    res.originalClass ||
+    ""
+});
 
       // PHOTO PREVIEW
       if (res.photoId) {
@@ -150,6 +177,60 @@ export default function EditStudent() {
 
   };
 
+ const loadExamFee = async () => {
+
+  try {
+
+    const franchiseRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_approved",
+        [
+          Query.equal(
+            "email",
+            form.franchiseEmail
+          )
+        ]
+      );
+
+    if (
+      franchiseRes.documents.length === 0
+    ) {
+      return 0;
+    }
+
+    const plan =
+      franchiseRes.documents[0].plan;
+
+    const planRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_plans",
+        [
+          Query.equal("name", plan)
+        ]
+      );
+
+    if (
+      planRes.documents.length > 0
+    ) {
+      return Number(
+        planRes.documents[0].amount || 0
+      );
+    }
+
+    return 0;
+
+  } catch (err) {
+
+    console.log(err);
+
+    return 0;
+
+  }
+};
+
+
   const handleSubmit = async (e) => {
 
     e.preventDefault();
@@ -193,6 +274,9 @@ export default function EditStudent() {
 
           photoId,
           signatureId,
+          courseId: form.courseId,
+courseName: form.courseName,
+subjects: form.subjects,
 
           courseFees: Number(form.courseFees) || 0,
           discount: Number(form.discount) || 0,
@@ -218,17 +302,35 @@ export default function EditStudent() {
 
   return (
 
-    <form
-      onSubmit={handleSubmit}
-      className="p-10 bg-gray-100 min-h-screen"
-    >
+ <form
+  onSubmit={handleSubmit}
+  className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 p-8"
+>
 
-      <h1 className="text-3xl font-bold mb-8">
-        Edit Student Admission
+   <div className="max-w-7xl mx-auto mb-8">
+
+  <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+
+    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-8">
+
+      <h1 className="text-4xl font-bold text-white">
+        Student Profile Management
       </h1>
 
-      {/* PHOTO + SIGNATURE */}
+      <p className="text-blue-100 mt-2">
+        Update student details, course, fees and documents
+      </p>
 
+    </div>
+
+  </div>
+
+</div>
+
+      {/* PHOTO + SIGNATURE */}
+<div className="max-w-7xl mx-auto">
+
+<div className="bg-white rounded-3xl shadow-xl p-8"></div>
       <div className="grid grid-cols-2 gap-6 mb-8">
 
         <div>
@@ -251,7 +353,17 @@ export default function EditStudent() {
               }
 
             }}
-            className="border p-2 w-full bg-white"
+            className="
+w-full
+rounded-2xl
+border-2
+border-dashed
+border-blue-300
+p-4
+bg-blue-50
+hover:border-blue-500
+transition
+"
           />
 
           {photoPreview && (
@@ -283,7 +395,17 @@ export default function EditStudent() {
               }
 
             }}
-            className="border p-2 w-full bg-white"
+            className="
+w-full
+rounded-2xl
+border-2
+border-dashed
+border-blue-300
+p-4
+bg-blue-50
+hover:border-blue-500
+transition
+"
           />
 
           {signaturePreview && (
@@ -296,26 +418,68 @@ export default function EditStudent() {
         </div>
 
       </div>
+      </div>
+      
 
       {/* FORM */}
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <input
-          name="studentName"
-          value={form.studentName || ""}
-          placeholder="Student Name"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+     <div>
 
-        <input
-          name="surname"
-          value={form.surname || ""}
-          placeholder="Surname"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+<label className="block text-sm font-semibold text-gray-700 mb-2">
+  Student Name
+</label>
+
+<input
+  name="studentName"
+  value={form.studentName || ""}
+  onChange={handleChange}
+  className="
+  w-full
+  rounded-xl
+  border
+  border-gray-300
+  px-4
+  py-3
+  bg-white
+  focus:ring-2
+  focus:ring-blue-500
+  "
+/>
+
+</div>
+
+      <div>
+
+<label className="block text-sm font-semibold text-gray-700 mb-2">
+  Surname
+</label>
+
+<input
+  name="surname"
+  value={form.surname || ""}
+  onChange={handleChange}
+  className="
+  w-full
+  rounded-xl
+  border
+  border-gray-300
+  px-4
+  py-3
+  bg-white
+  focus:ring-2
+  focus:ring-blue-500
+  "
+/>
+
+</div>
+
+      <div>
+
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Relation Type
+        </label>
 
         <select
           name="relationType"
@@ -328,18 +492,37 @@ export default function EditStudent() {
           <option>W/O</option>
         </select>
 
+      </div>
+
         {/* FATHER */}
 
         <div>
 
-          <input
-            name="fatherName"
-            value={form.fatherName || ""}
-            placeholder="Father Name"
-            onChange={handleChange}
-            className="border p-3 w-full bg-white"
-          />
 
+       <div>
+
+<label className="block text-sm font-semibold text-gray-700 mb-2">
+  Father Name
+</label>
+
+<input
+  name="fatherName"
+  value={form.fatherName || ""}
+  onChange={handleChange}
+  className="
+  w-full
+  rounded-xl
+  border
+  border-gray-300
+  px-4
+  py-3
+  bg-white
+  focus:ring-2
+  focus:ring-blue-500
+  "
+/>
+
+</div>
           <div className="flex items-center gap-2 mt-2">
 
             <input
@@ -365,13 +548,30 @@ export default function EditStudent() {
 
         <div>
 
-          <input
-            name="motherName"
-            value={form.motherName || ""}
-            placeholder="Mother Name"
-            onChange={handleChange}
-            className="border p-3 w-full bg-white"
-          />
+         <div>
+
+<label className="block text-sm font-semibold text-gray-700 mb-2">
+  Mother Name
+</label>
+
+<input
+  name="motherName"
+  value={form.motherName || ""}
+  onChange={handleChange}
+  className="
+  w-full
+  rounded-xl
+  border
+  border-gray-300
+  px-4
+  py-3
+  bg-white
+  focus:ring-2
+  focus:ring-blue-500
+  "
+/>
+
+</div>
 
           <div className="flex items-center gap-2 mt-2">
 
@@ -394,29 +594,90 @@ export default function EditStudent() {
 
         </div>
 
-        <input
-          name="mobile"
-          value={form.mobile || ""}
-          placeholder="Mobile"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+<div>
+  <label className="block text-sm font-semibold text-gray-700 mb-2">
+    Class Name
+  </label>
 
-        <input
-          name="altMobile"
-          value={form.altMobile || ""}
-          placeholder="Alternate Mobile"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+  <input
+    value={form.className || ""}
+    readOnly
+    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3"
+  />
+</div>
+      <div>
 
-        <input
-          name="email"
-          value={form.email || ""}
-          placeholder="Email"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+<label className="block text-sm font-semibold text-gray-700 mb-2">
+  Mobile
+</label>
+
+<input
+  name="mobile"
+  value={form.mobile || ""}
+  onChange={handleChange}
+  className="
+  w-full
+  rounded-xl
+  border
+  border-gray-300
+  px-4
+  py-3
+  bg-white
+  focus:ring-2
+  focus:ring-blue-500
+  "
+/>
+
+</div>
+
+      <div>
+
+<label className="block text-sm font-semibold text-gray-700 mb-2">
+  Alternate Mobile
+</label>
+
+<input
+  name="altMobile"
+  value={form.altMobile || ""}
+  onChange={handleChange}
+  className="
+  w-full
+  rounded-xl
+  border
+  border-gray-300
+  px-4
+  py-3
+  bg-white
+  focus:ring-2
+  focus:ring-blue-500
+  "
+/>
+
+</div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Email
+          </label>
+
+          <input
+            name="email"
+            value={form.email || ""}
+            placeholder="Email"
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
 
         <input
           type="date"
@@ -445,62 +706,207 @@ export default function EditStudent() {
           className="border p-3 bg-white"
         />
 
-        <input
-          name="qualification"
-          value={form.qualification || ""}
-          placeholder="Qualification"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Qualification
+          </label>
 
-        <input
-          name="occupation"
-          value={form.occupation || ""}
-          placeholder="Occupation"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+          <input
+            name="qualification"
+            value={form.qualification || ""}
+            placeholder="Qualification"
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
 
-        <input
-          name="state"
-          value={form.state || ""}
-          placeholder="State"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Occupation
+          </label>
 
-        <input
-          name="city"
-          value={form.city || ""}
-          placeholder="City"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+          <input
+            name="occupation"
+            value={form.occupation || ""}
+            placeholder="Occupation"
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
 
-        <input
-          name="postcode"
-          value={form.postcode || ""}
-          placeholder="Postcode"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            State
+          </label>
 
-        <textarea
-          name="address"
-          value={form.address || ""}
-          placeholder="Address"
-          onChange={handleChange}
-          className="border p-3 bg-white col-span-3"
-        />
+          <input
+            name="state"
+            value={form.state || ""}
+            placeholder="State"
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
 
-        <input
-          name="courseName"
-          value={form.courseName || ""}
-          placeholder="Course Name"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            City
+          </label>
 
+          <input
+            name="city"
+            value={form.city || ""}
+            placeholder="City"
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Postcode
+          </label>
+
+          <input
+            name="postcode"
+            value={form.postcode || ""}
+            placeholder="Postcode"
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
+
+        <div className="col-span-3">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Address
+          </label>
+
+          <textarea
+            name="address"
+            value={form.address || ""}
+            placeholder="Address"
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
+
+      
+<select
+  value={form.courseId || ""}
+  onChange={async (e) => {
+
+    const courseId = e.target.value;
+
+    const course = courses.find(
+      c => c.$id === courseId
+    );
+
+    if (!course) return;
+
+    const subjectRes =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "course_subjects",
+        [
+          Query.equal(
+            "courseId",
+            courseId
+          )
+        ]
+      );
+
+    const subjects =
+      subjectRes.documents
+        .map(s => s.subjectName)
+        .join(", ");
+
+    setForm(prev => ({
+      ...prev,
+      courseId: courseId,
+      courseName: course.courseName,
+      subjects: subjects,
+      courseFees:
+        Number(course.courseFees || 0)
+    }));
+
+  }}
+  className="border p-3 bg-white"
+>
+
+  <option value="">
+    Select Course
+  </option>
+
+  {courses.map(course => (
+    <option
+      key={course.$id}
+      value={course.$id}
+    >
+      {course.courseName}
+    </option>
+  ))}
+
+</select>
         <input
           name="subjects"
           value={form.subjects || ""}
@@ -509,35 +915,84 @@ export default function EditStudent() {
           className="border p-3 bg-white"
         />
 
-        <input
-          name="batch"
-          value={form.batch || ""}
-          placeholder="Batch"
-          onChange={handleChange}
-          className="border p-3 bg-white"
-        />
 
-        {/* FEES */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Batch
+          </label>
 
-        <input
-          type="number"
-          value={form.courseFees || 0}
-          placeholder="Course Fees"
-          onChange={(e) =>
-            calculateFees(e.target.value, form.discount)
-          }
-          className="border p-3 bg-white"
-        />
+          <input
+            name="batch"
+            value={form.batch || ""}
+            placeholder="Batch"
+            onChange={handleChange}
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
 
-        <input
-          type="number"
-          value={form.discount || 0}
-          placeholder="Discount"
-          onChange={(e) =>
-            calculateFees(form.courseFees, e.target.value)
-          }
-          className="border p-3 bg-white"
-        />
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Course Fees
+          </label>
+
+          <input
+            type="number"
+            name="courseFees"
+            value={form.courseFees || 0}
+            placeholder="Course Fees"
+            onChange={(e) =>
+              calculateFees(e.target.value, form.discount)
+            }
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Discount
+          </label>
+
+          <input
+            type="number"
+            name="discount"
+            value={form.discount || 0}
+            placeholder="Discount"
+            onChange={(e) =>
+              calculateFees(form.courseFees, e.target.value)
+            }
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
 
         <input
           value={form.totalFees || 0}
@@ -583,7 +1038,19 @@ export default function EditStudent() {
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-8 py-3 rounded-lg"
+className="
+px-10
+py-4
+rounded-2xl
+text-white
+font-bold
+bg-gradient-to-r
+from-blue-600
+to-indigo-600
+hover:scale-105
+transition-all
+shadow-lg
+"
         >
           Update Student
         </button>
