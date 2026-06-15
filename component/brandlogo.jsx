@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Client, Databases } from "appwrite";
 
 /* ================= APPWRITE ================= */
-const client = new Client();
 
 client
   .setEndpoint("https://cloud.appwrite.io/v1")
