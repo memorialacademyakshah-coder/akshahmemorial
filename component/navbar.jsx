@@ -70,12 +70,12 @@ export default function Navbar() {
             md:text-4xl
             lg:text-5xl
             font-extrabold
-            text-[#0A1551]
+            text-[#0A1551]             
             uppercase
             tracking-wide
           "
         >
-          {navbarData?.topBarText || 'BNMI INDIA'}
+          {navbarData?.topBarText || 'AK SHAH MEMORIAL ACADEMY'}
         </h1>
 
       </div>
@@ -123,7 +123,7 @@ export default function Navbar() {
             title="VERIFICATION"
             href="/verify/verification"
           />
-          <NavItem
+          <NavItem 
             title="FRANCHISE FORM"
             href="/franchise/signup"
           />

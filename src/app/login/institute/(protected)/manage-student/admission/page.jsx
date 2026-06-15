@@ -14,6 +14,7 @@ export default function AdmissionList() {
   const [students, setStudents] = useState([]);
   const router = useRouter();
   const [courseMap, setCourseMap] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
 
@@ -65,6 +66,22 @@ export default function AdmissionList() {
     setCourseMap(map);
   };
 
+
+  const filteredStudents = students.filter((student) => {
+  const courseName =
+    student.courseType === "semester" &&
+    student.courseName?.length > 20
+      ? courseMap[student.courseName] || ""
+      : student.courseName || "";
+
+  return (
+    student.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.rollNumber?.toString().includes(searchTerm) ||
+    student.mobile?.toString().includes(searchTerm) ||
+    courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.username?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+});
   return (
 
     <div className="p-10">
@@ -74,6 +91,16 @@ export default function AdmissionList() {
         <h1 className="text-2xl font-bold">
           LIST STUDENT ADMISSION
         </h1>
+
+        <div className="mb-6">
+  <input
+    type="text"
+    placeholder="Search by Name, Roll No, Mobile or Course..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="w-full md:w-96 bg-[#121212] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-orange-500"
+  />
+</div>
 
        <div className="flex gap-3">
   <button
@@ -121,7 +148,7 @@ export default function AdmissionList() {
 
         <tbody>
 
-          {students.length === 0 ? (
+          {filteredStudents.length === 0 ? (
 
             <tr>
               <td colSpan="10" className="text-center p-4">
@@ -131,7 +158,7 @@ export default function AdmissionList() {
 
           ) : (
 
-            students.map((item, index) => (
+            filteredStudents.map((item, index) => (
 
               <tr key={item.$id}>
 

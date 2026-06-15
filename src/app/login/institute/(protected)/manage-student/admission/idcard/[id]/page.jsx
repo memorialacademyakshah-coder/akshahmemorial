@@ -212,8 +212,7 @@ export default function IDCard() {
   <div className="absolute top-[650px] left-[710px] w-[380px] text-[18px] leading-6 text-black">
     {student.address || ""}
   </div>
-
-  {/* QR CODE */}
+        {/* QR CODE */}
   {/* <div className="absolute bottom-[40px] right-[60px] bg-white p-2">
     <QRCode
       value={`${window.location.origin}/verify-student/${student.$id}`}

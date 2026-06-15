@@ -40,8 +40,9 @@ export default function BulkAdmission() {
       aadhar:
         String(row["Student Addhaar No"] || ""),
 
-      dob:
-        row["DOB"] || "",
+     dob: row["DOB"]
+  ? String(row["DOB"]).trim()
+  : "",
 
       rollNumber:
         String(row["Roll No"] || ""),
@@ -61,7 +62,7 @@ courseName: "",
   String(row["Father's Adhaar No"] || ""),
     }));
 
-    console.log("DOB VALUE:", row["DOB"]);
+  
     setStudents(formatted);
   };
 
@@ -86,158 +87,152 @@ courseName: "",
     };
   };
 
-  const importStudents = async () => {
-    try {
-      setLoading(true);
+const importStudents = async () => {
+  try {
+    setLoading(true);
 
-      const franchise =
-        await getFranchiseInfo();
+    const franchise = await getFranchiseInfo();
 
-      let imported = 0;
-      let skipped = 0;
+    let imported = 0;
+    let failed = 0;
+    let failedStudents = [];
 
-      for (const student of students) {
-        try {
-          const existing =
-            await databases.listDocuments(
-              DATABASE_ID,
-              COLLECTION_ID,
-              [
-                Query.equal(
-                  "aadhar",
-                  student.aadhar
-                ),
-              ]
-            );
+    for (const student of students) {
+      try {
+        const username =
+          student.rollNumber || ID.unique();
 
-          if (
-            existing.documents.length > 0
-          ) {
-            skipped++;
-            continue;
+        const password =
+          student.aadhar?.slice(-4) || "1234";
+
+        await databases.createDocument(
+          DATABASE_ID,
+          COLLECTION_ID,
+          ID.unique(),
+          {
+            studentName: student.studentName || "",
+
+            fatherName: student.fatherName || "",
+
+            motherName: student.motherName || "",
+
+            aadhar: String(student.aadhar || ""),
+
+            // Store DOB as text
+            dob: String(student.dob || ""),
+
+            rollNumber: String(
+              student.rollNumber || ""
+            ),
+
+           className: String(
+  student.className || ""
+),
+
+            courseName: String(
+              student.courseName || ""
+            ),
+
+            address: student.address || "",
+
+            mobile: String(
+              student.mobile || ""
+            ),
+
+            fatherAadhar: String(
+              student.fatherAadhar || ""
+            ),
+
+            username,
+            password,
+
+            relationType: "S/O",
+
+            status: "Active",
+
+            bulkAdmission: true,
+
+            photoId: "",
+            signatureId: "",
+
+            qualification: "",
+            occupation: "",
+
+            altMobile: "",
+            email: "",
+
+            gender: "",
+
+            subjects: "",
+
+            courseFees: 0,
+            discount: 0,
+            totalFees: 0,
+            feesReceived: 0,
+            balance: 0,
+
+            batch: "",
+
+            admissionDate:
+              new Date()
+                .toISOString()
+                .split("T")[0],
+
+            franchiseEmail:
+              franchise.user.email,
+
+            franchiseId:
+              franchise.franchiseId,
+
+            instituteName:
+              franchise.instituteName,
+
+            createdById:
+              franchise.user.$id,
+
+            createdByName:
+              franchise.instituteName,
+
+            createdAt:
+              new Date().toISOString(),
           }
+        );
 
-          const username =
-            student.rollNumber;
+        imported++;
+      } catch (err) {
+        failed++;
 
-          const password =
-            student.aadhar?.slice(-4) ||
-            "1234";
+        failedStudents.push({
+          student:
+            student.studentName,
+          error: err.message,
+        });
 
-          await databases.createDocument(
-            DATABASE_ID,
-            COLLECTION_ID,
-            ID.unique(),
-            {
-              studentName:
-                student.studentName,
-
-              fatherName:
-                student.fatherName,
-
-              motherName:
-                student.motherName,
-
-              aadhar:
-                student.aadhar,
-
-              dob: student.dob,
-
-              rollNumber:
-                student.rollNumber,
-
-              courseName:
-  student.courseName,
-
-className:
-  student.className,
-
-              address:
-                student.address,
-
-              mobile:
-                student.mobile,
-
-              fatherAadhar:
-                student.fatherAadhar,
-
-              username,
-              password,
-
-              relationType: "S/O",
-
-              status: "Active",
-
-              bulkAdmission: true,
-
-              photoId: "",
-              signatureId: "",
-
-              qualification: "",
-              occupation: "",
-
-              altMobile: "",
-              email: "",
-
-              gender: "",
-
-              subjects: "",
-
-              courseFees: 0,
-              discount: 0,
-              totalFees: 0,
-              feesReceived: 0,
-              balance: 0,
-
-              batch: "",
-
-              admissionDate:
-                new Date()
-                  .toISOString()
-                  .split("T")[0],
-
-              franchiseEmail:
-                franchise.user.email,
-
-              franchiseId:
-                franchise.franchiseId,
-
-              instituteName:
-                franchise.instituteName,
-
-              createdById:
-                franchise.user.$id,
-
-              createdByName:
-                franchise.instituteName,
-
-              createdAt:
-                new Date().toISOString(),
-            }
-          );
-
-          imported++;
-        }catch (err) {
-  console.error("IMPORT ERROR:", err);
-
-  alert(
-    `Error: ${err.message}\nCode: ${err.code}`
-  );
-}
+        console.error(
+          "FAILED:",
+          student.studentName,
+          err.message
+        );
       }
-
-      alert(
-        `Imported: ${imported}\nSkipped: ${skipped}`
-      );
-
-      setStudents([]);
-    } catch (err) {
-      console.log(err);
-      alert(err.message);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    console.log(
+      "FAILED STUDENTS",
+      failedStudents
+    );
+
+    alert(
+      `Imported: ${imported}\nFailed: ${failed}`
+    );
+
+    setStudents([]);
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
   <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 p-8">

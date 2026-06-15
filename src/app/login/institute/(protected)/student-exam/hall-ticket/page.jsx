@@ -19,6 +19,8 @@ export default function HallTicketPage() {
   const [endTime, setEndTime] = useState("");
   const [reportingTime, setReportingTime] = useState("");
   const [duration, setDuration] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");   
+  const [appliedStudents, setAppliedStudents] = useState([]);
 
   useEffect(() => {
     loadStudents();
@@ -36,7 +38,8 @@ export default function HallTicketPage() {
         COLLECTION,
         [
           Query.equal("createdById", user.$id),
-          Query.orderDesc("$createdAt")
+          Query.orderAsc("$createdAt"),
+           Query.limit(300)
         ]
       );
 
@@ -114,6 +117,10 @@ export default function HallTicketPage() {
         return;
       }
 
+      // Mark selected students as applied
+setAppliedStudents(prev => [...new Set([...prev, ...selected])]);
+setSelected([]);
+
       // ✅ SAVE TO LOCAL STORAGE
       localStorage.setItem(
         "hallticketStudents",
@@ -136,6 +143,7 @@ export default function HallTicketPage() {
         JSON.stringify(franchise)
       );
 
+
       // ✅ OPEN PRINT PAGE
       window.open(
         "/login/institute/student-exam/hall-ticket/print",
@@ -151,6 +159,18 @@ export default function HallTicketPage() {
 
   };
 
+
+const filteredStudents = students.filter((student) =>
+  student.studentName
+    ?.toLowerCase()
+    .includes(searchTerm.toLowerCase()) ||
+  student.mobile
+    ?.toString()
+    .includes(searchTerm) ||
+  student.rollNumber
+    ?.toString()
+    .includes(searchTerm)
+);
   return (
 
     <div className="p-10 bg-black min-h-screen text-white">
@@ -245,6 +265,16 @@ export default function HallTicketPage() {
 
       </div>
 
+      <div className="mb-4">
+  <input
+    type="text"
+    placeholder="Search student by name..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="w-full md:w-96 border border-gray-700 bg-black text-white p-3 rounded"
+  />
+</div>
+
       {/* STUDENT TABLE */}
       <table className="w-full border border-gray-800">
 
@@ -262,7 +292,7 @@ export default function HallTicketPage() {
 
         <tbody>
 
-          {students.map(s => {
+         {filteredStudents.map(s => {
 
             const photo = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${s.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
 
@@ -270,13 +300,20 @@ export default function HallTicketPage() {
 
               <tr key={s.$id} className="border-t hover:bg-[#1a1a1a]">
 
-                <td className="p-2 text-center">
-                  <input
-                    type="checkbox"
-                    onChange={() => toggleStudent(s.$id)}
-                    className="accent-orange-500"
-                  />
-                </td>
+<td className="p-2 text-center">
+  {appliedStudents.includes(s.$id) ? (
+    <span className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold">
+      Applied
+    </span>
+  ) : (
+    <input
+      type="checkbox"
+      checked={selected.includes(s.$id)}
+      onChange={() => toggleStudent(s.$id)}
+      className="accent-orange-500 w-5 h-5"
+    />
+  )}
+</td>
 
                 <td className="p-2">
                   <img src={photo} className="w-12 h-12 rounded-full" />

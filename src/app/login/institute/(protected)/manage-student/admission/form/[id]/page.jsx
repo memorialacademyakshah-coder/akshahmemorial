@@ -181,14 +181,11 @@ export default function AdmissionForm() {
                     {student.admissionDate || ""}
                 </div>
 
-                {/* COURSE NAME */}
                 {/* CLASS NAME */}
 
-<div className="absolute top-[390px] left-[210px] text-lg">
-  {student.className || ""}
-</div>
 
-                <div className="absolute top-[365px] left-[210px] text-lg">
+
+                <div className="absolute top-[367px] left-[210px] text-lg">
   {student.className || student.courseName || ""}
 </div>
 

@@ -9,6 +9,7 @@ import WorkShowcase from '../../component/WorkShowcase'
 import TeamSection from '../../component/TeamSection'
 import BrandSlider from '../../component/brandlogo'
 import TopStudents from '../../component/topstudent'
+import HomeSlider from '../../component/homeslider'
 
 export default function Page() {
   return (
@@ -16,6 +17,7 @@ export default function Page() {
       <Navbar />
 
       <Hero />
+      <HomeSlider/> 
  <TopStudents/>
 
       <ServicesSection />

@@ -53,6 +53,12 @@ export default function AdminSidebar() {
           label="Banner Section"
           href="/admin/website/hero"
         />
+
+         <MenuItem
+          icon={<Image size={18} />}
+          label="Home Slider"
+          href="/admin/website/home-slider"
+        />
         <MenuItem
           icon={<Image size={18} />}
           label="Top Student"

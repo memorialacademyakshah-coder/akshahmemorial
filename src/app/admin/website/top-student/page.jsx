@@ -71,7 +71,7 @@ const uploadImage = async (
     const uploaded = await storage.createFile(
       BUCKET_ID,
       ID.unique(),
-      file
+      file    
     );
 
     const fileId = uploaded.$id;
@@ -92,7 +92,7 @@ const uploadImage = async (
   } catch (error) {
     console.error(error);
     alert("Image Upload Failed");
-  }
+  }  
 };
 
 const getImageUrl = (fileId) => {

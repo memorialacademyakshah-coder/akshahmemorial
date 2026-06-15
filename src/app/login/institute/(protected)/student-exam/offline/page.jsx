@@ -16,6 +16,7 @@ export default function OfflineExamList() {
 
   const [students, setStudents] = useState([]);
   const [results, setResults] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
   // ✅ EXAM MODE
   const [examMode, setExamMode] = useState({});
@@ -28,12 +29,14 @@ export default function OfflineExamList() {
 
     const user = await account.get();
 
-    const admissions = await databases.listDocuments(
-      DATABASE_ID,
-      ADMISSION_COLLECTION,
-      [Query.equal("createdById", user.$id)]
-    );
-
+   const admissions = await databases.listDocuments(
+  DATABASE_ID,
+  ADMISSION_COLLECTION,
+  [
+    Query.equal("createdById", user.$id),
+    Query.limit(1000)
+  ]
+);
     const examResults = await databases.listDocuments(
       DATABASE_ID,
       RESULT_COLLECTION,
@@ -59,6 +62,13 @@ export default function OfflineExamList() {
     setExamMode(savedMode);
   };
 
+  const filteredStudents = students.filter((student) =>
+  student.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  student.rollNumber?.toString().includes(searchTerm) ||
+  student.mobile?.toString().includes(searchTerm) ||
+  student.courseName?.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
   return (
 
     <div className="p-10 bg-black min-h-screen text-white">
@@ -67,6 +77,15 @@ export default function OfflineExamList() {
         List Offline Exams Results
       </h2>
 
+<div className="mb-6">
+  <input
+    type="text"
+    placeholder="Search by Name, Roll No, Mobile or Course..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="w-full md:w-96 bg-[#121212] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-orange-500"
+  />
+</div>
       <table className="w-full border border-gray-800 bg-[#121212] overflow-hidden rounded-xl">
 
         <thead className="bg-orange-500 text-black">
@@ -85,7 +104,7 @@ export default function OfflineExamList() {
 
         <tbody>
 
-          {students.map((student, index) => {
+         {filteredStudents.map((student, index) => {
 
             const result = results[student.$id];
 

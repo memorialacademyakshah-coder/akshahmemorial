@@ -160,12 +160,12 @@ export default function PrintHallTicket() {
               />
 
               {/* QR CODE */}
-              <div className="absolute bottom-[160px] left-[100px] bg-white p-2">
+              {/* <div className="absolute bottom-[160px] left-[100px] bg-white p-2">
                 <QRCode
                   value={`${window.location.origin}/verify-student/${student.$id}`}
                   size={90}
                 />
-              </div>
+              </div> */}
 
               {/* FRANCHISE LOGO */}
          {franchise?.logo && (
@@ -179,9 +179,9 @@ export default function PrintHallTicket() {
 )}
 
               {/* FRANCHISE NAME */}
-              <div className="absolute top-[140px] w-full text-center text-2xl font-bold text-red-700">
+              {/* <div className="absolute top-[140px] w-full text-center text-2xl font-bold text-red-700">
                 {franchise?.instituteName || ""}
-              </div>
+              </div> */}
 
               {/* PHOTO */}
               {photoUrl && (
@@ -192,9 +192,10 @@ export default function PrintHallTicket() {
               )}
 
               {/* COURSE NAME */}
-              <div className="absolute top-[279px] left-[310px] font-semibold text-xs">
-                {student.courseName}
-              </div>
+                          <div className="absolute top-[275px] left-[310px] text-lg">
+  {student.className || student.courseName || ""}
+</div>
+
 
               {/* COURSE DURATION */}
               <div className="absolute top-[300px] left-[330px]">
@@ -270,43 +271,43 @@ export default function PrintHallTicket() {
                   className="absolute bottom-[280px] left-[490px] w-[140px] h-[60px] object-contain border"
                 />
               ) : (
-                <div className="absolute bottom-[250px] left-[120px] text-red-500">
+                <div className="absolute bottom-[300px] left-[490px] text-red-500">
                   No Signature
                 </div>
               )}
 
               {/* FRANCHISE SIGNATURE */}
-              {franchiseSign && (
+              {/* {franchiseSign && (
                 <img
                   src={franchiseSign}
                   className="absolute bottom-[280px] right-[500px] w-[160px] h-[60px] object-contain"
                 />
-              )}
+              )} */}
 
               {/* EXTRA SIGNATURE */}
-              {franchiseSign && (
+              {/* {franchiseSign && (
                  <div className="absolute bottom-[120px] right-[70px] w-[120px] h-[60px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
                 <img
                   src={franchiseSign} className="w-full h-full object-cover "
                   
                 />
               </div>
-              )}
+              )} */}
 
               {/* FRANCHISE OWNER NAME */}
-              <div className="absolute bottom-[100px] right-[95px] text-sm font-semibold text-center">
+              {/* <div className="absolute bottom-[100px] right-[95px] text-sm font-semibold text-center">
                 {franchise?.name || ""}
-              </div>
+              </div> */}
 
               {/* FRANCHISE EMAIL */}
-              <div className="absolute bottom-[70px] w-full text-center text-sm">
+              {/* <div className="absolute bottom-[70px] w-full text-center text-sm">
                 Email: {franchise?.email || ""}
-              </div>
+              </div> */}
 
               {/* FRANCHISE ADDRESS */}
-              <div className="absolute bottom-[90px] w-full text-center text-sm">
+              {/* <div className="absolute bottom-[90px] w-full text-center text-sm">
                 {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
-              </div>
+              </div> */}
 
             </div>
 
