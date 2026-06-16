@@ -14,6 +14,7 @@ export default function PaymentList() {
   const router = useRouter();
 
   const [records, setRecords] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [summary, setSummary] = useState({
     totalFees: 0,
     paidFees: 0,
@@ -110,6 +111,16 @@ const payments = await databases.listDocuments(
 
   };
 
+  const filteredRecords = records.filter((item) => {
+  const search = searchTerm.toLowerCase();
+
+  return (
+    item.studentName?.toLowerCase().includes(search) ||
+    item.rollNumber?.toString().includes(searchTerm) ||
+    item.className?.toLowerCase().includes(search)
+  );
+});
+
   return (
 
     <div className="p-10">
@@ -122,6 +133,13 @@ const payments = await databases.listDocuments(
           List Students Payments
         </h2>
 
+<input
+  type="text"
+  placeholder="Search by Name, Roll No or Class"
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  className="border px-4 py-2 rounded-md w-80"
+/>
         <div className="flex gap-4">
 
           <button
@@ -140,105 +158,166 @@ const payments = await databases.listDocuments(
       </div>
 
       {/* SUMMARY */}
+{/* SUMMARY CARDS */}
 
-      <div className="text-right mb-6 font-semibold">
+<div className="grid md:grid-cols-3 gap-5 mb-8">
 
-        <p>Paid Fees : ₹ {summary.paidFees}</p>
-        <p>Balance Fees : ₹ {summary.balanceFees}</p>
-        <p>Total Fees : ₹ {summary.totalFees}</p>
+  <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 rounded-2xl shadow-lg">
+    <p className="text-sm opacity-90">Total Fees</p>
+    <h2 className="text-3xl font-bold mt-2">
+      ₹ {summary.totalFees}
+    </h2>
+  </div>
 
-      </div>
+  <div className="bg-gradient-to-r from-green-500 to-green-700 text-white p-6 rounded-2xl shadow-lg">
+    <p className="text-sm opacity-90">Paid Fees</p>
+    <h2 className="text-3xl font-bold mt-2">
+      ₹ {summary.paidFees}
+    </h2>
+  </div>
 
-      {/* TABLE */}
+  <div className="bg-gradient-to-r from-red-500 to-red-700 text-white p-6 rounded-2xl shadow-lg">
+    <p className="text-sm opacity-90">Balance Fees</p>
+    <h2 className="text-3xl font-bold mt-2">
+      ₹ {summary.balanceFees}
+    </h2>
+  </div>
 
-      <table className="w-full border border-gray-300 rounded-lg overflow-hidden">
+</div>
 
-        <thead className="bg-yellow-200">
+{/* TABLE */}
+
+<div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
+
+  <div className="overflow-x-auto">
+
+    <table className="w-full">
+
+      <thead>
+
+        <tr className="bg-gradient-to-r from-yellow-300 to-yellow-200 text-gray-800">
+
+          <th className="p-4 border">#</th>
+          <th className="p-4 border">Student Name</th>
+          <th className="p-4 border">Roll No</th>
+          <th className="p-4 border">Class</th>
+          <th className="p-4 border">Course</th>
+          <th className="p-4 border text-center">Total Fees</th>
+          <th className="p-4 border text-center">Paid</th>
+          <th className="p-4 border text-center">Balance</th>
+          <th className="p-4 border text-center">Action</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {filteredRecords.length === 0 ? (
 
           <tr>
 
-            <th className="p-3 border">#</th>
-            <th className="p-3 border">Student Name</th>
-            <th className="p-3 border">Course Name</th>
-            <th className="p-3 border text-center">Total Fees</th>
-            <th className="p-3 border text-center">Fees Paid</th>
-            <th className="p-3 border text-center">Balance</th>
-            <th className="p-3 border text-center">Action</th>
+            <td
+              colSpan="9"
+              className="text-center p-10 text-gray-500"
+            >
+              No Data Available
+            </td>
 
           </tr>
 
-        </thead>
+        ) : (
 
-        <tbody>
+          filteredRecords.map((item, index) => (
 
-          {records.length === 0 ? (
+            <tr
+              key={item.$id}
+              className="hover:bg-blue-50 transition-all duration-200"
+            >
 
-            <tr>
-              <td colSpan="7" className="text-center p-6">
-                No Data Available
+              <td className="p-4 border">
+                {index + 1}
               </td>
+
+              <td className="p-4 border font-semibold">
+                {item.studentName}
+              </td>
+
+              <td className="p-4 border">
+                {item.rollNumber || "-"}
+              </td>
+
+              <td className="p-4 border">
+                {item.className || "-"}
+              </td>
+
+              <td className="p-4 border">
+                {item.courseName || "-"}
+              </td>
+
+              <td className="p-4 border text-center font-semibold">
+                ₹ {item.total}
+              </td>
+
+              <td className="p-4 border text-center font-semibold text-green-600">
+                ₹ {item.paid}
+              </td>
+
+              <td className="p-4 border text-center font-semibold text-red-600">
+                ₹ {item.balance}
+              </td>
+
+              <td className="p-4 border text-center">
+
+                {item.paymentId ? (
+
+                  <button
+                    onClick={() =>
+                      router.push(
+                        `/login/institute/manage-student/fees/receipt/${item.paymentId}`
+                      )
+                    }
+                    className="
+                      bg-gradient-to-r
+                      from-blue-600
+                      to-indigo-600
+                      text-white
+                      px-4
+                      py-2
+                      rounded-xl
+                      hover:scale-105
+                      transition-all
+                      shadow-md
+                    "
+                  >
+                    View Receipt
+                  </button>
+
+                ) : (
+
+                  <span className="text-gray-400 text-sm">
+                    No Receipt
+                  </span>
+
+                )}
+
+              </td>
+
             </tr>
 
-          ) : (
+          ))
 
-            records.map((item, index) => (
+        )}
 
-              <tr key={item.$id} className="hover:bg-gray-50">
+      </tbody>
 
-                <td className="p-3 border">{index + 1}</td>
+    </table>
 
-                <td className="p-3 border font-medium">
-                  {item.studentName}
-                </td>
+  </div>
 
-                <td className="p-3 border">
-                  {item.course}
-                </td>
+</div>
 
-                <td className="p-3 border text-center">
-                  ₹ {item.total}
-                </td>
-
-                <td className="p-3 border text-green-600 text-center font-semibold">
-                  ₹ {item.paid}
-                </td>
-
-                <td className="p-3 border text-red-600 text-center font-semibold">
-                  ₹ {item.balance}
-                </td>
-
-                <td className="p-3 border text-center">
-
-                  {item.paymentId ? (
-
-                    <button
-                      onClick={() => router.push(`/login/institute/manage-student/fees/receipt/${item.paymentId}`)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                    >
-                      View
-                    </button>
-
-                  ) : (
-
-                    <span className="text-gray-400 text-sm">
-                      No Receipt
-                    </span>
-
-                  )}
-
-                </td>
-
-              </tr>
-
-            ))
-
-          )}
-
-        </tbody>
-
-      </table>
-
-    </div>
+</div>
 
   );
 

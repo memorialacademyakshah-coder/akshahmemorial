@@ -167,19 +167,19 @@ export default function ReceiptPage() {
 
 
 {/* FRANCHISE LOGO */}
-{franchise?.logo && (
+{/* {franchise?.logo && (
                   <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
     <img
         src={franchise.logo}
       className="w-full h-full object-cover rounded-full"
     />
   </div>
-                )}
+                )} */}
 
 {/* INSTITUTE NAME */}
-<div className="absolute top-[160px] left-0 w-full text-center text-3xl font-bold text-red-700">
+{/* <div className="absolute top-[160px] left-0 w-full text-center text-3xl font-bold text-red-700">
   {franchise?.instituteName || ""}
-</div>
+</div> */}
 
 
                 {/* RECEIPT NUMBER */}
@@ -218,29 +218,33 @@ export default function ReceiptPage() {
 
                 </div>
 
-                {/* BATCH */}
+                
 
-                <div className="absolute top-[320px] right-[100px] flex items-center gap-2">
+              {/* CLASS NAME */}
 
-                    <span className="font-semibold">Batch Name :</span>
+<div className="absolute top-[320px] right-[100px] flex items-center gap-2">
 
-                    <div className="border px-3 py-1 w-[140px] text-center">
-                        {admission.batch}
-                    </div>
+    <span className="font-semibold">Class Name :</span>
 
-                </div>
+    <div className="border px-3 py-1 w-[140px] text-center">
+        {admission.className || "-"}
+    </div>
 
-                {/* COURSE */}
+</div>
 
-                <div className="absolute top-[390px] left-[140px] flex items-center gap-2">
+               
 
-                    <span className="font-semibold">Course Name :</span>
+              {/* ROLL NUMBER */}
 
-                    <div className="border px-3 py-1 w-[550px]">
-                        {admission.courseName || payment.course || ""}
-                    </div>
+<div className="absolute top-[390px] left-[140px] flex items-center gap-2">
 
-                </div>
+    <span className="font-semibold">Roll Number :</span>
+
+    <div className="border px-3 py-1 w-[220px] text-center">
+        {admission.rollNumber || "-"}
+    </div>
+
+</div>
 
                 {/* FEES SECTION */}
 
@@ -278,7 +282,7 @@ export default function ReceiptPage() {
 
 
                     {/* OWNER NAME */}
-<div className="absolute bottom-[-90px] right-[30px] text-center">
+{/* <div className="absolute bottom-[-90px] right-[30px] text-center">
 
   <div className="font-semibold text-lg">
     {franchise?.name || ""}
@@ -288,26 +292,26 @@ export default function ReceiptPage() {
 
 
                     {/* FRANCHISE SIGNATURE */}
-{franchise?.signature && (
+{/* {franchise?.signature && (
     <div className="absolute bottom-[-60px] right-[10px] w-[130px] h-[50px]  overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
   <img
     src={franchise.signature}
    className="w-full h-full object-cover "
   />
 </div>
-)}
+)} */}
 
 
                     {/* FRANCHISE EMAIL */}
-<div className="absolute top-[90px] right-[50px] w-full text-center text-sm">
+{/* <div className="absolute top-[90px] right-[50px] w-full text-center text-sm">
   {franchise?.email || ""}
-</div>
+</div> */}
 
 
 {/* FRANCHISE ADDRESS */}
-<div className="absolute top-[117px] right-[50px] w-full text-center text-sm">
+{/* <div className="absolute top-[117px] right-[50px] w-full text-center text-sm">
   {franchise?.address || ""}, {franchise?.city || ""}, {franchise?.state || ""}
-</div>
+</div> */}
 
 
                 </div>

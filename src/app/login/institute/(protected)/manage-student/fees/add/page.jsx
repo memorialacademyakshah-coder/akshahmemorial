@@ -16,6 +16,7 @@ export default function AddPayment() {
   const [admissions, setAdmissions] = useState([]);
   const [selectedAdmission, setSelectedAdmission] = useState(null);
   const [totalPaid, setTotalPaid] = useState(0);
+const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({
     paymentAmount: "",
@@ -31,12 +32,14 @@ export default function AddPayment() {
 
     const user = await account.get();
 
-    const response = await databases.listDocuments(
-      DATABASE_ID,
-      ADMISSION_COLLECTION,
-      [Query.equal("createdById", user.$id)]
-    );
-
+  const response = await databases.listDocuments(
+  DATABASE_ID,
+  ADMISSION_COLLECTION,
+  [
+    Query.equal("createdById", user.$id),
+    Query.limit(500)
+  ]
+);
     setAdmissions(response.documents);
 
   };
@@ -66,6 +69,8 @@ export default function AddPayment() {
 
   };
 
+
+
   const handleSubmit = async (e) => {
 
     e.preventDefault();
@@ -82,7 +87,7 @@ export default function AddPayment() {
         studentId: selectedAdmission.$id,
         admissionId: selectedAdmission.$id,
         studentName: selectedAdmission.studentName,
-        course: selectedAdmission.course,
+        course: selectedAdmission.courseName,
 
         paymentAmount: Number(form.paymentAmount),
         paymentMode: form.paymentMode,
@@ -105,6 +110,12 @@ export default function AddPayment() {
     Number(form.paymentAmount || 0)
     : 0;
 
+    const filteredAdmissions = admissions.filter((student) =>
+  student.studentName?.toLowerCase().includes(search.toLowerCase()) ||
+  student.rollNumber?.toString().includes(search) ||
+  student.className?.toLowerCase().includes(search.toLowerCase())
+);
+
   return (
 
     <div className="p-10 bg-gray-100 min-h-screen">
@@ -123,19 +134,73 @@ export default function AddPayment() {
               Select Student & Course
             </label>
 
-            <select
-              onChange={(e) => handleAdmissionSelect(e.target.value)}
-              className="border rounded-md p-2"
-              required
-            >
-              <option value="">Select Student</option>
+         <div className="col-span-2">
 
-              {admissions.map((item) => (
-                <option key={item.$id} value={item.$id}>
-                  {item.studentName} - {item.course}
-                </option>
-              ))}
-            </select>
+  <label className="font-semibold mb-2 block">
+    Search Student
+  </label>
+
+  <input
+    type="text"
+    placeholder="Search by Name, Roll Number or Class..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="
+      w-full
+      rounded-xl
+      border
+      border-gray-300
+      px-4
+      py-3
+      mb-3
+      focus:ring-2
+      focus:ring-blue-500
+      outline-none
+    "
+  />
+
+  <div className="
+  max-h-80
+  overflow-y-auto
+  border
+  rounded-xl
+  shadow-inner
+  bg-white
+">
+
+    {filteredAdmissions.map((student) => (
+
+      <div
+        key={student.$id}
+        onClick={() => handleAdmissionSelect(student.$id)}
+       className={`
+  p-4
+  border-b
+  cursor-pointer
+  transition
+  ${
+    selectedAdmission?.$id === student.$id
+      ? "bg-blue-100 border-l-4 border-blue-600"
+      : "hover:bg-blue-50"
+  }
+`}
+      >
+        <div className="font-semibold">
+          {student.studentName}
+        </div>
+
+        <div className="text-sm text-gray-500">
+          Roll: {student.rollNumber} |
+          Class: {student.className}
+        </div>
+
+      </div>
+
+    ))}
+
+  </div>
+
+</div>
           </div>
 
           {/* Amount */}
@@ -186,26 +251,91 @@ export default function AddPayment() {
         </form>
 
         {/* Summary */}
-        {selectedAdmission && (
+  {selectedAdmission && (
 
-          <div className="mt-6 bg-gray-50 p-4 rounded-lg border">
+  <div className="mt-6 space-y-4">
 
-            <p>
-              <strong>Total Course Fees :</strong> ₹ {selectedAdmission.totalFees}
-            </p>
+    <div className="
+      rounded-2xl
+      bg-gradient-to-r
+      from-blue-600
+      to-indigo-600
+      text-white
+      p-6
+      shadow-xl
+    ">
 
-            <p>
-              <strong>Already Paid :</strong> ₹ {totalPaid}
-            </p>
+      <h3 className="text-2xl font-bold">
+        {selectedAdmission.studentName}
+      </h3>
 
-            <p className="text-red-600 font-bold">
-              Remaining Balance : ₹ {balance}
-            </p>
+      <div className="grid md:grid-cols-3 gap-4 mt-4">
 
-          </div>
+        <div>
+          <p className="text-blue-100 text-sm">
+            Roll Number
+          </p>
+          <p className="font-semibold">
+            {selectedAdmission.rollNumber}
+          </p>
+        </div>
 
-        )}
+        <div>
+          <p className="text-blue-100 text-sm">
+            Class
+          </p>
+          <p className="font-semibold">
+            {selectedAdmission.className}
+          </p>
+        </div>
 
+        <div>
+          <p className="text-blue-100 text-sm">
+            Course
+          </p>
+          <p className="font-semibold">
+            {selectedAdmission.courseName}
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div className="grid md:grid-cols-3 gap-4">
+
+      <div className="bg-blue-50 p-5 rounded-2xl">
+        <p className="text-sm text-gray-500">
+          Total Fees
+        </p>
+        <h2 className="text-2xl font-bold text-blue-600">
+          ₹ {selectedAdmission.totalFees}
+        </h2>
+      </div>
+
+      <div className="bg-green-50 p-5 rounded-2xl">
+        <p className="text-sm text-gray-500">
+          Paid Fees
+        </p>
+        <h2 className="text-2xl font-bold text-green-600">
+          ₹ {totalPaid}
+        </h2>
+      </div>
+
+      <div className="bg-red-50 p-5 rounded-2xl">
+        <p className="text-sm text-gray-500">
+          Balance
+        </p>
+        <h2 className="text-2xl font-bold text-red-600">
+          ₹ {balance}
+        </h2>
+      </div>
+
+    </div>
+
+  </div>
+
+)}
         <div className="flex gap-4 mt-8">
 
           <button
