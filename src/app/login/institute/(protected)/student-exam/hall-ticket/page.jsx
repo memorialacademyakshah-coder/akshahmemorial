@@ -21,11 +21,14 @@ export default function HallTicketPage() {
   const [duration, setDuration] = useState("");
   const [searchTerm, setSearchTerm] = useState("");   
   const [appliedStudents, setAppliedStudents] = useState([]);
+  const [generatedTickets, setGeneratedTickets] = useState([]);
 
-  useEffect(() => {
-    loadStudents();
-  }, []);
+useEffect(() => {
+  loadStudents();
+  loadGeneratedTickets();
+}, []);
 
+ 
   // ✅ LOAD STUDENTS
   const loadStudents = async () => {
 
@@ -39,7 +42,7 @@ export default function HallTicketPage() {
         [
           Query.equal("createdById", user.$id),
           Query.orderAsc("$createdAt"),
-           Query.limit(300)
+           Query.limit(500)
         ]
       );
 
@@ -50,6 +53,26 @@ export default function HallTicketPage() {
     }
 
   };
+
+   const loadGeneratedTickets = async () => {
+  try {
+    const user = await account.get();
+
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      "generated_halltickets",
+      [
+        Query.equal("createdById", user.$id),
+        Query.limit(500)
+      ]
+    );
+
+    setGeneratedTickets(res.documents);
+  } catch (err) {
+    console.log(err);
+  }
+};
+ 
 
   // ✅ SELECT STUDENT
   const toggleStudent = (id) => {
@@ -103,6 +126,8 @@ export default function HallTicketPage() {
       // ✅ FILTER STUDENTS
       const selectedStudents = students
         .filter(s => selected.includes(s.$id))
+
+        
       .map(s => ({
   ...s,
   username: s.rollNumber || s.studentName,
@@ -110,12 +135,66 @@ export default function HallTicketPage() {
 
   signatureId: s.signatureId, // ✅ MUST BE HERE
   duration: s.duration
-}))
+}));
 
       if (selectedStudents.length === 0) {
         alert("Select at least one student");
         return;
       }
+
+
+      
+for (const student of selectedStudents) {
+
+  const existing = await databases.listDocuments(
+    DATABASE_ID,
+    "generated_halltickets",
+    [
+      Query.equal("studentId", student.$id),
+      Query.equal("createdById", user.$id)
+    ]
+  );
+
+  if (existing.documents.length > 0) {
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      "generated_halltickets",
+      existing.documents[0].$id,
+      {
+        examDate,
+        startTime,
+        endTime,
+        reportingTime,
+        duration
+      }
+    );
+
+  } else {
+
+    await databases.createDocument(
+      DATABASE_ID,
+      "generated_halltickets",
+      "unique()",
+      {
+        studentId: student.$id,
+        studentName: student.studentName,
+        rollNumber: student.rollNumber,
+
+        examDate,
+        startTime,
+        endTime,
+        reportingTime,
+        duration,
+
+        createdById: user.$id
+      }
+    );
+
+  }
+
+}
+
 
       // Mark selected students as applied
 setAppliedStudents(prev => [...new Set([...prev, ...selected])]);
@@ -158,6 +237,57 @@ setSelected([]);
     }
 
   };
+
+  const viewHallTicket = async (student) => {
+
+  const ticket = generatedTickets.find(
+    t => t.studentId === student.$id
+  );
+
+  if (!ticket) return;
+
+  const user = await account.get();
+
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_approved",
+    [Query.equal("email", user.email)]
+  );
+
+  const franchise = res.documents[0];
+
+  localStorage.setItem(
+    "hallticketStudents",
+    JSON.stringify([{
+      ...student,
+      username: student.rollNumber || student.studentName,
+      password: student.aadhar?.slice(-4) || "1234567890",
+      signatureId: student.signatureId
+    }])
+  );
+
+  localStorage.setItem(
+    "hallticketExam",
+    JSON.stringify({
+      examDate: ticket.examDate,
+      startTime: ticket.startTime,
+      endTime: ticket.endTime,
+      reportingTime: ticket.reportingTime,
+      duration: ticket.duration
+    })
+  );
+
+  localStorage.setItem(
+    "hallticketFranchise",
+    JSON.stringify(franchise)
+  );
+
+  window.open(
+    "/login/institute/student-exam/hall-ticket/print",
+    "_blank"
+  );
+
+};
 
 
 const filteredStudents = students.filter((student) =>
@@ -292,27 +422,41 @@ const filteredStudents = students.filter((student) =>
 
         <tbody>
 
-         {filteredStudents.map(s => {
+        {filteredStudents.map(s => {
 
-            const photo = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${s.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+  const generated = generatedTickets.some(
+    t => t.studentId === s.$id
+  );
 
-            return (
+  const photo = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${s.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+
+  return (
+            
 
               <tr key={s.$id} className="border-t hover:bg-[#1a1a1a]">
 
 <td className="p-2 text-center">
-  {appliedStudents.includes(s.$id) ? (
-    <span className="bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold">
-      Applied
-    </span>
+
+  {generated ? (
+
+    <button
+      onClick={() => viewHallTicket(s)}
+      className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-white text-sm"
+    >
+      View
+    </button>
+
   ) : (
+
     <input
       type="checkbox"
       checked={selected.includes(s.$id)}
       onChange={() => toggleStudent(s.$id)}
       className="accent-orange-500 w-5 h-5"
     />
+
   )}
+
 </td>
 
                 <td className="p-2">
