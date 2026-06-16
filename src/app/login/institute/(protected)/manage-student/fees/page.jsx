@@ -30,17 +30,23 @@ export default function PaymentList() {
 
       const user = await account.get();
 
-      const admissions = await databases.listDocuments(
-        DATABASE_ID,
-        ADMISSION_COLLECTION,
-        [Query.equal("createdById", user.$id)]
-      );
+    const admissions = await databases.listDocuments(
+  DATABASE_ID,
+  ADMISSION_COLLECTION,
+  [
+    Query.equal("createdById", user.$id),
+    Query.limit(1000)
+  ]
+);
 
-      const payments = await databases.listDocuments(
-        DATABASE_ID,
-        PAYMENT_COLLECTION,
-        [Query.equal("createdById", user.$id)]
-      );
+const payments = await databases.listDocuments(
+  DATABASE_ID,
+  PAYMENT_COLLECTION,
+  [
+    Query.equal("createdById", user.$id),
+    Query.limit(1000)
+  ]
+);
 
       /* Create payment map */
 
