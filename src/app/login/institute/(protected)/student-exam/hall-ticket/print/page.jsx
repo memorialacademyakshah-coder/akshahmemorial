@@ -192,24 +192,24 @@ export default function PrintHallTicket() {
               )}
 
               {/* COURSE NAME */}
-                          <div className="absolute top-[275px] left-[310px] text-lg">
+                          <div className="absolute top-[293px] left-[320px] text-lg">
   {student.className || student.courseName || ""}
 </div>
 
 
               {/* COURSE DURATION */}
-              <div className="absolute top-[300px] left-[330px]">
+              {/* <div className="absolute top-[300px] left-[330px]">
                 {exam.duration || student.duration || "N/A"}
-              </div>
+              </div> */}
 
               {/* STUDENT NAME */}
-              <div className="absolute top-[415px] left-[190px] text-[13px]">
+              <div className="absolute top-[418px] left-[190px] text-[13px]">
                 {student.studentName}
               </div>
               {/* ROLL NUMBER */}
 
-<div className="absolute top-[365px] right-[120px] text-lg font-semibold">
-    Roll No: {student.rollNumber || ""}
+<div className="absolute top-[340px] left-[300px] text-lg font-semibold">
+     {student.rollNumber || ""}
 </div>
 
               {/* FATHER NAME */}
@@ -219,7 +219,7 @@ export default function PrintHallTicket() {
 
               {/* SURNAME */}
               <div className="absolute top-[504px] left-[160px]">
-                {student.surname}
+                {student.surname} 
               </div>
 
               {/* MOTHER NAME */}
@@ -228,14 +228,14 @@ export default function PrintHallTicket() {
               </div>
 
               {/* USERNAME */}
-              <div className="absolute top-[345px] left-[350px]">
+              {/* <div className="absolute top-[345px] left-[350px]">
                                 {student.studentName}
-              </div>
+              </div> */}
 
               {/* PASSWORD */}
-              <div className="absolute top-[370px] left-[350px]">
+              {/* <div className="absolute top-[370px] left-[350px]">
                 {student.password}
-              </div>
+              </div> */}
 
               {/* EXAM DATE */}
               <div className="absolute top-[415px] left-[470px]">
@@ -258,20 +258,20 @@ export default function PrintHallTicket() {
               </div>
 
               {/* CENTER ADDRESS */}
-              <div className="absolute top-[585px] left-[390px] w-[300px] text-[11px]">
+              {/* <div className="absolute top-[585px] left-[390px] w-[300px] text-[11px]">
                 {franchise?.address || ""}
                 <br />
                 {franchise?.city || ""}, {franchise?.state || ""}
-              </div>
+              </div> */}
 
               {/* STUDENT SIGNATURE */}
               {signatureUrl ? (
                 <img
                   src={signatureUrl}
-                  className="absolute bottom-[280px] left-[490px] w-[140px] h-[60px] object-contain border"
+                  className="absolute bottom-[210px] left-[490px] w-[140px] h-[60px] object-contain border"
                 />
               ) : (
-                <div className="absolute bottom-[300px] left-[490px] text-red-500">
+                <div className="absolute bottom-[200px] left-[500px] text-red-500">
                   No Signature
                 </div>
               )}
@@ -285,14 +285,14 @@ export default function PrintHallTicket() {
               )} */}
 
               {/* EXTRA SIGNATURE */}
-              {/* {franchiseSign && (
-                 <div className="absolute bottom-[120px] right-[70px] w-[120px] h-[60px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
+              {franchiseSign && (
+                 <div className="absolute bottom-[190px] left-[160px] w-[200px] h-[60px] overflow-hidden rounded-full border-4 border-white flex items-center justify-center shadow-md">
                 <img
                   src={franchiseSign} className="w-full h-full object-cover "
                   
                 />
               </div>
-              )} */}
+              )}
 
               {/* FRANCHISE OWNER NAME */}
               {/* <div className="absolute bottom-[100px] right-[95px] text-sm font-semibold text-center">
