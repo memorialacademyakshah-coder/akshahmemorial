@@ -186,7 +186,7 @@ export default function Footer() {
                   text-[#08104d]
                 "
               >
-                AdvanceIndiaIT
+                ASMA
               </h2>
 
               <p
