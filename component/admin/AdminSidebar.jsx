@@ -79,6 +79,11 @@ export default function AdminSidebar() {
           href="/admin/website/about"
         />
     
+     <MenuItem
+          icon={<Image size={18} />}
+          label="Teacher Job"
+          href="/admin/website/teacher_job"
+        />
 
         <MenuItem
           icon={<Image size={18} />}

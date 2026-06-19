@@ -10,14 +10,18 @@ import TeamSection from '../../component/TeamSection'
 import BrandSlider from '../../component/brandlogo'
 import TopStudents from '../../component/topstudent'
 import HomeSlider from '../../component/homeslider'
+import TeacherApplyPage from './career/[jobId]/page'
+import TeacherHiringPopup from '../../component/TeacherHiringPopup'
 
 export default function Page() {
   return (
     <>
       <Navbar />
+     
 
       <Hero />
       <HomeSlider/> 
+      <TeacherHiringPopup/>
  <TopStudents/>
 
       <ServicesSection />
