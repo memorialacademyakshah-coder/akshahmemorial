@@ -126,9 +126,8 @@ export default function PrintHallTicket() {
           onClick={handleDownload}
           className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded"
         >
-          Download Hall Ticket
-        </button>
-
+          Download Hall Ticket       
+</button>
       </div>
 
       <div ref={printRef}>

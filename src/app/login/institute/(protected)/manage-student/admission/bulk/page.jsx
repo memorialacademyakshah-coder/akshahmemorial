@@ -24,8 +24,11 @@ export default function BulkAdmission() {
     const sheet =
       workbook.Sheets[workbook.SheetNames[0]];
 
-    const jsonData =
-      XLSX.utils.sheet_to_json(sheet);
+ const jsonData =
+  XLSX.utils.sheet_to_json(sheet, {
+    defval: "",
+    raw: false,
+  });
 
     const formatted = jsonData.map((row) => ({
       studentName:
@@ -95,135 +98,125 @@ const importStudents = async () => {
 
     let imported = 0;
     let failed = 0;
-    let failedStudents = [];
+    const failedStudents = [];
 
-    for (const student of students) {
+    for (let i = 0; i < students.length; i++) {
+      const student = students[i];
+
       try {
         const username =
-          student.rollNumber || ID.unique();
+          student.rollNumber?.trim()
+            ? `${student.rollNumber}_${Date.now()}_${i}`
+            : ID.unique();
 
         const password =
           student.aadhar?.slice(-4) || "1234";
+
+        const payload = {
+          studentName: String(student.studentName || ""),
+          fatherName: String(student.fatherName || ""),
+          motherName: String(student.motherName || ""),
+          aadhar: String(student.aadhar || ""),
+          fatherAadhar: String(student.fatherAadhar || ""),
+          dob: String(student.dob || ""),
+          rollNumber: String(student.rollNumber || ""),
+          className: String(student.className || ""),
+          courseName: String(student.courseName || ""),
+          address: String(student.address || ""),
+          mobile: String(student.mobile || ""),
+
+          username,
+          password,
+
+          relationType: "S/O",
+          status: "Active",
+          bulkAdmission: true,
+
+          photoId: "",
+          signatureId: "",
+
+          qualification: "",
+          occupation: "",
+          altMobile: "",
+          email: "",
+          gender: "",
+          subjects: "",
+
+          courseFees: 0,
+          discount: 0,
+          totalFees: 0,
+          feesReceived: 0,
+          balance: 0,
+
+          batch: "",
+
+          admissionDate:
+            new Date()
+              .toISOString()
+              .split("T")[0],
+
+          franchiseEmail:
+            franchise.user.email,
+
+          franchiseId:
+            franchise.franchiseId,
+
+          instituteName:
+            franchise.instituteName,
+
+          createdById:
+            franchise.user.$id,
+
+          createdByName:
+            franchise.instituteName,
+
+          createdAt:
+            new Date().toISOString(),
+        };
 
         await databases.createDocument(
           DATABASE_ID,
           COLLECTION_ID,
           ID.unique(),
-          {
-            studentName: student.studentName || "",
-
-            fatherName: student.fatherName || "",
-
-            motherName: student.motherName || "",
-
-            aadhar: String(student.aadhar || ""),
-
-            // Store DOB as text
-            dob: String(student.dob || ""),
-
-            rollNumber: String(
-              student.rollNumber || ""
-            ),
-
-           className: String(
-  student.className || ""
-),
-
-            courseName: String(
-              student.courseName || ""
-            ),
-
-            address: student.address || "",
-
-            mobile: String(
-              student.mobile || ""
-            ),
-
-            fatherAadhar: String(
-              student.fatherAadhar || ""
-            ),
-
-            username,
-            password,
-
-            relationType: "S/O",
-
-            status: "Active",
-
-            bulkAdmission: true,
-
-            photoId: "",
-            signatureId: "",
-
-            qualification: "",
-            occupation: "",
-
-            altMobile: "",
-            email: "",
-
-            gender: "",
-
-            subjects: "",
-
-            courseFees: 0,
-            discount: 0,
-            totalFees: 0,
-            feesReceived: 0,
-            balance: 0,
-
-            batch: "",
-
-            admissionDate:
-              new Date()
-                .toISOString()
-                .split("T")[0],
-
-            franchiseEmail:
-              franchise.user.email,
-
-            franchiseId:
-              franchise.franchiseId,
-
-            instituteName:
-              franchise.instituteName,
-
-            createdById:
-              franchise.user.$id,
-
-            createdByName:
-              franchise.instituteName,
-
-            createdAt:
-              new Date().toISOString(),
-          }
+          payload
         );
 
         imported++;
+
+        // prevents Appwrite rate-limit
+        await new Promise((resolve) =>
+          setTimeout(resolve, 100)
+        );
       } catch (err) {
         failed++;
 
         failedStudents.push({
-          student:
-            student.studentName,
-          error: err.message,
+          student: student.studentName,
+          error:
+            err?.message ||
+            JSON.stringify(err),
         });
 
         console.error(
-          "FAILED:",
+          "FAILED STUDENT:",
           student.studentName,
-          err.message
+          err
         );
       }
     }
 
-    console.log(
-      "FAILED STUDENTS",
-      failedStudents
-    );
+    console.table(failedStudents);
 
     alert(
-      `Imported: ${imported}\nFailed: ${failed}`
+      `Import Complete\n\nImported: ${imported}\nFailed: ${failed}`
     );
+
+    if (failedStudents.length > 0) {
+      console.log(
+        "Failed Students",
+        failedStudents
+      );
+    }
 
     setStudents([]);
   } catch (err) {

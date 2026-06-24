@@ -21,29 +21,35 @@ export default function NavbarCMS() {
   })
 
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [Query.limit(1)]
-      )
+ const fetchData = async () => {
+  try {
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      COLLECTION_ID,
+      [Query.limit(1)]
+    );
 
-      if (res.documents.length) {
-        const d = res.documents[0]
+    console.log("Website Docs:", res.documents);
 
-        setDocId(d.$id)
+    if (res.documents.length > 0) {
+      const d = res.documents[0];
 
-        setForm({
-          topBarText: d.topBarText || '',
-          phone: d.phone || '',
-          logoUrl: d.logoUrl || '',
-          navMenus: d.navMenus || '',
-          showFranchiseBtn: d.showFranchiseBtn ?? true,
-          showAdminBtn: d.showAdminBtn ?? true,
-        })
-      }
+      setDocId(d.$id);
+
+      setForm({
+        topBarText: d.topBarText || "",
+        phone: d.phone || "",
+        logoUrl: d.logoUrl || "",
+        showFranchiseBtn:
+          d.showFranchiseBtn ?? true,
+        showAdminBtn:
+          d.showAdminBtn ?? true,
+      });
     }
-
+  } catch (err) {
+    console.error(err);
+  }
+};
     fetchData()
   }, [])
 
@@ -64,21 +70,45 @@ export default function NavbarCMS() {
     }))
   }
 
-  const saveNavbar = async () => {
-    try {
+const saveNavbar = async () => {
+  try {
+    const payload = {
+      topBarText: form.topBarText || "",
+      phone: form.phone || "",
+      logoUrl: form.logoUrl || "",
+      showFranchiseBtn: form.showFranchiseBtn,
+      showAdminBtn: form.showAdminBtn,
+    };
+
+    if (docId) {
       await databases.updateDocument(
         DATABASE_ID,
         COLLECTION_ID,
         docId,
-        form
-      )
+        payload
+      );
+    } else {
+      const newDoc =
+        await databases.createDocument(
+          DATABASE_ID,
+          COLLECTION_ID,
+          ID.unique(),
+          payload
+        );
 
-      alert('Navbar Updated Successfully ✅')
-    } catch (err) {
-      console.error(err)
-      alert('Failed to update navbar')
+      setDocId(newDoc.$id);
     }
+
+    alert("Navbar Updated Successfully ✅");
+  } catch (err) {
+    console.error(err);
+
+    alert(
+      err?.message ||
+      JSON.stringify(err)
+    );
   }
+};
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 md:p-10">

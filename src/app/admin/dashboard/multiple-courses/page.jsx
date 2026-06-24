@@ -77,7 +77,7 @@ const editCourse = async (course) => {
         let cleanedName = course.courseName
 
         if (course.award) {
-            cleanedName = cleanedName.replace(`${course.award} IN `, "")
+            cleanedName = cleanedName.replace(`${course.award} FOR `, "")
         }
 
         setCourseTitle(cleanedName)
@@ -123,7 +123,7 @@ const saveCourse = async () => {
             return
         }
 
-        const courseName = `${finalAward} IN ${courseTitle}`
+        const courseName = `${finalAward} FOR ${courseTitle}`
 
         // ================= UPDATE =================
         if (isEditing) {
