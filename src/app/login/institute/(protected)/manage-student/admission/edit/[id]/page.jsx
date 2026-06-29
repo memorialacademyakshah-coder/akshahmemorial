@@ -234,6 +234,17 @@ const loadCourses = async () => {
   const handleSubmit = async (e) => {
 
     e.preventDefault();
+    const MAX_SIZE = 250 * 1024; // 250 KB
+
+if (photo && photo.size > MAX_SIZE) {
+  alert("Student photo must be less than 250 KB.");
+  return;
+}
+
+if (signature && signature.size > MAX_SIZE) {
+  alert("Signature must be less than 250 KB.");
+  return;
+}
 
     try {
 
@@ -336,23 +347,28 @@ subjects: form.subjects,
         <div>
 
           <label className="block font-semibold mb-2">
-            Student Photo
+            Student Photo (Max 250 KB)
           </label>
 
           <input
             type="file"
             accept="image/*"
             onChange={(e) => {
+  const file = e.target.files[0];
 
-              const file = e.target.files[0];
+  if (!file) return;
 
-              setPhoto(file);
+  const MAX_SIZE = 250 * 1024; // 250 KB
 
-              if (file) {
-                setPhotoPreview(URL.createObjectURL(file));
-              }
+  if (file.size > MAX_SIZE) {
+    alert("Student photo must be less than 250 KB.");
+    e.target.value = "";
+    return;
+  }
 
-            }}
+  setPhoto(file);
+  setPhotoPreview(URL.createObjectURL(file));
+}}
             className="
 w-full
 rounded-2xl
@@ -378,23 +394,28 @@ transition
         <div>
 
           <label className="block font-semibold mb-2">
-            Signature
+            Signature (Max 250 KB)
           </label>
 
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => {
+           onChange={(e) => {
+  const file = e.target.files[0];
 
-              const file = e.target.files[0];
+  if (!file) return;
 
-              setSignature(file);
+  const MAX_SIZE = 250 * 1024; // 250 KB
 
-              if (file) {
-                setSignaturePreview(URL.createObjectURL(file));
-              }
+  if (file.size > MAX_SIZE) {
+    alert("Signature must be less than 250 KB.");
+    e.target.value = "";
+    return;
+  }
 
-            }}
+  setSignature(file);
+  setSignaturePreview(URL.createObjectURL(file));
+}}
             className="
 w-full
 rounded-2xl
