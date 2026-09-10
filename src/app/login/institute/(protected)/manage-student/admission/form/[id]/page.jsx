@@ -141,14 +141,14 @@ export default function AdmissionForm() {
                 {/* TEMPLATE */}
 
                 <img
-                    src="/admi.png"
+                    src="/admit.jpeg"
                     className="w-full"
                     alt="Admission Template"
                 />
 
                 {/* FRANCHISE LOGO */}
 
-{franchise?.logo && (
+{/* {franchise?.logo && (
   <div className="absolute top-[10px] left-[410px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
     <img
       src={franchise.logo}
@@ -156,7 +156,7 @@ export default function AdmissionForm() {
       alt="Institute Logo"
     />
   </div>
-)}
+)} */}
 
                 {/* INSTITUTE NAME */}
 
@@ -166,92 +166,92 @@ export default function AdmissionForm() {
 
                  <img
           src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
-          className="absolute top-[250px] right-[120px] w-[100px] h-[100px] object-cover"
+          className="absolute top-[435px] right-[80px] w-[120px] h-[120px] object-cover"
         />
 
          {/* ROLL NUMBER */}
 
-<div className="absolute top-[320px] right-[250px] text-lg font-semibold">
-    Roll No: {student.rollNumber || ""}
+<div className="absolute top-[510px] left-[250px] text-lg font-semibold">
+     {student.rollNumber || ""}
 </div>
 
                 {/* ADMISSION DATE */}
 
-                <div className="absolute top-[320px] left-[260px] text-lg">
+                {/* <div className="absolute top-[320px] left-[260px] text-lg">
                     {student.admissionDate || ""}
-                </div>
+                </div> */}
 
                 {/* CLASS NAME */}
 
 
 
-                <div className="absolute top-[367px] left-[210px] text-lg">
+                <div className="absolute top-[470px] left-[250px] text-lg">
   {student.className || student.courseName || ""}
 </div>
 
                 {/* STUDENT NAME */}
 
-                <div className="absolute top-[408px] left-[210px] text-lg">
+                <div className="absolute top-[428px] left-[250px] text-lg">
                     {student.studentName || ""}
                 </div>
 
                 {/* FATHER NAME */}
 
-                <div className="absolute top-[450px] left-[210px] text-lg">
+                <div className="absolute top-[600px] left-[320px] text-lg">
                     {student.fatherName || ""}
                 </div>
 
                 {/* MOTHER NAME */}
 
-                <div className="absolute top-[495px] left-[210px] text-lg">
+                {/* <div className="absolute top-[495px] left-[210px] text-lg">
                     {student.motherName || ""}
-                </div>
+                </div> */}
 
                 {/* MOBILE */}
 
-                <div className="absolute top-[670px] w-[200px] left-[240px] text-lg">
+                {/* <div className="absolute top-[670px] w-[200px] left-[240px] text-lg">
                     {student.mobile || ""}
-                </div>
+                </div> */}
 
                 {/* ALT MOBILE */}
-
+{/* 
                 <div className="absolute top-[670px] left-[620px] text-lg">
                     {student.altMobile || ""}
-                </div>
+                </div> */}
 
                 {/* AADHAR */}
 
-                <div className="absolute top-[537px] left-[260px] text-lg">
+                {/* <div className="absolute top-[537px] left-[260px] text-lg">
                     {student.aadhar || ""}
-                </div>
+                </div> */}
 
                 {/* EMAIL */}
 
-                <div className="absolute top-[580px] left-[170px] text-lg">
+                {/* <div className="absolute top-[580px] left-[170px] text-lg">
                     {student.email || ""}
-                </div>
+                </div> */}
 
                 {/* QUALIFICATION */}
 
-                <div className="absolute top-[625px] left-[230px] text-lg">
+                {/* <div className="absolute top-[625px] left-[230px] text-lg">
                     {student.qualification || ""}
-                </div>
+                </div> */}
 
                 {/* GENDER */}
 
-                <div className="absolute top-[624px] left-[550px] text-lg">
+                {/* <div className="absolute top-[624px] left-[550px] text-lg">
                     {student.gender || ""}
-                </div>
+                </div> */}
 
                 {/* ADDRESS */}
 
-                <div className="absolute top-[705px] left-[250px] w-[600px] text-lg">
+                {/* <div className="absolute top-[705px] left-[250px] w-[600px] text-lg">
                     {student.address || ""}
-                </div>
+                </div> */}
 
                 {/* STUDENT SIGNATURE */}
 
-                {student.signatureId && (
+                {/* {student.signatureId && (
 
                     <img
                         src={`${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${student.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`}
@@ -259,46 +259,46 @@ export default function AdmissionForm() {
                         alt="Student Signature"
                     />
 
-                )}
+                )} */}
 
                 {/* COURSE FEES */}
 
-                <div className="absolute top-[890px] left-[200px] text-lg">
+                {/* <div className="absolute top-[890px] left-[200px] text-lg">
                     {student.courseFees || ""}
-                </div>
+                </div> */}
 
                 {/* PAID FEES */}
 
-                <div className="absolute top-[890px] left-[450px] text-lg">
+                {/* <div className="absolute top-[890px] left-[450px] text-lg">
                     {student.feesReceived || ""}
-                </div>
+                </div> */}
 
                 {/* BALANCE */}
-
+{/* 
                 <div className="absolute top-[890px] left-[690px] text-lg">
                     {student.balance || ""}
-                </div>
+                </div> */}
 
                 {/* BATCH */}
 
-                <div className="absolute top-[955px] left-[200px] text-lg">
+                {/* <div className="absolute top-[955px] left-[200px] text-lg">
                     {student.batch || ""}
-                </div>
+                </div> */}
 
                 {/* REGISTERED PERSON */}
 
-                <div className="absolute top-[955px] left-[520px] text-lg">
+                {/* <div className="absolute top-[955px] left-[520px] text-lg">
                     {student.createdByName || ""}
-                </div>
+                </div> */}
 
                 {/* FRANCHISE SIGNATURE */}
 
-                {franchise?.signature && (
+                {/* {franchise?.signature && (
                     <img
                         src={franchise.signature}
                         className="absolute bottom-[150px] right-[65px] w-[150px] h-[50px]"
                     />
-                )}
+                )} */}
 
                 {/* FRANCHISE EMAIL */}
 
