@@ -48,6 +48,20 @@ export default function PrintHallTicket() {
 
   };
 
+
+    const formatDOB = (dob) => {
+    if (!dob) return "";
+
+    // Appwrite date usually comes as YYYY-MM-DD
+    const parts = dob.split("-");
+
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    return dob;
+  };
+
   // ✅ DOWNLOAD
   const handleDownload = async () => {
 
@@ -76,6 +90,10 @@ export default function PrintHallTicket() {
         }
 
       }
+
+        // ==============================
+  // FORMAT DATE OF BIRTH
+  // ==============================
 
       const dataUrl = await htmlToImage.toPng(node, {
         quality: 1,
@@ -154,7 +172,7 @@ export default function PrintHallTicket() {
 
               {/* BACKGROUND TEMPLATE */}
               <img
-                src="/hall.png"
+                src="/admit.jpeg"
                 className="absolute top-0 left-0 w-full h-full"
               />
 
@@ -167,7 +185,7 @@ export default function PrintHallTicket() {
               </div> */}
 
               {/* FRANCHISE LOGO */}
-         {franchise?.logo && (
+         {/* {franchise?.logo && (
   <div className="absolute top-[5px] left-[350px] w-[135px] h-[135px] overflow-hidden bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
     <img
       src={franchise.logo}
@@ -175,7 +193,7 @@ export default function PrintHallTicket() {
       alt="Institute Logo"
     />
   </div>
-)}
+)} */}
 
               {/* FRANCHISE NAME */}
               {/* <div className="absolute top-[140px] w-full text-center text-2xl font-bold text-red-700">
@@ -186,46 +204,62 @@ export default function PrintHallTicket() {
               {photoUrl && (
                 <img
                   src={photoUrl}
-                  className="absolute top-[270px] left-[86px] w-[120px] h-[120px] object-cover"
+                  className="absolute top-[395px] left-[600px] w-[150px] h-[190px] object-cover"
                 />
               )}
 
               {/* COURSE NAME */}
-                          <div className="absolute top-[293px] left-[320px] text-lg">
+                          <div className="absolute top-[430px] left-[230px] text-lg">
   {student.className || student.courseName || ""}
 </div>
 
+              {/* STUDENT NAME */}
+              <div className="absolute top-[390px] left-[220px] text-[18px]">
+                {student.studentName}
+              </div>
+              {/* ROLL NUMBER */}
+
+<div className="absolute top-[470px] left-[220px] text-lg font-semibold">
+     {student.rollNumber || ""}
+</div>
+
+              {/* FATHER NAME */}
+              <div className="absolute top-[550px] left-[280px] text-[18px]">
+                {student.fatherName}
+              </div>
+
+  {/* =========================================
+                  DATE OF BIRTH
+              ========================================= */}
+              <div className="absolute top-[510px] left-[220px] text-[18px]">
+                {formatDOB(student.dob)}
+              </div>
+
+              <div className="absolute top-[430px] left-[450px] text-[13px]">
+                {student.batch || ""}
+              </div>
 
               {/* COURSE DURATION */}
               {/* <div className="absolute top-[300px] left-[330px]">
                 {exam.duration || student.duration || "N/A"}
               </div> */}
 
-              {/* STUDENT NAME */}
-              <div className="absolute top-[418px] left-[190px] text-[13px]">
-                {student.studentName}
-              </div>
-              {/* ROLL NUMBER */}
-
-<div className="absolute top-[340px] left-[300px] text-lg font-semibold">
-     {student.rollNumber || ""}
-</div>
-
-              {/* FATHER NAME */}
-              <div className="absolute top-[463px] left-[240px] text-[13px]">
-                {student.fatherName}
-              </div>
 
               {/* SURNAME */}
-              <div className="absolute top-[504px] left-[160px]">
+              {/* <div className="absolute top-[504px] left-[160px]">
                 {student.surname} 
-              </div>
+              </div> */}
 
               {/* MOTHER NAME */}
-              <div className="absolute top-[546px] left-[180px]">
+              {/* <div className="absolute top-[546px] left-[180px]">
                 {student.motherName}
-              </div>
+              </div> */}
 
+
+              {/* =========================================
+                  SECTION
+                  Using Batch as Section
+              ========================================= */}
               {/* USERNAME */}
               {/* <div className="absolute top-[345px] left-[350px]">
                                 {student.studentName}
@@ -237,24 +271,24 @@ export default function PrintHallTicket() {
               </div> */}
 
               {/* EXAM DATE */}
-              <div className="absolute top-[415px] left-[470px]">
+              {/* <div className="absolute top-[415px] left-[470px]">
                 {exam.examDate}
-              </div>
+              </div> */}
 
               {/* EXAM TIME */}
-              <div className="absolute top-[460px] left-[490px]">
+              {/* <div className="absolute top-[460px] left-[490px]">
                 {exam.startTime} - {exam.endTime}
-              </div>
+              </div> */}
 
               {/* DURATION */}
-              <div className="absolute top-[502px] left-[510px]">
+              {/* <div className="absolute top-[502px] left-[510px]">
                 {exam.duration || student.duration || "N/A"}
-              </div>
+              </div> */}
 
               {/* REPORTING TIME */}
-              <div className="absolute top-[545px] left-[500px]">
+              {/* <div className="absolute top-[545px] left-[500px]">
                 {exam.reportingTime}
-              </div>
+              </div> */}
 
               {/* CENTER ADDRESS */}
               {/* <div className="absolute top-[585px] left-[390px] w-[300px] text-[11px]">
@@ -264,7 +298,7 @@ export default function PrintHallTicket() {
               </div> */}
 
               {/* STUDENT SIGNATURE */}
-              {signatureUrl ? (
+              {/* {signatureUrl ? (
                 <img
                   src={signatureUrl}
                   className="absolute bottom-[210px] left-[490px] w-[140px] h-[60px] object-contain border"
@@ -273,7 +307,7 @@ export default function PrintHallTicket() {
                 <div className="absolute bottom-[200px] left-[500px] text-red-500">
                   No Signature
                 </div>
-              )}
+              )} */}
 
               {/* FRANCHISE SIGNATURE */}
               {/* {franchiseSign && (
@@ -284,14 +318,14 @@ export default function PrintHallTicket() {
               )} */}
 
               {/* EXTRA SIGNATURE */}
-              {franchiseSign && (
+              {/* {franchiseSign && (
                  <div className="absolute bottom-[190px] left-[160px] w-[200px] h-[60px] overflow-hidden rounded-full border-4 border-white flex items-center justify-center shadow-md">
                 <img
                   src={franchiseSign} className="w-full h-full object-cover "
                   
                 />
               </div>
-              )}
+              )} */}
 
               {/* FRANCHISE OWNER NAME */}
               {/* <div className="absolute bottom-[100px] right-[95px] text-sm font-semibold text-center">

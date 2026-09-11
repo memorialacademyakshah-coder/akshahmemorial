@@ -644,7 +644,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             onChange={handleChange}
             className="border p-2 w-full"
           />
-
+ 
         </div>
 
       </div>
