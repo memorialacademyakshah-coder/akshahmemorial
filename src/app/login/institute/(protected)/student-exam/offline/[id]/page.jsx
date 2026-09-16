@@ -8,7 +8,7 @@ import { Query } from "appwrite";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const ADMISSION_COLLECTION = "student_admissions";
 const RESULT_COLLECTION = "exam_results";
-const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
+const BUCKET_ID = "6986e8a4001925504f6b";
 
 export default function ResultPage() {
 
@@ -20,110 +20,378 @@ export default function ResultPage() {
   const [marks, setMarks] = useState([]);
   const [selectedSem, setSelectedSem] = useState(1);
   const [totalSem, setTotalSem] = useState(1);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (id) loadStudent();
   }, [id]);
 
-useEffect(() => {
-  if (
-    student?.courseType === "semester" &&
-    student?.courseCode &&
-    selectedSem
-  ) {
-    loadSemesterSubjects(student.courseCode, selectedSem);
-  }
-}, [selectedSem, student]);
+ useEffect(() => {
+  const initSemester = async () => {
+    if (
+      student?.courseType === "semester" &&
+      student?.courseCode &&
+      selectedSem
+    ) {
+      const semesterSubjects = await loadSemesterSubjects(
+        student.courseCode,
+        selectedSem,
+        student.franchiseEmail
+      );
+
+      await loadExistingResult(
+        id,
+        selectedSem,
+        semesterSubjects
+      );
+    }
+  };
+
+  initSemester();
+}, [selectedSem, student, id]);
+
+  const loadStudent = async () => {
+    try {
+
+      const res = await databases.getDocument(
+        DATABASE_ID,
+        ADMISSION_COLLECTION,
+        id
+      );
+
+      setStudent(res);
+
+      // ✅ SEMESTER SUPPORT (NEW)
+      if (res.courseType === "semester") {
+
+        let courseCode = res.courseCode;
+
+        // 🔥 fallback if missing
+        if (!courseCode) {
+          const courseRes = await databases.listDocuments(
+            DATABASE_ID,
+            "semester_courses",
+            [Query.equal("courseName", res.courseName)]
+          );
+
+          if (courseRes.documents.length > 0) {
+            courseCode = courseRes.documents[0].courseCode;
+          }
+        }
+
+        if (!courseCode) {
+          alert("Course code not found");
+          return;
+        }
+
+        // ✅ FETCH COURSE DETAILS (THIS IS THE KEY FIX)
+        const courseRes = await databases.listDocuments(
+          DATABASE_ID,
+          "franchise_semester_courses",
+          [Query.equal("courseCode", courseCode)]
+        );
+
+        if (courseRes.documents.length > 0) {
+
+          const courseData = courseRes.documents[0];
+
+          // 🔥 SET TOTAL SEMESTERS
+          setTotalSem(courseData.totalSemesters || 1);
+
+        }
+
+        // ✅ STORE COURSE CODE
+        res.courseCode = courseCode;
+        setStudent(res);
+
+        setSelectedSem(res.currentSemester || 1);
+
+        // ✅ LOAD FIRST SEMESTER
 
 
-const loadStudent = async () => {
+        return;
+      }
+
+
+// ==========================================
+// SUBJECT LOADING
+// ==========================================
+let subjectList = [];
+// ==========================================
+// SINGLE COURSE
+// ==========================================
+// IMPORTANT:
+// Only treat the student as a normal SINGLE course
+// if the course actually exists in courses_single.
+//
+// This prevents BEAUTY courses from being affected.
+// ==========================================
+// ==========================================
+// SINGLE COURSE
+// ==========================================
+if (res.courseType === "single") {
+
+  let normalSingleCourse = null;
+
   try {
 
-    const res = await databases.getDocument(
-      DATABASE_ID,
-      ADMISSION_COLLECTION,
-      id
-    );
+    // ==========================================
+    // FIRST: USE courseId SAVED IN ADMISSION
+    // ==========================================
+    if (res.courseId) {
 
-    setStudent(res);
+      try {
 
-    // ✅ SEMESTER SUPPORT (NEW)
-if (res.courseType === "semester") {
+        const courseRes = await databases.getDocument(
+          DATABASE_ID,
+          "courses_single",
+          res.courseId
+        );
 
-  let courseCode = res.courseCode;
+        if (courseRes) {
+          normalSingleCourse = courseRes;
+        }
 
-  // 🔥 fallback if missing
-  if (!courseCode) {
-    const courseRes = await databases.listDocuments(
-      DATABASE_ID,
-      "semester_courses",
-      [Query.equal("courseName", res.courseName)]
-    );
+      } catch (courseIdError) {
 
-    if (courseRes.documents.length > 0) {
-      courseCode = courseRes.documents[0].courseCode;
+        console.log(
+          "COURSE ID LOOKUP FAILED:",
+          courseIdError
+        );
+
+      }
+
     }
-  }
 
-  if (!courseCode) {
-    alert("Course code not found");
-    return;
-  }
+    // ==========================================
+    // FALLBACK: FIND BY COURSE CODE
+    // ==========================================
+    if (!normalSingleCourse && res.courseCode) {
 
-  // ✅ FETCH COURSE DETAILS (THIS IS THE KEY FIX)
-  const courseRes = await databases.listDocuments(
-    DATABASE_ID,
-    "semester_courses",
-    [Query.equal("courseCode", courseCode)]
-  );
+      const courseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "courses_single",
+        [
+          Query.equal("courseCode", res.courseCode),
+          Query.limit(1)
+        ]
+      );
 
-  if (courseRes.documents.length > 0) {
+      if (courseRes.documents.length > 0) {
+        normalSingleCourse = courseRes.documents[0];
+      }
 
-    const courseData = courseRes.documents[0];
+    }
 
-    // 🔥 SET TOTAL SEMESTERS
-    setTotalSem(courseData.totalSemesters || 1);
+    // ==========================================
+    // FALLBACK: FIND BY COURSE NAME
+    // ==========================================
+    if (!normalSingleCourse && res.courseName) {
 
-  }
+      const courseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "courses_single",
+        [
+          Query.equal("courseName", res.courseName),
+          Query.limit(1)
+        ]
+      );
 
-  // ✅ STORE COURSE CODE
-  setStudent((prev) => ({
-    ...prev,
-    courseCode
-  }));
+      if (courseRes.documents.length > 0) {
+        normalSingleCourse = courseRes.documents[0];
+      }
 
-  // ✅ LOAD FIRST SEMESTER
-  await loadSemesterSubjects(courseCode, 1);
+    }
 
-  return;
+    console.log(
+      "SINGLE COURSE FOUND:",
+      normalSingleCourse
+    );
+
+    // ==========================================
+    // LOAD SUBJECTS
+    // ==========================================
+    if (normalSingleCourse) {
+
+      const subjectRes = await databases.listDocuments(
+        DATABASE_ID,
+        "course_subjects",
+        [
+          Query.equal(
+            "courseId",
+            normalSingleCourse.$id
+          ),
+          Query.limit(1)
+        ]
+      );
+
+      console.log(
+        "SINGLE COURSE SUBJECT DOCUMENTS:",
+        subjectRes.documents
+      );
+
+      if (subjectRes.documents.length > 0) {
+
+        const subjectName =
+          subjectRes.documents[0].subjectName?.trim();
+
+       if (subjectName) {
+
+  // ==========================================
+  // SINGLE COURSE = ONE SUBJECT
+  // ==========================================
+  subjectList = [subjectName];
+
 }
 
-    // ✅ OLD LOGIC (UNCHANGED)
- let subjectList = [];
+      }
+      
 
-if (res.subjects) {
+    }
 
-  // ✅ SINGLE / BEAUTY
-  if (
-    res.courseType === "single" ||
-    res.courseType === "beauty"
-  ) {
+    console.log(
+      "FINAL SINGLE SUBJECT LIST:",
+      subjectList
+    );
 
-    subjectList = [
-      res.subjects
-        .split(",")
-        .map(s => s.trim())
-        .join(", ")
-    ];
+  } catch (singleCourseError) {
+
+    console.error(
+      "SINGLE COURSE SUBJECT ERROR:",
+      singleCourseError
+    );
+
+  }
+}
+
+  // ==========================================
+// BEAUTY COURSE
+// ==========================================
+// BEAUTY WORKS SAME AS SINGLE COURSE
+// Get the Beauty course from beauty_courses_single
+// Then get ONE subject from beauty_courses_subjects
+// ==========================================
+else if (res.courseType === "beauty") {
+
+  let beautyCourse = null;
+
+  try {
+
+    // ------------------------------------------
+    // FIRST: Find Beauty course using courseCode
+    // ------------------------------------------
+    if (res.courseCode) {
+
+      const courseQueries = [
+        Query.equal("courseCode", res.courseCode),
+        Query.limit(1)
+      ];
+
+      if (res.franchiseEmail) {
+        courseQueries.push(
+          Query.equal("franchiseEmail", res.franchiseEmail)
+        );
+      }
+
+      const courseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "beauty_courses_single",
+        courseQueries
+      );
+
+      if (courseRes.documents.length > 0) {
+        beautyCourse = courseRes.documents[0];
+      }
+    }
+
+
+    // ------------------------------------------
+    // FALLBACK: Find Beauty course using name
+    // ------------------------------------------
+    if (!beautyCourse && res.courseName) {
+
+      const courseQueries = [
+        Query.equal("courseName", res.courseName),
+        Query.limit(1)
+      ];
+
+      if (res.franchiseEmail) {
+        courseQueries.push(
+          Query.equal("franchiseEmail", res.franchiseEmail)
+        );
+      }
+
+      const courseRes = await databases.listDocuments(
+        DATABASE_ID,
+        "beauty_courses_single",
+        courseQueries
+      );
+
+      if (courseRes.documents.length > 0) {
+        beautyCourse = courseRes.documents[0];
+      }
+    }
+
+
+    // ------------------------------------------
+    // NOW GET BEAUTY SUBJECT
+    // ------------------------------------------
+    if (beautyCourse) {
+
+      const subjectQueries = [
+        Query.equal("courseId", beautyCourse.$id),
+        Query.limit(1)
+      ];
+
+      if (res.franchiseEmail) {
+        subjectQueries.push(
+          Query.equal("franchiseEmail", res.franchiseEmail)
+        );
+      }
+
+      const subjectRes = await databases.listDocuments(
+        DATABASE_ID,
+        "beauty_courses_subjects",
+        subjectQueries
+      );
+
+      if (subjectRes.documents.length > 0) {
+
+        const subjectName =
+          subjectRes.documents[0].subjectName?.trim();
+
+        if (subjectName) {
+          // SAME AS SINGLE COURSE
+          subjectList = [subjectName];
+        }
+
+      }
+
+    }
+
+  } catch (beautyError) {
+
+    console.error(
+      "BEAUTY COURSE SUBJECT ERROR:",
+      beautyError
+    );
 
   }
 
-  // ✅ MULTIPLE
-  else if (res.courseType === "multiple") {
+}
 
-    // 🔥 SUPPORT BOTH || AND NORMAL SUBJECTS
+// ==========================================
+// MULTIPLE COURSE
+// ==========================================
+// KEEP MULTIPLE LOGIC EXACTLY AS BEFORE
+// ==========================================
+else if (res.courseType === "multiple") {
+
+  if (res.subjects) {
+
     if (res.subjects.includes("||")) {
 
+      // New format
       subjectList = res.subjects
         .split("||")
         .map(s => s.trim())
@@ -131,98 +399,276 @@ if (res.subjects) {
 
     } else {
 
-      // ✅ KEEP WHOLE SUBJECT AS ONE
-      subjectList = [res.subjects];
+      // Old format
+      subjectList = res.subjects
+        .split(/,\s*(?![^()]*\))/)
+        .map(s => s.trim())
+        .filter(Boolean);
 
     }
 
   }
 
-  // ✅ FALLBACK
-  else {
-
-    subjectList = [res.subjects];
-
-  }
 }
-    setSubjects(subjectList);
 
-    const initialMarks = subjectList.map(sub => ({
-      subject: sub,
-      theory: "",
-      practical: "",
-      total: 0
-    }));
+// ==========================================
+// FALLBACK
+// ==========================================
+else if (res.subjects) {
 
-    setMarks(initialMarks);
+  subjectList = [res.subjects];
 
-  } catch (err) {
-    console.log(err);
-  }
-};
+}
 
-const loadSemesterSubjects = async (courseCode, semester) => {
+setSubjects(subjectList);
 
+
+
+      const initialMarks = subjectList.map(sub => ({
+        subject: sub,
+        theory: "",
+        practical: "",
+        total: 0
+      }));
+
+      setMarks(initialMarks);
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+const loadExistingResult = async (
+  studentId,
+  semester,
+  semesterSubjects = []
+) => {
   try {
-
-    const semNumber = Number(semester);
-
-    console.log("FETCHING:", courseCode, semNumber);
-
     const res = await databases.listDocuments(
       DATABASE_ID,
-      "semester_subjects",
+      RESULT_COLLECTION,
       [
-        Query.equal("courseCode", courseCode),
-        Query.equal("semesterNumber", semNumber)
+        Query.equal("studentId", studentId),
+        Query.equal(
+          "semesterNumber",
+          Number(semester)
+        ),
+        Query.limit(1)
       ]
     );
 
-    console.log("RESULT:", res.documents);
+    // No existing result for this semester
+    if (!res.documents.length) {
+      const blankMarks = semesterSubjects.map((sub) => ({
+        subject: sub,
+        theory: "",
+        practical: "",
+        total: 0,
+      }));
 
-    if (res.documents.length === 0) {
-      alert(`No subjects found for Semester ${semNumber}`);
+      setMarks(blankMarks);
+      return;
     }
 
-    const subjectList = [
-  ...new Set(res.documents.map(s => s.subjectName))
-];
+    const result = res.documents[0];
 
-    const initialMarks = subjectList.map(sub => ({
-      subject: sub,
-      theory: "",
-      practical: "",
-      total: 0
-    }));
+    let parsed =
+      typeof result.marksArray === "string"
+        ? JSON.parse(result.marksArray)
+        : result.marksArray;
 
-    setSubjects(subjectList);
-    setMarks(initialMarks);
+    // Make sure marksArray is valid
+    if (!Array.isArray(parsed)) {
+      parsed = [];
+    }
+
+    // Remove invalid entries
+    parsed = parsed.filter(
+      (m) => m && typeof m === "object"
+    );
+
+    // Match saved marks with current semester subjects
+    const restored = semesterSubjects.map((subject) => {
+      const existing = parsed.find(
+        (m) => m.subject === subject
+      );
+
+      // Subject has no saved marks yet
+      if (!existing) {
+        return {
+          subject,
+          theory: "",
+          practical: "",
+          total: 0,
+        };
+      }
+
+      const theory = Number(
+        existing.objective || 0
+      );
+
+      const practical = Number(
+        existing.practical || 0
+      );
+
+      return {
+        subject,
+        theory,
+        practical,
+        total: theory + practical,
+      };
+    });
+
+    setMarks(restored);
 
   } catch (err) {
-    console.log("SEM ERROR:", err);
+    console.error(
+      "LOAD RESULT ERROR:",
+      err
+    );
   }
 };
- const updateMarks = (index, field, value) => {
-  let val = Number(value) || 0;
 
-  // 🚫 LIMIT TO 50
-  if (val > 50) {
-    alert("Maximum marks allowed is 50");
-    val = 50;
-  }
+  const loadSemesterSubjects = async (
+    courseCode,
+    semester,
+    franchiseEmail
+  ) => {
+    try {
+      const semNumber = Number(semester);
 
-  if (val < 0) val = 0;
+      // -----------------------------------------
+      // FIRST: Find subjects using course + semester
+      // -----------------------------------------
+      let queries = [
+        Query.equal("courseCode", courseCode),
+        Query.equal("semesterNumber", semNumber),
+      ];
 
-  const updated = [...marks];
+      // Only add franchiseEmail when it actually exists
+      if (franchiseEmail) {
+        queries.push(
+          Query.equal("franchiseEmail", franchiseEmail)
+        );
+      }
 
-  updated[index][field] = val;
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_semester_course_subjects",
+        queries
+      );
 
-  updated[index].total =
-    Number(updated[index].theory || 0) +
-    Number(updated[index].practical || 0);
+      console.log("SEMESTER SUBJECT QUERY:", {
+        courseCode,
+        semester: semNumber,
+        franchiseEmail,
+        subjectsFound: res.documents.length,
+      });
 
-  setMarks(updated);
-};
+      const subjectList = res.documents
+        .map((s) => s.subjectName)
+        .filter(Boolean);
+
+      console.log("SEMESTER SUBJECTS:", subjectList);
+
+ const initialMarks = subjectList.map((sub) => ({
+  subject: sub,
+  theory: "",
+  practical: "",
+  total: 0,
+}));
+
+setSubjects(subjectList);
+setMarks(initialMarks);
+
+return subjectList;
+
+    } catch (err) {
+      console.error(
+        "SEM SUBJECT ERROR:",
+        err
+      );
+
+      alert(
+        err?.message ||
+        "Unable to load semester subjects"
+      );
+
+      setSubjects([]);
+      setMarks([]);
+    }
+  };
+
+  const updateMarks = (index, field, value) => {
+
+    // Allow the input to temporarily be empty
+    if (value === "") {
+      setMarks((prev) => {
+        const updated = [...prev];
+
+        updated[index] = {
+          ...updated[index],
+          [field]: "",
+          total:
+            Number(
+              field === "theory"
+                ? ""
+                : updated[index].theory || 0
+            ) +
+            Number(
+              field === "practical"
+                ? ""
+                : updated[index].practical || 0
+            ),
+        };
+
+        return updated;
+      });
+
+      return;
+    }
+
+    let val = Number(value);
+
+    // Prevent invalid numbers
+    if (Number.isNaN(val)) {
+      return;
+    }
+
+    // Maximum 50
+    if (val > 50) {
+      val = 50;
+    }
+
+    // Minimum 0
+    if (val < 0) {
+      val = 0;
+    }
+
+    setMarks((prev) => {
+      const updated = [...prev];
+
+      const current = updated[index];
+
+      const theory =
+        field === "theory"
+          ? val
+          : Number(current.theory || 0);
+
+      const practical =
+        field === "practical"
+          ? val
+          : Number(current.practical || 0);
+
+      updated[index] = {
+        ...current,
+        [field]: val,
+        total: theory + practical,
+      };
+
+      return updated;
+    });
+  };
 
   const calculateTotal = () => {
     return marks.reduce((sum, m) => sum + m.total, 0);
@@ -255,6 +701,10 @@ const loadSemesterSubjects = async (courseCode, semester) => {
 
   const saveResult = async () => {
 
+    if (saving) return;
+
+    setSaving(true);
+
     if (!student) {
       alert("Student not loaded");
       return;
@@ -273,106 +723,209 @@ const loadSemesterSubjects = async (courseCode, semester) => {
       const percentage = calculatePercentage();
       const grade = calculateGrade();
 
-      const resultDoc = await databases.createDocument(
-  DATABASE_ID,
-  RESULT_COLLECTION,
-  ID.unique(),
- {
-  studentId: id,
-  studentName: student.studentName || "",
-  course: student.courseName || "",
-  photoId: student.photoId || "",
+      // CHECK WHETHER RESULT ALREADY EXISTS
 
-  subjects: subjects.join(", "),
+      const existingResult = await databases.listDocuments(
+        DATABASE_ID,
+        RESULT_COLLECTION,
+        [
+          Query.equal("studentId", id),
+          Query.equal("semesterNumber", Number(selectedSem)),
+          Query.limit(1),
+        ]
+      );
 
-  // ✅ ADD THESE (IMPORTANT)
- semesterNumber: Number(selectedSem),
-courseCode: student.courseCode,
-courseType: student.courseType,
+      console.log("Student ID:", id);
+      console.log("Existing Results:", existingResult.documents);
+      console.log("Count:", existingResult.documents.length);
 
-  // ✅ KEEP THIS (already correct)
-  marksArray: JSON.stringify(
-    marks.map((m) => ({
-      subject: m.subject,
-      objective: Number(m.theory || 0),
-      practical: Number(m.practical || 0),
-      total: Number(m.theory || 0) + Number(m.practical || 0)
-    }))
-  ),
+      let resultId;
 
-  totalMarks: Number(totalMarks),
-  percentage: Number(percentage),
-  grade,
-
-  franchiseId: student.franchiseId || "",
-  instituteName: student.instituteName || "",
-
-  createdById: user.$id,
-  createdAt: new Date().toISOString()
-}
-);
-
-// ===============================
-// ✅ FINAL CORRECT SAVE LOGIC
-// ===============================
-if (student.courseType === "multiple") {
-
-  for (const m of marks) {
-
-    await databases.createDocument(
-      DATABASE_ID,
-      "student_subject_results",
-      ID.unique(),
-      {
+      const resultData = {
         studentId: id,
+        studentName: student.studentName || "",
+        course: student.courseName || "",
+        photoId: student.photoId || "",
 
-        // ✅ SUBJECT COMES DIRECTLY FROM UI
-        subject: m.subject,
+        subjects: subjects.join(", "),
 
-        // ✅ CORRECT VALUES
-        objective: Number(m.theory || 0),
-        practical: Number(m.practical || 0),
-        total:
-          Number(m.theory || 0) +
-          Number(m.practical || 0),
+        semesterNumber: Number(selectedSem),
 
+        status: "draft",
+
+        certificateApplied: false,
+
+        courseCode: student.courseCode,
         courseType: student.courseType,
-        createdAt: new Date().toISOString()
+
+        marksArray: JSON.stringify(
+          marks.map((m) => ({
+            subject: m.subject,
+            objective: Number(m.theory || 0),
+            practical: Number(m.practical || 0),
+            total:
+              Number(m.theory || 0) +
+              Number(m.practical || 0),
+          }))
+        ),
+
+        totalMarks: Number(totalMarks),
+        percentage: Number(percentage),
+        grade,
+
+        franchiseId: student.franchiseId || "",
+        instituteName: student.instituteName || "",
+
+        createdById: user.$id,
+        createdAt: new Date().toISOString(),
+      };
+
+      if (existingResult.documents.length > 0) {
+
+        resultId = existingResult.documents[0].$id;
+
+        const updatedDoc = await databases.updateDocument(
+          DATABASE_ID,
+          RESULT_COLLECTION,
+          resultId,
+          resultData
+        );
+
+        console.log("UPDATED:", updatedDoc.$id);
+      } else {
+
+        const newResult = await databases.createDocument(
+          DATABASE_ID,
+          RESULT_COLLECTION,
+          ID.unique(),
+          resultData
+        );
+
+
+        console.log("CREATED:", newResult.$id);
+
+        resultId = newResult.$id;
+
       }
-    );
-  }
 
-} else {
+      // ===============================
+      // UPDATE CERTIFICATE
+      // ===============================
 
-  // ✅ KEEP SAME
-  for (const m of marks) {
+      const cert = await databases.listDocuments(
+        DATABASE_ID,
+        "certificates",
+        [
+          Query.equal("studentId", id),
+          Query.limit(1),
+        ]
+      );
 
-    await databases.createDocument(
-      DATABASE_ID,
-      "student_subject_results",
-      ID.unique(),
-      {
-        studentId: id,
-        subject: m.subject || "Course",
-        objective: Number(m.theory || 0),
-        practical: Number(m.practical || 0),
-        total:
-          Number(m.theory || 0) +
-          Number(m.practical || 0),
+      if (cert.documents.length > 0) {
 
-        courseType: student.courseType,
-        createdAt: new Date().toISOString()
+        await databases.updateDocument(
+          DATABASE_ID,
+          "certificates",
+          cert.documents[0].$id,
+          {
+            totalMarks: Number(totalMarks),
+            percentage: Number(percentage),
+            marks: Number(percentage),
+            grade: grade,
+          }
+        );
+
       }
-    );
-  }
 
-}
+      const oldSubjects = await databases.listDocuments(
+        DATABASE_ID,
+        "student_subject_results",
+        [
+          Query.equal("studentId", id),
+
+          Query.equal(
+            "semesterNumber",
+            Number(selectedSem)
+          ),
+          Query.limit(500),
+        ]
+      );
+
+      for (const doc of oldSubjects.documents) {
+        await databases.deleteDocument(
+          DATABASE_ID,
+          "student_subject_results",
+          doc.$id
+        );
+      }
+
+
+      // ===============================
+      // ✅ FINAL CORRECT SAVE LOGIC
+      // ===============================
+      if (student.courseType === "multiple") {
+
+        for (const m of marks) {
+
+          await databases.createDocument(
+            DATABASE_ID,
+            "student_subject_results",
+            ID.unique(),
+            {
+              studentId: id,
+
+              semesterNumber:
+                Number(selectedSem),
+              // ✅ SUBJECT COMES DIRECTLY FROM UI
+              subject: m.subject,
+
+              // ✅ CORRECT VALUES
+              objective: Number(m.theory || 0),
+              practical: Number(m.practical || 0),
+              total:
+                Number(m.theory || 0) +
+                Number(m.practical || 0),
+
+              courseType: student.courseType,
+              createdAt: new Date().toISOString()
+            }
+          );
+        }
+
+      } else {
+
+        // ✅ KEEP SAME
+        for (const m of marks) {
+
+          await databases.createDocument(
+            DATABASE_ID,
+            "student_subject_results",
+            ID.unique(),
+            {
+              studentId: id,
+              semesterNumber:
+                Number(selectedSem),
+              subject: m.subject || "Course",
+              objective: Number(m.theory || 0),
+              practical: Number(m.practical || 0),
+              total:
+                Number(m.theory || 0) +
+                Number(m.practical || 0),
+
+              courseType: student.courseType,
+              createdAt: new Date().toISOString()
+            }
+          );
+        }
+
+      }
       alert("Result Saved Successfully");
       router.push("/login/institute/student-exam/offline");
 
     } catch (err) {
       console.error("SAVE ERROR:", err);
       alert(err?.message || "Error saving result");
+      setSaving(false);
     }
   };
 
@@ -424,27 +977,27 @@ if (student.courseType === "multiple") {
 
       {/* Marks Table */}
       <div className="bg-[#121212] border border-gray-800 p-6 rounded shadow">
-{student.courseType === "semester" && (
-  <div className="mb-6">
+        {student.courseType === "semester" && (
+          <div className="mb-6">
 
-    <label className="mr-3 font-semibold">
-      Select Semester:
-    </label>
+            <label className="mr-3 font-semibold">
+              Select Semester:
+            </label>
 
-<select
-  value={selectedSem}
-  onChange={(e) => setSelectedSem(Number(e.target.value))}
-  className="border px-3 py-2 bg-black text-white"
->
-  {[...Array(totalSem)].map((_, i) => (
-    <option key={i} value={i + 1}>
-      Semester {i + 1}
-    </option>
-  ))}
-</select>
+            <select
+              value={selectedSem}
+              onChange={(e) => setSelectedSem(Number(e.target.value))}
+              className="border px-3 py-2 bg-black text-white"
+            >
+              {[...Array(totalSem)].map((_, i) => (
+                <option key={i} value={i + 1}>
+                  Semester {i + 1}
+                </option>
+              ))}
+            </select>
 
-  </div>
-)}
+          </div>
+        )}
         <table className="w-full border border-gray-800">
 
           <thead className="bg-orange-500 text-black">
@@ -473,20 +1026,24 @@ if (student.courseType === "multiple") {
                   <td className="border p-3">100</td>
 
                   <td className="border p-3">
-                   <input
-  type="number"
-  max={50}
-  min={0}
-  className="border p-2 w-24 bg-black text-white"
-  onChange={(e) =>
-    updateMarks(index, "theory", e.target.value)
-  }
-/>
+
+                    <input
+                      type="number"
+                      value={marks[index]?.theory ?? ""}
+                      max={50}
+                      min={0}
+                      className="border p-2 w-24 bg-black text-white"
+                      onChange={(e) =>
+                        updateMarks(index, "theory", e.target.value)
+                      }
+                    />
+
                   </td>
 
                   <td className="border p-3">
-                   <input
+                  <input
   type="number"
+  value={marks[index]?.practical ?? ""}
   max={50}
   min={0}
   className="border p-2 w-24 bg-black text-white"
@@ -528,9 +1085,13 @@ if (student.courseType === "multiple") {
 
         <button
           onClick={saveResult}
-          className="bg-orange-500 px-6 py-3 mt-6 rounded"
+          disabled={saving}
+          className={`px-6 py-3 mt-6 rounded ${saving
+            ? "bg-gray-500 cursor-not-allowed"
+            : "bg-orange-500 hover:bg-orange-600"
+            }`}
         >
-          Save Result
+          {saving ? "Saving...please wait" : "Save Result"}
         </button>
 
       </div>

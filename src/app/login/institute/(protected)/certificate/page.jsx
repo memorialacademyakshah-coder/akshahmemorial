@@ -7,7 +7,7 @@ import { Query, ID } from "appwrite";
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const RESULT_COLLECTION = "exam_results";
 const CERT_COLLECTION = "certificates";
-const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
+const BUCKET_ID = "6a33a9e10026cc738837";
 
 export default function CertificatePage() {
 
@@ -31,33 +31,58 @@ export default function CertificatePage() {
       const res = await databases.listDocuments(
         DATABASE_ID,
         RESULT_COLLECTION,
-        [Query.orderDesc("$createdAt")]
+        [
+          Query.orderDesc("$createdAt"),
+          Query.limit(500),
+        ]
       );
 
-      // ✅ LOAD CERTIFICATES
-      const certRes = await databases.listDocuments(
-        DATABASE_ID,
-        CERT_COLLECTION
-      );
+    
 
-      // ✅ CREATE APPLIED ARRAY
-      const appliedStudents = certRes.documents.map(
-        cert => cert.studentId
-      );
-
+     
       // ✅ FILTER RESULTS
-      const passedStudents = res.documents
-        .filter(
-          r =>
-            r.grade !== "F" &&
-            r.createdById === user.$id
-        )
-        .map(r => ({
-          ...r,
-          alreadyApplied: appliedStudents.includes(r.studentId)
-        }));
+      // Only passed students of this institute
+      const passed = res.documents.filter(
+        (r) =>
+          r.grade !== "F" &&
+          r.createdById === user.$id
+      );
 
-      setResults(passedStudents);
+      // Remove duplicate studentIds (keep latest result)
+    const uniqueMap = new Map();
+const finalResults = [];
+
+passed.forEach((r) => {
+
+  if (r.courseType === "semester") {
+
+    finalResults.push({
+      ...r,
+      alreadyApplied: r.certificateApplied === true,
+    });
+
+  } else {
+
+    if (!uniqueMap.has(r.studentId)) {
+
+      uniqueMap.set(r.studentId, {
+        ...r,
+        alreadyApplied: r.certificateApplied === true,
+      });
+
+    }
+
+  }
+
+});
+
+setResults([
+  ...finalResults,
+  ...uniqueMap.values(),
+]);
+
+
+
 
     } catch (err) {
 
@@ -73,18 +98,16 @@ export default function CertificatePage() {
 
   const toggleSelect = (id) => {
 
+    const student = results.find(r => r.$id === id);
+
+    if (student?.alreadyApplied) return;
+
     if (selected.includes(id)) {
-
       setSelected(selected.filter(s => s !== id));
-
     } else {
-
       setSelected([...selected, id]);
-
     }
-
   };
-
   const applyCertificate = async () => {
 
     if (selected.length === 0) {
@@ -100,56 +123,158 @@ export default function CertificatePage() {
 
         if (!student) continue;
 
-        // ✅ PREVENT DUPLICATE
-        const existing = await databases.listDocuments(
-          DATABASE_ID,
-          CERT_COLLECTION,
-          [
-            Query.equal("studentId", student.studentId)
-          ]
-        );
 
-        if (existing.documents.length > 0) {
-          continue;
+
+        
+
+ const existingCert =
+await databases.listDocuments(
+    DATABASE_ID,
+    CERT_COLLECTION,
+    [
+        Query.equal("studentId", student.studentId),
+        Query.limit(1)
+    ]
+);
+
+if (existingCert.documents.length > 0) {
+
+    // ==========================================
+    // EXISTING CERTIFICATE
+    // Re-use the same certificate for next semester
+    // ==========================================
+
+    await databases.updateDocument(
+        DATABASE_ID,
+        CERT_COLLECTION,
+        existingCert.documents[0].$id,
+        {
+            // New semester waiting for approval
+            semesterNumber: Number(student.semesterNumber),
+
+            // New semester marks
+            totalMarks: student.totalMarks || 0,
+            percentage: student.percentage || 0,
+            marks: student.percentage || 0,
+            grade: student.grade || "",
+
+            // Keep overall value until admin approves
+            overallPercentage:
+                existingCert.documents[0].overallPercentage || 0,
+
+            overallGrade:
+                existingCert.documents[0].overallGrade || "",
+
+            // 🔥 THIS IS THE IMPORTANT FIX
+            status: "pending",
+
+            // Keep previous approved semesters
+            approvedSemesters:
+                existingCert.documents[0].approvedSemesters || "",
+
+            // Don't create a new certificate number
+            certificateNo:
+                existingCert.documents[0].certificateNo || "",
+
+            // Keep existing issue date
+            issueDate:
+                existingCert.documents[0].issueDate || ""
         }
+    );
 
-        await databases.createDocument(
-          DATABASE_ID,
-          CERT_COLLECTION,
-          ID.unique(),
-          {
+} else {
+
+    // First semester → create certificate
+    await databases.createDocument(
+        DATABASE_ID,
+        CERT_COLLECTION,
+        ID.unique(),
+        {
             studentId: student.studentId,
             studentName: student.studentName,
+
             course: student.course,
-            instituteName: student.instituteName,
-            franchiseId: student.franchiseId,
-            photoId: student.photoId,
-            marks: student.totalMarks,
-            grade: student.grade,
-            examMode: student.examMode || "OFFLINE",
-            examDate: student.examDate || "",
-            certificateNo: "ASMA-" + Date.now(),
-            status: "pending",
+            courseType: student.courseType,
+            courseCode: student.courseCode,
+
+            semesterNumber: Number(student.semesterNumber || 1),
+
             createdById: student.createdById,
-            createdAt: new Date().toISOString()
+
+            instituteName: student.instituteName || "",
+            franchiseId: student.franchiseId || "",
+
+            photoId: student.photoId || "",
+
+           totalMarks: student.totalMarks || 0,
+percentage: student.percentage || 0,
+marks: student.percentage || 0,
+grade: student.grade || "",
+
+            status: "pending",
+
+            overallPercentage: student.percentage || 0,
+
+            approvedSemesters: "",
+
+            certificateNo: "",
+            marksheetNo: "",
+            issueDate: ""
+        }
+    );
+
+}
+
+        await databases.updateDocument(
+
+          DATABASE_ID,
+
+          RESULT_COLLECTION,
+
+          student.$id,
+
+          {
+
+            certificateApplied: true,
+
+            resultStatus: "Applied"
+
           }
+
         );
 
+
+        
+
       }
+
+
 
       alert("Certificate request sent to admin");
 
       setSelected([]);
+
+      setResults(prev =>
+        prev.map(item =>
+          selected.includes(item.$id)
+            ? { ...item, alreadyApplied: true }
+            : item
+        )
+      );
+
+      setSelected([]);
+
 
       // ✅ RELOAD FOR DISABLE CHECKBOX
       loadResults();
 
     } catch (err) {
 
-      console.log(err);
-      alert("Error applying certificate");
+  console.error(err);
 
-    }
+  alert(err.message);
+
+}
 
   };
 
@@ -201,6 +326,9 @@ export default function CertificatePage() {
                 <th className="p-4 text-left">#</th>
                 <th className="p-4 text-left">Photo</th>
                 <th className="p-4 text-left">Student</th>
+                <th className="p-4 text-left">
+  Semester
+</th>
                 <th className="p-4 text-left">Course</th>
                 <th className="p-4 text-left">Exam Mode</th>
                 <th className="p-4 text-left">Objective</th>
@@ -248,10 +376,10 @@ export default function CertificatePage() {
 
                   try {
 
-                    const marks = JSON.parse(r.marks);
+                    const marks = JSON.parse(r.marksArray || "[]");
 
                     marks.forEach(m => {
-                      objective += Number(m.theory || 0);
+                      objective += Number(m.objective || 0);
                       practical += Number(m.practical || 0);
                     });
 
@@ -266,24 +394,18 @@ export default function CertificatePage() {
 
                       {/* CHECKBOX */}
                       <td className="p-4">
-
-                        {r.alreadyApplied ? (
-
+                        {r.certificateApplied ? (
                           <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
                             Applied
                           </span>
-
                         ) : (
-
                           <input
                             type="checkbox"
                             checked={selected.includes(r.$id)}
                             onChange={() => toggleSelect(r.$id)}
                             className="w-5 h-5 accent-blue-600 cursor-pointer"
                           />
-
                         )}
-
                       </td>
 
                       <td className="p-4 font-medium">
@@ -306,6 +428,11 @@ export default function CertificatePage() {
                       <td className="p-4 font-semibold text-gray-700">
                         {r.studentName}
                       </td>
+                      <td>
+
+Semester {r.semesterNumber}
+
+</td>
 
                       {/* COURSE */}
                       <td className="p-4 text-gray-600">

@@ -4,18 +4,61 @@ import { useState, useEffect } from "react";
 import { databases, account } from "@/lib/appwrite";
 import { ID, Storage, Client, Query } from "appwrite";
 import { useRouter } from "next/navigation";
+import imageCompression from "browser-image-compression";
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "student_admissions";
-const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
+const BUCKET_ID = "6a33a9e10026cc738837";
 
-const MAX_FILE_SIZE = 300 * 1024; // 300 KB
+
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
 
 const storage = new Storage(client);
+
+const compressImage = async (file, isSignature = false) => {
+  if (!file) return null;
+
+  try {
+    const options = {
+      maxSizeMB: isSignature ? 0.03 : 0.06,
+      maxWidthOrHeight: isSignature ? 350 : 300,
+      useWebWorker: true,
+      fileType: "image/jpeg",
+      initialQuality: 0.75,
+    };
+
+    const compressed = await imageCompression(file, options);
+
+    // Make absolutely sure the uploaded file has a .jpg extension
+    const newFileName = file.name
+      ? file.name.replace(/\.[^/.]+$/, "") + ".jpg"
+      : `${isSignature ? "signature" : "photo"}.jpg`;
+
+    return new File(
+      [compressed],
+      newFileName,
+      {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      }
+    );
+  } catch (error) {
+    console.error("Image compression error:", error);
+
+    // Fallback: create a JPG-compatible File name
+    return new File(
+      [file],
+      file.name?.replace(/\.[^/.]+$/, "") + ".jpg",
+      {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      }
+    );
+  }
+};
 
 export default function AddStudent() {
 
@@ -27,7 +70,7 @@ export default function AddStudent() {
 const [signaturePreview, setSignaturePreview] = useState(null);
 const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState("");
+  
 const [semesterSubjects, setSemesterSubjects] = useState([]);
  
 
@@ -46,6 +89,7 @@ showMotherInCertificate: false,
     courseType: "single",
     courseName: "",
     subjects: "",
+    selectedSubjectIds: "",
 
     mobile: "",
     altMobile: "",
@@ -61,6 +105,13 @@ showMotherInCertificate: false,
     qualification: "",
     occupation: "",
 
+
+    
+
+totalSemesters: 0,
+
+courseStatus: "Active",
+    
     courseFees: 0,
     discount: 0,
     totalFees: 0,
@@ -75,11 +126,9 @@ showMotherInCertificate: false,
     status: "Active"
 
   });
-  const username = form.mobile || form.email
-const password = form.aadhar?.slice(-4) || "1234"
-  
- 
+
 useEffect(() => {
+
   const fees = Number(form.courseFees) || 0;
   const disc = Number(form.discount) || 0;
   const received = Number(form.feesReceived) || 0;
@@ -90,10 +139,40 @@ useEffect(() => {
   setForm(prev => ({
     ...prev,
     totalFees: total,
-    balance: balance
+    balance
   }));
 
-}, [form.courseFees, form.discount, form.feesReceived]);
+}, [
+  form.courseFees,
+  form.discount,
+  form.feesReceived
+]);
+
+
+  const username = form.mobile || form.email
+const password = form.aadhar?.slice(-4) || "1234"
+  
+ 
+useEffect(() => {
+
+  const fees = Number(form.courseFees) || 0;
+  const disc = Number(form.discount) || 0;
+  const received = Number(form.feesReceived) || 0;
+
+  const total = fees - disc;
+  const balance = total - received;
+
+  setForm(prev => ({
+    ...prev,
+    totalFees: total,
+    balance
+  }));
+
+}, [
+  form.courseFees,
+  form.discount,
+  form.feesReceived
+]);
 
 
 
@@ -133,9 +212,17 @@ const checkUser = async () => {
       collection = "beauty_courses_single";
       queries = [Query.equal("franchiseEmail", user.email)];
     }
-    if (type === "semester") {
-  collection = "semester_courses";
-  queries = []; // 🔥 IMPORTANT (no filter for now)
+ if (type === "semester") {
+
+  collection = "franchise_semester_courses";
+
+  queries = [
+    Query.equal(
+      "franchiseEmail",
+      user.email
+    )
+  ];
+
 }
 
 try {
@@ -154,35 +241,63 @@ try {
 
   };
 
-  const loadSemesterSubjects = async (courseCode, semester) => {
+const loadSemesterSubjects = async (
+  courseCode,
+  semester
+) => {
 
   try {
 
-
     const user = await account.get();
 
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "semester_subjects",
-      [
-        Query.equal("courseCode", courseCode),
-        Query.equal("semesterNumber", Number(semester)),
-   
-      ]
+    const res =
+      await databases.listDocuments(
+        DATABASE_ID,
+        "franchise_semester_course_subjects",
+        [
+  Query.equal(
+  "courseCode",
+  courseCode
+),
+
+          Query.equal(
+            "semesterNumber",
+            Number(semester)
+          ),
+
+          Query.equal(
+            "franchiseEmail",
+            user.email
+          )
+        ]
+      );
+
+setSemesterSubjects(res.documents);
+
+const subjectNames = res.documents
+  .map((s) => s.subjectName)
+  .join(", ");
+
+setForm((prev) => ({
+  ...prev,
+
+  subjects: subjectNames,
+
+  selectedSubjectIds: res.documents
+    .map((s) => s.subjectId)
+    .join("||"),
+
+  currentSemester: Number(semester)
+}));
+  } catch (err) {
+
+    console.log(
+      "SEM SUBJECT ERROR:",
+      err
     );
 
-    setSemesterSubjects(res.documents);
-
-    const subjectNames = res.documents.map(s => s.subjectName).join(", ");
-
-    setForm(prev => ({
-      ...prev,
-      subjects: subjectNames
-    }));
-
-  } catch (err) {
-    console.log("SEM SUBJECT ERROR:", err);
   }
+
 };
 
 
@@ -251,17 +366,67 @@ const handleCourseChange = async (e) => {
     // =========================
     // ✅ SEMESTER (SPECIAL CASE)
     // =========================
-    if (form.courseType === "semester") {
-      setForm(prev => ({
-        ...prev,
-        courseName: course.courseName || course.courseCode,
-        courseCode: course.courseCode,
-        subjects: "",
-        courseFees: Number(course.courseFees || 0),
-        examFees: Number(course.examFees || 0)
-      }));
-      return;
-    }
+if (form.courseType === "semester") {
+
+  const user = await account.get();
+
+  const resPlan = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_approved",
+    [
+      Query.equal("email", user.email)
+    ]
+  );
+
+  const plan = resPlan.documents[0]?.plan;
+
+  const planRes = await databases.listDocuments(
+    DATABASE_ID,
+    "franchise_plans",
+    [
+      Query.equal("name", plan)
+    ]
+  );
+
+  const dynamicFee =
+    Number(planRes.documents[0]?.amount || 0);
+
+  setForm(prev => ({
+    ...prev,
+
+    courseName: course.$id,
+
+    courseDisplayName: course.courseName,
+
+    courseCode: course.courseCode,
+
+    subjects: "",
+
+    selectedSubjectIds: "",
+
+    courseFees: Number(course.courseFees || 0),
+
+    examFees: dynamicFee,
+
+    duration: course.duration,
+
+    courseDuration: course.duration,
+
+  
+
+    totalSemesters: Number(course.totalSemesters),
+
+    courseStatus: "Active"
+  }));
+
+  // Automatically load Semester 1 subjects
+  await loadSemesterSubjects(
+    course.courseCode,
+    1
+  );
+
+  return;
+}
 
     // =========================
     // ✅ MULTIPLE COURSE (IMPORTANT FIX)
@@ -338,7 +503,27 @@ console.log(err);
   }
 };
 const handleChange = (e) => {
-  setForm({ ...form, [e.target.name]: e.target.value });
+
+  const { name, value } = e.target;
+
+  const upperCaseFields = [
+    "studentName",
+    "surname",
+    "fatherName",
+    "motherName",
+    "address",
+    "qualification",
+    "occupation",
+    "batch",
+    "remark"
+  ];
+
+  setForm(prev => ({
+    ...prev,
+    [name]: upperCaseFields.includes(name)
+      ? value.toUpperCase()
+      : value
+  }));
 };
 
 const handleSubmit = async (e) => {
@@ -370,14 +555,25 @@ const handleSubmit = async (e) => {
     let ADMISSION_FEE = Number(form.examFees || 0)
     // ✅ SEMESTER ONE-TIME FEE LOGIC (ADD ONLY)
 if (form.courseType === "semester") {
-
-  const existing = await databases.listDocuments(
+const existing =
+  await databases.listDocuments(
     DATABASE_ID,
     "student_admissions",
     [
-      Query.equal("mobile", form.mobile), // better than name
-      Query.equal("courseName", form.courseName),
-      Query.equal("courseType", "semester")
+      Query.equal(
+        "mobile",
+        form.mobile
+      ),
+
+      Query.equal(
+        "courseCode",
+        form.courseCode
+      ),
+
+      Query.equal(
+        "courseType",
+        "semester"
+      )
     ]
   );
 
@@ -407,19 +603,29 @@ if (form.courseType === "semester") {
     let photoId = ""
     let signatureId = ""
 
-    const uploadPhoto = await storage.createFile(
-      BUCKET_ID,
-      ID.unique(),
-      photo
-    )
-    photoId = uploadPhoto.$id
+    console.log("PHOTO:", photo);
+console.log("PHOTO NAME:", photo?.name);
+console.log("PHOTO TYPE:", photo?.type);
 
-    const uploadSign = await storage.createFile(
-      BUCKET_ID,
-      ID.unique(),
-      signature
-    )
-    signatureId = uploadSign.$id
+console.log("SIGNATURE:", signature);
+console.log("SIGNATURE NAME:", signature?.name);
+console.log("SIGNATURE TYPE:", signature?.type);
+
+   const uploadPhoto = await storage.createFile(
+  BUCKET_ID,
+  ID.unique(),
+  photo
+);
+
+photoId = uploadPhoto.$id;
+
+const uploadSign = await storage.createFile(
+  BUCKET_ID,
+  ID.unique(),
+  signature
+);
+
+signatureId = uploadSign.$id;
 
     console.log("Signature uploaded:", signatureId)
 
@@ -442,12 +648,36 @@ const generatePassword = () => {
 const password = generatePassword();
 
     // ✅ FINAL DATA
-   const finalData = {
-  ...form,
-  courseName: form.courseDisplayName, // ✅ SAVE NAME
-  courseId: form.courseName,          // ✅ SAVE ID
+// ✅ FINAL DATA
+// Remove selectedSubjectIds because it is NOT an attribute
+// in the student_admissions Appwrite collection.
+
+const {
+  selectedSubjectIds,
+  ...formData
+} = form;
+
+const finalData = {
+  ...formData,
+
+  courseFees: Number(form.courseFees || 0),
+  discount: Number(form.discount || 0),
+  totalFees: Number(form.totalFees || 0),
   feesReceived: Number(form.feesReceived || 0),
   balance: Number(form.balance || 0),
+  examFees: Number(form.examFees || 0),
+
+  
+  
+
+  totalSemesters: Number(form.totalSemesters),
+
+  courseStatus: "Active",
+
+  courseCode: form.courseCode,
+  courseName: form.courseDisplayName,
+  courseId: form.courseName,
+
   admissionDate: form.admissionDate
     ? form.admissionDate
     : new Date().toISOString().split("T")[0]
@@ -492,7 +722,7 @@ const password = generatePassword();
     ID.unique(),
     {
       franchiseId: franchise.franchiseId,
-      amount: ADMISSION_FEE,
+      amount: ADMISSION_FEE.toFixed(2),
       type: "deduct",
       reason: "Student Admission",
       studentName: form.studentName,
@@ -519,7 +749,17 @@ const password = generatePassword();
         franchiseEmail: user.email,
         franchiseId: franchise.franchiseId,
         instituteName: franchise.instituteName,
-semesterNumber: selectedSemester ? Number(selectedSemester) : null,
+
+        semesterNumber: form.currentSemester,
+
+currentSemester: form.currentSemester,
+
+completedSemester: form.completedSemester,
+
+totalSemesters: form.totalSemesters,
+
+courseStatus: form.courseStatus,
+
         createdById: franchise.userId,
         createdByName: franchise.instituteName,
 
@@ -564,18 +804,17 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
      <input
   type="file"
   accept="image/*"
-  onChange={(e) => {
+ onChange={async (e) => {
     const file = e.target.files[0];
 
-    if (file && file.size > MAX_FILE_SIZE) {
-      alert("Photo must be less than 300 kb");
-      e.target.value = "";
-      return;
-    }
+    if (!file) return;
 
-    setPhoto(file);
-    setPhotoPreview(URL.createObjectURL(file)); // ✅ preview
-  }}
+    const compressed = await compressImage(file);
+
+    setPhoto(compressed);
+
+    setPhotoPreview(URL.createObjectURL(compressed));
+}}
   className="border p-2 w-full"
   required
 />
@@ -602,18 +841,17 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
 <input
   type="file"
   accept="image/*"
-  onChange={(e) => {
+ onChange={async (e) => {
     const file = e.target.files[0];
 
-    if (file && file.size > MAX_FILE_SIZE) {
-      alert("Signature must be less than 300 MB");
-      e.target.value = "";
-      return;
-    }
+    if (!file) return;
 
-    setSignature(file);
-    setSignaturePreview(URL.createObjectURL(file)); // ✅ preview
-  }}
+    const compressed = await compressImage(file, true);
+
+    setSignature(compressed);
+
+    setSignaturePreview(URL.createObjectURL(compressed));
+}}
   className="border p-2 w-full"
   required
 />
@@ -644,7 +882,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             onChange={handleChange}
             className="border p-2 w-full"
           />
- 
+
         </div>
 
       </div>
@@ -685,7 +923,8 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.studentName}
             onChange={handleChange}
             className="border p-2 w-full"
-            style={{ textTransform: 'uppercase' }}
+            
+        
           />
 
         </div>
@@ -701,7 +940,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.relationType}
             onChange={handleChange}
             className="border p-2 w-full"
-               style={{ textTransform: 'uppercase' }}
+         
           >
 
             <option>S/O</option>
@@ -723,7 +962,6 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.fatherName}
             onChange={handleChange}
             className="border p-2 w-full"
-               style={{ textTransform: 'uppercase' }} 
           />
           <div className="flex items-center gap-2 mt-2">
   <input
@@ -755,7 +993,6 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.surname}
             onChange={handleChange}
             className="border p-2 w-full"
-            style={{ textTransform: 'uppercase' }}
           />
 
 
@@ -772,9 +1009,9 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.motherName}
             onChange={handleChange}
             className="border p-2 w-full"
-            style={{ textTransform: 'uppercase' }}
           />
- <div className="flex items-center gap-2 mt-2">
+          5
+ {/* <div className="flex items-center gap-2 mt-2">
   <input
     type="checkbox"
     checked={form.showMotherInCertificate}
@@ -789,7 +1026,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
   <label className="text-sm">
     Show in Certificate
   </label>
-</div>
+</div> */}
 
         </div>
 
@@ -842,43 +1079,7 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
   Semester
 </button>
 
-        {form.courseType === "semester" && form.courseName && (
 
-  <div className="mb-4">
-
-    <label className="block mb-1 font-semibold">
-      Select Semester
-    </label>
-
-    <select
-      value={selectedSemester}
-      onChange={(e) => {
-        const sem = e.target.value;
-        setSelectedSemester(sem);
-
-        const selectedCourse = courses.find(c => c.$id === form.courseName);
-
-        if (selectedCourse) {
-          loadSemesterSubjects(selectedCourse.courseCode, sem);
-        }
-      }}
-      className="border p-2 w-full"
-    >
-      <option value="">Select Semester</option>
-
-      {courses.find(c => c.$id === form.courseName)?.totalSemesters &&
-        [...Array(courses.find(c => c.$id === form.courseName).totalSemesters)].map((_, i) => (
-          <option key={i + 1} value={i + 1}>
-            Semester {i + 1}
-          </option>
-        ))
-      }
-
-    </select>
-
-  </div>
-
-)}
 
       </div>
 
@@ -984,7 +1185,6 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
   value={form.address}
   onChange={handleChange}
   className="border p-2 w-full"
-  style={{ textTransform: 'uppercase' }}
 />
 </div>
         <div>
@@ -1043,7 +1243,6 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.qualification}
             onChange={handleChange}
             className="border p-2 w-full"
-            style={{ textTransform: 'uppercase' }}
           />
 
         </div>
@@ -1059,7 +1258,6 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.occupation}
             onChange={handleChange}
             className="border p-2 w-full"
-            style={{ textTransform: 'uppercase' }}
           />
 
         </div>
@@ -1098,8 +1296,11 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
           <input
             type="number"
             value={form.discount}
-          onChange={(e) =>
-  setForm({ ...form, discount: e.target.value })
+         onChange={(e) =>
+  setForm({
+    ...form,
+    discount: Number(e.target.value) || 0
+  })
 }
             className="border p-2 w-full"
           />
@@ -1198,7 +1399,6 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.batch}
             onChange={handleChange}
             className="border p-2 w-full"
-            style={{ textTransform: 'uppercase' }}
           />
 
         </div>
@@ -1214,7 +1414,6 @@ semesterNumber: selectedSemester ? Number(selectedSemester) : null,
             value={form.remark}
             onChange={handleChange}
             className="border p-2 w-full"
-            style={{ textTransform: 'uppercase' }}
           />
 
         </div>

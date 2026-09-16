@@ -639,8 +639,8 @@ useEffect(() => {
         </div>
 
         {/* MARKS */}
-        <div className="absolute top-[770px] left-[660px] font-bold text-2xl">
-          {percentage}%
+        <div className="absolute top-[765px] left-[660px] font-bold text-2xl">
+          {percentage}
         </div>
 
         {/* ✅ QR (NOW WORKING WITH WEBSITE) */}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { databases } from "@/lib/appwrite";
 import { Storage, Client, ID, Query } from "appwrite";
 import { useParams, useRouter } from "next/navigation";
+
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 const COLLECTION_ID = "student_admissions";
 const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
@@ -15,19 +16,15 @@ const client = new Client()
 const storage = new Storage(client);
 
 export default function EditStudent() {
-
   const { id } = useParams();
   const router = useRouter();
 
   const [photo, setPhoto] = useState(null);
-  const [signature, setSignature] = useState(null);
 
   const [photoPreview, setPhotoPreview] = useState("");
-  const [signaturePreview, setSignaturePreview] = useState("");
   const [courses, setCourses] = useState([]);
 
   const [form, setForm] = useState({
-
     studentName: "",
     surname: "",
 
@@ -42,6 +39,7 @@ export default function EditStudent() {
     mobile: "",
     altMobile: "",
     email: "",
+    rollNumber: "",
     className: "",
     dob: "",
     gender: "",
@@ -71,19 +69,14 @@ export default function EditStudent() {
     batch: "",
     admissionDate: "",
     remark: ""
-
   });
 
   useEffect(() => {
     fetchStudent();
   }, []);
 
-
-
   const loadCourses = async (type = "single") => {
-
     try {
-
       let collection =
         type === "multiple"
           ? "franchise_multiple_courses"
@@ -95,18 +88,13 @@ export default function EditStudent() {
       );
 
       setCourses(res.documents);
-
     } catch (err) {
-
       console.log(err);
-
     }
-
   };
+
   const fetchStudent = async () => {
-
     try {
-
       const res = await databases.getDocument(
         DATABASE_ID,
         COLLECTION_ID,
@@ -121,7 +109,9 @@ export default function EditStudent() {
         className:
           res.className ||
           res.originalClass ||
-          ""
+          "",
+
+        rollNumber: res.rollNumber || ""
       });
 
       loadCourses(res.courseType || "single");
@@ -132,68 +122,51 @@ export default function EditStudent() {
           `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.photoId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
         );
       }
-
-      // SIGNATURE PREVIEW
-      if (res.signatureId) {
-        setSignaturePreview(
-          `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${res.signatureId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`
-        );
-      }
-
     } catch (err) {
-
       console.log(err);
       alert("Failed to load student");
-
     }
   };
 
   const handleChange = (e) => {
-
     setForm({
       ...form,
       [e.target.name]: e.target.value
     });
-
   };
 
   const calculateFees = (courseFees, discount) => {
-
     const fees = Number(courseFees) || 0;
     const disc = Number(discount) || 0;
 
     const total = fees - disc;
-    const balance = total - (Number(form.feesReceived) || 0);
+    const balance =
+      total - (Number(form.feesReceived) || 0);
 
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       courseFees: fees,
       discount: disc,
       totalFees: total,
       balance
     }));
-
   };
 
   const handleFeesReceived = (value) => {
-
     const received = Number(value) || 0;
 
     const balance =
       (Number(form.totalFees) || 0) - received;
 
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       feesReceived: received,
       balance
     }));
-
   };
 
   const loadExamFee = async () => {
-
     try {
-
       const franchiseRes =
         await databases.listDocuments(
           DATABASE_ID,
@@ -233,59 +206,37 @@ export default function EditStudent() {
       }
 
       return 0;
-
     } catch (err) {
-
       console.log(err);
-
       return 0;
-
     }
   };
 
-
   const handleSubmit = async (e) => {
-
     e.preventDefault();
-    const MAX_SIZE = 250 * 1024; // 250 KB
+
+    const MAX_SIZE = 250 * 1024;
 
     if (photo && photo.size > MAX_SIZE) {
-      alert("Student photo must be less than 250 KB.");
-      return;
-    }
-
-    if (signature && signature.size > MAX_SIZE) {
-      alert("Signature must be less than 250 KB.");
+      alert(
+        "Student photo must be less than 250 KB."
+      );
       return;
     }
 
     try {
-
       let photoId = form.photoId;
-      let signatureId = form.signatureId;
 
       // PHOTO UPDATE
       if (photo) {
-
-        const uploadPhoto = await storage.createFile(
-          BUCKET_ID,
-          ID.unique(),
-          photo
-        );
+        const uploadPhoto =
+          await storage.createFile(
+            BUCKET_ID,
+            ID.unique(),
+            photo
+          );
 
         photoId = uploadPhoto.$id;
-      }
-
-      // SIGNATURE UPDATE
-      if (signature) {
-
-        const uploadSign = await storage.createFile(
-          BUCKET_ID,
-          ID.unique(),
-          signature
-        );
-
-        signatureId = uploadSign.$id;
       }
 
       await databases.updateDocument(
@@ -293,51 +244,57 @@ export default function EditStudent() {
         COLLECTION_ID,
         id,
         {
-
           ...form,
 
           photoId,
-          signatureId,
+
+          rollNumber: form.rollNumber,
+          className: form.className,
+
           courseType: form.courseType,
           courseId: form.courseId,
           courseName: form.courseName,
           subjects: form.subjects,
 
-          courseFees: Number(form.courseFees) || 0,
-          discount: Number(form.discount) || 0,
-          totalFees: Number(form.totalFees) || 0,
-          feesReceived: Number(form.feesReceived) || 0,
-          balance: Number(form.balance) || 0
+          courseFees:
+            Number(form.courseFees) || 0,
 
+          discount:
+            Number(form.discount) || 0,
+
+          totalFees:
+            Number(form.totalFees) || 0,
+
+          feesReceived:
+            Number(form.feesReceived) || 0,
+
+          balance:
+            Number(form.balance) || 0
         }
       );
 
       alert("Student Updated Successfully");
 
-      router.push("/login/institute/manage-student/admission");
-
+      router.push(
+        "/login/institute/manage-student/admission"
+      );
     } catch (err) {
-
       console.log(err);
-      alert(err?.message || "Update failed");
 
+      alert(
+        err?.message || "Update failed"
+      );
     }
-
   };
 
   return (
-
     <form
       onSubmit={handleSubmit}
       className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 p-8"
     >
-
       <div className="max-w-7xl mx-auto mb-8">
-
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-
           <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-8">
-
             <h1 className="text-4xl font-bold text-white">
               Student Profile Management
             </h1>
@@ -345,21 +302,16 @@ export default function EditStudent() {
             <p className="text-blue-100 mt-2">
               Update student details, course, fees and documents
             </p>
-
           </div>
-
         </div>
-
       </div>
 
-      {/* PHOTO + SIGNATURE */}
+      {/* PHOTO */}
       <div className="max-w-7xl mx-auto">
-
         <div className="bg-white rounded-3xl shadow-xl p-8"></div>
+
         <div className="grid grid-cols-2 gap-6 mb-8">
-
           <div>
-
             <label className="block font-semibold mb-2">
               Student Photo (Max 250 KB)
             </label>
@@ -368,32 +320,40 @@ export default function EditStudent() {
               type="file"
               accept="image/*"
               onChange={(e) => {
-                const file = e.target.files[0];
+                const file =
+                  e.target.files[0];
 
                 if (!file) return;
 
-                const MAX_SIZE = 250 * 1024; // 250 KB
+                const MAX_SIZE =
+                  250 * 1024;
 
                 if (file.size > MAX_SIZE) {
-                  alert("Student photo must be less than 250 KB.");
+                  alert(
+                    "Student photo must be less than 250 KB."
+                  );
+
                   e.target.value = "";
                   return;
                 }
 
                 setPhoto(file);
-                setPhotoPreview(URL.createObjectURL(file));
+
+                setPhotoPreview(
+                  URL.createObjectURL(file)
+                );
               }}
               className="
-w-full
-rounded-2xl
-border-2
-border-dashed
-border-blue-300
-p-4
-bg-blue-50
-hover:border-blue-500
-transition
-"
+                w-full
+                rounded-2xl
+                border-2
+                border-dashed
+                border-blue-300
+                p-4
+                bg-blue-50
+                hover:border-blue-500
+                transition
+              "
             />
 
             {photoPreview && (
@@ -402,66 +362,15 @@ transition
                 className="w-28 h-28 object-cover rounded mt-3 border"
               />
             )}
-
           </div>
-
-          <div>
-
-            <label className="block font-semibold mb-2">
-              Signature (Max 250 KB)
-            </label>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files[0];
-
-                if (!file) return;
-
-                const MAX_SIZE = 250 * 1024; // 250 KB
-
-                if (file.size > MAX_SIZE) {
-                  alert("Signature must be less than 250 KB.");
-                  e.target.value = "";
-                  return;
-                }
-
-                setSignature(file);
-                setSignaturePreview(URL.createObjectURL(file));
-              }}
-              className="
-w-full
-rounded-2xl
-border-2
-border-dashed
-border-blue-300
-p-4
-bg-blue-50
-hover:border-blue-500
-transition
-"
-            />
-
-            {signaturePreview && (
-              <img
-                src={signaturePreview}
-                className="w-28 h-20 object-contain rounded mt-3 border bg-white"
-              />
-            )}
-
-          </div>
-
         </div>
       </div>
 
-
       {/* FORM */}
-
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
+        {/* STUDENT NAME */}
         <div>
-
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Student Name
           </label>
@@ -471,22 +380,21 @@ transition
             value={form.studentName || ""}
             onChange={handleChange}
             className="
-  w-full
-  rounded-xl
-  border
-  border-gray-300
-  px-4
-  py-3
-  bg-white
-  focus:ring-2
-  focus:ring-blue-500
-  "
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
           />
-
         </div>
 
+        {/* SURNAME */}
         <div>
-
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Surname
           </label>
@@ -496,22 +404,21 @@ transition
             value={form.surname || ""}
             onChange={handleChange}
             className="
-  w-full
-  rounded-xl
-  border
-  border-gray-300
-  px-4
-  py-3
-  bg-white
-  focus:ring-2
-  focus:ring-blue-500
-  "
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
           />
-
         </div>
 
+        {/* RELATION */}
         <div>
-
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Relation Type
           </label>
@@ -526,16 +433,11 @@ transition
             <option>D/O</option>
             <option>W/O</option>
           </select>
-
         </div>
 
         {/* FATHER */}
-
         <div>
-
-
           <div>
-
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Father Name
             </label>
@@ -545,28 +447,31 @@ transition
               value={form.fatherName || ""}
               onChange={handleChange}
               className="
-  w-full
-  rounded-xl
-  border
-  border-gray-300
-  px-4
-  py-3
-  bg-white
-  focus:ring-2
-  focus:ring-blue-500
-  "
+                w-full
+                rounded-xl
+                border
+                border-gray-300
+                px-4
+                py-3
+                bg-white
+                focus:ring-2
+                focus:ring-blue-500
+              "
             />
-
           </div>
-          <div className="flex items-center gap-2 mt-2">
 
+          <div className="flex items-center gap-2 mt-2">
             <input
               type="checkbox"
-              checked={form.showFatherInCertificate || false}
+              checked={
+                form.showFatherInCertificate ||
+                false
+              }
               onChange={(e) =>
                 setForm({
                   ...form,
-                  showFatherInCertificate: e.target.checked
+                  showFatherInCertificate:
+                    e.target.checked
                 })
               }
             />
@@ -574,17 +479,12 @@ transition
             <label className="text-sm">
               Show in Certificate
             </label>
-
           </div>
-
         </div>
 
         {/* MOTHER */}
-
         <div>
-
           <div>
-
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Mother Name
             </label>
@@ -594,29 +494,31 @@ transition
               value={form.motherName || ""}
               onChange={handleChange}
               className="
-  w-full
-  rounded-xl
-  border
-  border-gray-300
-  px-4
-  py-3
-  bg-white
-  focus:ring-2
-  focus:ring-blue-500
-  "
+                w-full
+                rounded-xl
+                border
+                border-gray-300
+                px-4
+                py-3
+                bg-white
+                focus:ring-2
+                focus:ring-blue-500
+              "
             />
-
           </div>
 
           <div className="flex items-center gap-2 mt-2">
-
             <input
               type="checkbox"
-              checked={form.showMotherInCertificate || false}
+              checked={
+                form.showMotherInCertificate ||
+                false
+              }
               onChange={(e) =>
                 setForm({
                   ...form,
-                  showMotherInCertificate: e.target.checked
+                  showMotherInCertificate:
+                    e.target.checked
                 })
               }
             />
@@ -624,24 +526,61 @@ transition
             <label className="text-sm">
               Show in Certificate
             </label>
-
           </div>
-
         </div>
 
+        {/* CLASS NAME - EDITABLE */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Class Name
           </label>
 
           <input
+            name="className"
             value={form.className || ""}
-            readOnly
-            className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3"
+            onChange={handleChange}
+            placeholder="Class Name"
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
           />
         </div>
-        <div>
 
+        {/* ROLL NUMBER - NEW */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Roll Number
+          </label>
+
+          <input
+            name="rollNumber"
+            value={form.rollNumber || ""}
+            onChange={handleChange}
+            placeholder="Roll Number"
+            className="
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
+          />
+        </div>
+
+        {/* MOBILE */}
+        <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Mobile
           </label>
@@ -651,22 +590,21 @@ transition
             value={form.mobile || ""}
             onChange={handleChange}
             className="
-  w-full
-  rounded-xl
-  border
-  border-gray-300
-  px-4
-  py-3
-  bg-white
-  focus:ring-2
-  focus:ring-blue-500
-  "
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
           />
-
         </div>
 
+        {/* ALTERNATE MOBILE */}
         <div>
-
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Alternate Mobile
           </label>
@@ -676,20 +614,20 @@ transition
             value={form.altMobile || ""}
             onChange={handleChange}
             className="
-  w-full
-  rounded-xl
-  border
-  border-gray-300
-  px-4
-  py-3
-  bg-white
-  focus:ring-2
-  focus:ring-blue-500
-  "
+              w-full
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-3
+              bg-white
+              focus:ring-2
+              focus:ring-blue-500
+            "
           />
-
         </div>
 
+        {/* EMAIL */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Email
@@ -714,6 +652,7 @@ transition
           />
         </div>
 
+        {/* DOB */}
         <input
           type="date"
           name="dob"
@@ -722,17 +661,22 @@ transition
           className="border p-3 bg-white"
         />
 
+        {/* GENDER */}
         <select
           name="gender"
           value={form.gender || ""}
           onChange={handleChange}
           className="border p-3 bg-white"
         >
-          <option value="">Select Gender</option>
+          <option value="">
+            Select Gender
+          </option>
+
           <option>Male</option>
           <option>Female</option>
         </select>
 
+        {/* AADHAR */}
         <input
           name="aadhar"
           value={form.aadhar || ""}
@@ -741,6 +685,7 @@ transition
           className="border p-3 bg-white"
         />
 
+        {/* QUALIFICATION */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Qualification
@@ -765,6 +710,7 @@ transition
           />
         </div>
 
+        {/* OCCUPATION */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Occupation
@@ -789,6 +735,7 @@ transition
           />
         </div>
 
+        {/* STATE */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             State
@@ -813,6 +760,7 @@ transition
           />
         </div>
 
+        {/* CITY */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             City
@@ -837,6 +785,7 @@ transition
           />
         </div>
 
+        {/* POSTCODE */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Postcode
@@ -861,6 +810,7 @@ transition
           />
         </div>
 
+        {/* ADDRESS */}
         <div className="col-span-3">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Address
@@ -885,8 +835,8 @@ transition
           />
         </div>
 
+        {/* COURSE TYPE */}
         <div className="col-span-3">
-
           <label className="block font-semibold mb-2">
             Course Type
           </label>
@@ -896,7 +846,7 @@ transition
             <button
               type="button"
               onClick={() => {
-                setForm(prev => ({
+                setForm((prev) => ({
                   ...prev,
                   courseType: "single",
                   courseId: "",
@@ -906,10 +856,11 @@ transition
 
                 loadCourses("single");
               }}
-              className={`px-4 py-2 rounded ${form.courseType === "single"
+              className={`px-4 py-2 rounded ${
+                form.courseType === "single"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-300"
-                }`}
+              }`}
             >
               Single
             </button>
@@ -917,7 +868,7 @@ transition
             <button
               type="button"
               onClick={() => {
-                setForm(prev => ({
+                setForm((prev) => ({
                   ...prev,
                   courseType: "multiple",
                   courseId: "",
@@ -927,74 +878,80 @@ transition
 
                 loadCourses("multiple");
               }}
-              className={`px-4 py-2 rounded ${form.courseType === "multiple"
+              className={`px-4 py-2 rounded ${
+                form.courseType === "multiple"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-300"
-                }`}
+              }`}
             >
               Multiple
             </button>
 
           </div>
-
         </div>
 
+        {/* COURSE */}
         <select
           value={form.courseId || ""}
           onChange={async (e) => {
-
-            const courseId = e.target.value;
+            const courseId =
+              e.target.value;
 
             const course = courses.find(
-              c => c.$id === courseId
+              (c) => c.$id === courseId
             );
 
             if (!course) return;
 
             let subjects = "";
 
-if(form.courseType === "multiple"){
+            if (
+              form.courseType ===
+              "multiple"
+            ) {
+              subjects = course.subjects
+                .split("||")
+                .join(", ");
+            } else {
+              const subjectRes =
+                await databases.listDocuments(
+                  DATABASE_ID,
+                  "course_subjects",
+                  [
+                    Query.equal(
+                      "courseId",
+                      courseId
+                    )
+                  ]
+                );
 
-    subjects = course.subjects
-        .split("||")
-        .join(", ");
+              subjects =
+                subjectRes.documents
+                  .map(
+                    (s) => s.subjectName
+                  )
+                  .join(", ");
+            }
 
-}else{
-
-    const subjectRes =
-        await databases.listDocuments(
-            DATABASE_ID,
-            "course_subjects",
-            [
-                Query.equal("courseId", courseId)
-            ]
-        );
-
-    subjects =
-        subjectRes.documents
-        .map(s=>s.subjectName)
-        .join(", ");
-
-}
-
-            setForm(prev => ({
+            setForm((prev) => ({
               ...prev,
               courseId: courseId,
-              courseName: course.courseName,
+              courseName:
+                course.courseName,
               subjects: subjects,
               courseFees:
-                Number(course.courseFees || 0)
+                Number(
+                  course.courseFees || 0
+                )
             }));
-
           }}
           className="border p-3 bg-white"
         >
-
           <option value="">
             Select Course
           </option>
 
-          {courses.map(course => (
+          {courses.map((course) => (
             <option
               key={course.$id}
               value={course.$id}
@@ -1002,8 +959,9 @@ if(form.courseType === "multiple"){
               {course.courseName}
             </option>
           ))}
-
         </select>
+
+        {/* SUBJECTS */}
         <input
           name="subjects"
           value={form.subjects || ""}
@@ -1012,7 +970,7 @@ if(form.courseType === "multiple"){
           className="border p-3 bg-white"
         />
 
-
+        {/* BATCH */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Batch
@@ -1037,6 +995,7 @@ if(form.courseType === "multiple"){
           />
         </div>
 
+        {/* COURSE FEES */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Course Fees
@@ -1048,7 +1007,10 @@ if(form.courseType === "multiple"){
             value={form.courseFees || 0}
             placeholder="Course Fees"
             onChange={(e) =>
-              calculateFees(e.target.value, form.discount)
+              calculateFees(
+                e.target.value,
+                form.discount
+              )
             }
             className="
               w-full
@@ -1064,6 +1026,7 @@ if(form.courseType === "multiple"){
           />
         </div>
 
+        {/* DISCOUNT */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Discount
@@ -1075,7 +1038,10 @@ if(form.courseType === "multiple"){
             value={form.discount || 0}
             placeholder="Discount"
             onChange={(e) =>
-              calculateFees(form.courseFees, e.target.value)
+              calculateFees(
+                form.courseFees,
+                e.target.value
+              )
             }
             className="
               w-full
@@ -1091,28 +1057,34 @@ if(form.courseType === "multiple"){
           />
         </div>
 
+        {/* TOTAL FEES */}
         <input
           value={form.totalFees || 0}
           readOnly
           className="border p-3 bg-gray-200"
         />
 
+        {/* FEES RECEIVED */}
         <input
           type="number"
           value={form.feesReceived || 0}
           placeholder="Fees Received"
           onChange={(e) =>
-            handleFeesReceived(e.target.value)
+            handleFeesReceived(
+              e.target.value
+            )
           }
           className="border p-3 bg-white"
         />
 
+        {/* BALANCE */}
         <input
           value={form.balance || 0}
           readOnly
           className="border p-3 bg-gray-200"
         />
 
+        {/* ADMISSION DATE */}
         <input
           type="date"
           name="admissionDate"
@@ -1121,6 +1093,7 @@ if(form.courseType === "multiple"){
           className="border p-3 bg-white"
         />
 
+        {/* REMARK */}
         <textarea
           name="remark"
           value={form.remark || ""}
@@ -1131,23 +1104,24 @@ if(form.courseType === "multiple"){
 
       </div>
 
+      {/* UPDATE BUTTON */}
       <div className="mt-8 flex justify-center">
 
         <button
           type="submit"
           className="
-px-10
-py-4
-rounded-2xl
-text-white
-font-bold
-bg-gradient-to-r
-from-blue-600
-to-indigo-600
-hover:scale-105
-transition-all
-shadow-lg
-"
+            px-10
+            py-4
+            rounded-2xl
+            text-white
+            font-bold
+            bg-gradient-to-r
+            from-blue-600
+            to-indigo-600
+            hover:scale-105
+            transition-all
+            shadow-lg
+          "
         >
           Update Student
         </button>
@@ -1155,7 +1129,5 @@ shadow-lg
       </div>
 
     </form>
-
   );
-
 }
