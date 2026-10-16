@@ -3,38 +3,246 @@
 import { useEffect, useState } from "react"
 import { databases } from "@/lib/appwrite"
 import { useRouter } from "next/navigation"
+import { Query } from "appwrite"
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+
+
+
 
 export default function WalletPage() {
 
   const [data, setData] = useState([])
+  const [filteredData, setFilteredData] = useState([])
+  const [search, setSearch] = useState("")
+
+const [transactions, setTransactions] = useState([])
+const [transactionDate, setTransactionDate] = useState("")
+
   const router = useRouter()
 
   const fetchData = async () => {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      "franchise_approved"
-    )
-    setData(res.documents)
+
+    try {
+
+      let allDocuments = []
+      let offset = 0
+      let hasMore = true
+
+      // ✅ Fetch all documents (more than 25)
+      while (hasMore) {
+
+        const res = await databases.listDocuments(
+          DATABASE_ID,
+          "franchise_approved",
+          [
+            Query.limit(100),
+            Query.offset(offset),
+            Query.orderAsc("instituteName")
+          ]
+        )
+
+        allDocuments = [...allDocuments, ...res.documents]
+
+        if (res.documents.length < 100) {
+          hasMore = false
+        } else {
+          offset += 100
+        }
+      }
+
+      setData(allDocuments)
+      setFilteredData(allDocuments)
+   
+
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+
+  const fetchTransactions = async () => {
+  try {
+    let allTransactions = []
+    let offset = 0
+    let hasMore = true
+
+    while (hasMore) {
+      const res = await databases.listDocuments(
+        DATABASE_ID,
+        "wallet_transactions",
+        [
+          Query.limit(100),
+          Query.offset(offset),
+          Query.orderDesc("$createdAt")
+        ]
+      )
+
+      allTransactions = [...allTransactions, ...res.documents]
+
+      if (res.documents.length < 100) {
+        hasMore = false
+      } else {
+        offset += 100
+      }
+    }
+
+    setTransactions(allTransactions)
+    
+
+  } catch (err) {
+    console.error("Transaction fetch error:", err)
+  }
+}
+
+
+useEffect(() => {
+  fetchData()
+  fetchTransactions()
+}, [])
+
+
+
+
+
+
+useEffect(() => {
+
+  let filtered = [...data]
+
+  // =========================
+  // SEARCH BY NAME / MOBILE / EMAIL
+  // =========================
+  if (search) {
+
+    const text = search.toLowerCase()
+
+    filtered = filtered.filter((item) =>
+      (item.instituteName || "")
+        .toLowerCase()
+        .includes(text)
+
+      ||
+
+      (item.mobile || "")
+        .toLowerCase()
+        .includes(text)
+
+      ||
+
+      (item.email || "")
+        .toLowerCase()
+        .includes(text)
+    )
+  }
+
+
+  // =========================
+  // SEARCH BY RECHARGE DATE
+  // =========================
+  if (transactionDate) {
+
+    // Get franchise IDs that had a RECHARGE on this date
+    const rechargeFranchiseIds = transactions
+      .filter((transaction) => {
+
+        // Only ADD / RECHARGE transactions
+        const type = String(transaction.type || "").toLowerCase()
+
+        if (type !== "add" && type !== "recharge") {
+          return false
+        }
+
+        const dateValue =
+          transaction.createdAt ||
+          transaction.$createdAt ||
+          transaction.date
+
+        if (!dateValue) return false
+
+        // Convert transaction date to local date
+        const transactionLocalDate =
+          new Date(dateValue).toLocaleDateString("en-CA")
+
+        return transactionLocalDate === transactionDate
+
+      })
+      .map((transaction) => transaction.franchiseId)
+
+    // Remove duplicate franchise IDs
+    const uniqueFranchiseIds = new Set(rechargeFranchiseIds)
+
+    // Show only franchises that were recharged on selected date
+    filtered = filtered.filter((franchise) =>
+      uniqueFranchiseIds.has(franchise.$id)
+    )
+  }
+
+
+  setFilteredData(filtered)
+
+}, [search, transactionDate, data, transactions])
 
   return (
 
     <div className="p-6 bg-gray-50 min-h-screen">
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-semibold text-gray-800">
-          Franchise Wallet
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Manage franchise balances and transactions
-        </p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+        <div>
+          <h1 className="text-3xl font-semibold text-gray-800">
+            Franchise Wallet
+          </h1>
+          <button
+onClick={() => {
+  fetchData()
+  fetchTransactions()
+}}
+
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+
+          >
+
+            🔄 Refresh
+
+          </button>
+
+          <p className="text-gray-500 text-sm">
+            Manage franchise balances and transactions
+          </p>
+        </div>
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+
+          <input
+            type="text"
+            placeholder="Search Franchise Name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-80 outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+         <input
+  type="date"
+  value={transactionDate}
+  onChange={(e) => setTransactionDate(e.target.value)}
+  className="border border-gray-300 px-4 py-2 rounded-lg w-full md:w-52 outline-none focus:ring-2 focus:ring-blue-500"
+/>
+
+    {(search || transactionDate) && (
+  <button
+    onClick={() => {
+  setSearch("")
+  setTransactionDate("")
+}}
+    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+  >
+    Clear
+  </button>
+)}
+
+        </div>
+
       </div>
 
       {/* Card */}
@@ -60,7 +268,7 @@ export default function WalletPage() {
             {/* Table Body */}
             <tbody>
 
-              {data.map((item, i) => (
+              {filteredData.map((item, i) => (
                 <tr
                   key={item.$id}
                   className="border-t hover:bg-gray-50 transition"
@@ -97,14 +305,28 @@ export default function WalletPage() {
                   <td className="p-4 text-center space-x-2">
 
                     <button
-                      onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}`)}
+                      onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}?type=add`)}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
                     >
                       Recharge
                     </button>
 
-                    <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium transition">
+                    <button
+                      onClick={() => router.push(`/admin/dashboard/wallet/recharge/${item.$id}?type=deduct`)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition"
+                    >
+                      Deduct
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        router.push(`/admin/dashboard/wallet/history/${item.$id}`)
+                      }
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-medium transition"
+                    >
+
                       History
+
                     </button>
 
                   </td>
@@ -112,10 +334,10 @@ export default function WalletPage() {
                 </tr>
               ))}
 
-              {data.length === 0 && (
+              {filteredData.length === 0 && (
                 <tr>
                   <td colSpan="7" className="p-6 text-center text-gray-400">
-                    No franchise data found
+                    No franchise data found for the given search criteria.
                   </td>
                 </tr>
               )}
