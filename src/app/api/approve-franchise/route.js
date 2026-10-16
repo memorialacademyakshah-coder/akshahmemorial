@@ -1,3 +1,4 @@
+
 import { Client, Databases, ID } from "node-appwrite";
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
@@ -12,13 +13,12 @@ const databases = new Databases(client);
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
 
 export async function POST(req) {
-
   try {
-
     const franchiseData = await req.json();
 
     const cleanReq = JSON.parse(JSON.stringify(franchiseData));
 
+    // Remove Appwrite system attributes.
     delete cleanReq.$id;
     delete cleanReq.$sequence;
     delete cleanReq.$createdAt;
@@ -27,18 +27,28 @@ export async function POST(req) {
     delete cleanReq.$databaseId;
     delete cleanReq.$collectionId;
 
+    // Remove attributes that should not be copied from the request.
+    delete cleanReq.expiryDate;
+    
+    delete cleanReq.issueDate;
+    delete cleanReq.qrCode;
+    delete cleanReq.verifyUrl;
+    delete cleanReq.requestId;
+
     const newDocId = ID.unique();
 
-    const verifyUrl =
-      `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${newDocId}`;
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://www.bnmiindia.org";
 
+    const verifyUrl = `${baseUrl}/verify/${newDocId}`;
     const qrCode = await QRCode.toDataURL(verifyUrl);
 
     const issueDate = new Date();
 
-    const expiryDate = new Date();
-
-    expiryDate.setFullYear(issueDate.getFullYear() + 1);
+    const expireDate = new Date(issueDate);
+    expireDate.setFullYear(expireDate.getFullYear() + 1);
 
     const createdDoc = await databases.createDocument(
       DATABASE_ID,
@@ -47,7 +57,7 @@ export async function POST(req) {
       {
         ...cleanReq,
 
-        requestId: franchiseData.$id,
+        requestId: franchiseData.$id || "",
 
         instituteName: cleanReq.instituteName || "",
         email: cleanReq.email || "",
@@ -59,28 +69,31 @@ export async function POST(req) {
         qrCode,
         verifyUrl,
 
-        wallet: cleanReq.wallet || "0.00",
-        courierWallet: cleanReq.courierWallet || "0.00",
+        wallet: String(cleanReq.wallet ?? "0.00"),
+        courierWallet: String(cleanReq.courierWallet ?? "0.00"),
 
+        // Keep this Boolean because Appwrite defines it as Boolean.
+        expiryDate: false,
+
+        // Store the actual expiration date separately.
+        
         issueDate: issueDate.toISOString(),
-        expiryDate: expiryDate.toISOString()
       }
     );
 
     return NextResponse.json({
       success: true,
-      approvedId: createdDoc.$id
+      approvedId: createdDoc.$id,
     });
-
   } catch (err) {
-
     console.error("FINAL APPROVE ERROR:", err);
 
-    return NextResponse.json({
-      success: false,
-      error: err.message
-    });
-
+    return NextResponse.json(
+      {
+        success: false,
+        error: err.message || "Franchise approval failed",
+      },
+      { status: 500 }
+    );
   }
-
 }
