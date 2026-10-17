@@ -599,96 +599,69 @@ return subjectList;
     }
   };
 
-  const updateMarks = (index, field, value) => {
-
-    // Allow the input to temporarily be empty
-    if (value === "") {
-      setMarks((prev) => {
-        const updated = [...prev];
-
-        updated[index] = {
-          ...updated[index],
-          [field]: "",
-          total:
-            Number(
-              field === "theory"
-                ? ""
-                : updated[index].theory || 0
-            ) +
-            Number(
-              field === "practical"
-                ? ""
-                : updated[index].practical || 0
-            ),
-        };
-
-        return updated;
-      });
-
-      return;
-    }
-
-    let val = Number(value);
-
-    // Prevent invalid numbers
-    if (Number.isNaN(val)) {
-      return;
-    }
-
-    // Maximum 50
-    if (val > 50) {
-      val = 50;
-    }
-
-    // Minimum 0
-    if (val < 0) {
-      val = 0;
-    }
-
+const updateMarks = (index, field, value) => {
+  if (value === "") {
     setMarks((prev) => {
       const updated = [...prev];
-
       const current = updated[index];
 
       const theory =
-        field === "theory"
-          ? val
-          : Number(current.theory || 0);
+        field === "theory" ? 0 : Number(current.theory || 0);
 
       const practical =
-        field === "practical"
-          ? val
-          : Number(current.practical || 0);
+        field === "practical" ? 0 : Number(current.practical || 0);
 
       updated[index] = {
         ...current,
-        [field]: val,
+        [field]: "",
         total: theory + practical,
       };
 
       return updated;
     });
-  };
+
+    return;
+  }
+
+  let val = Number(value);
+
+  if (!Number.isFinite(val)) return;
+
+  val = Math.max(0, Math.min(100, val));
+
+  setMarks((prev) => {
+    const updated = [...prev];
+    const current = updated[index];
+
+    const theory =
+      field === "theory" ? val : Number(current.theory || 0);
+
+    const practical =
+      field === "practical" ? val : Number(current.practical || 0);
+
+    updated[index] = {
+      ...current,
+      [field]: val,
+      total: theory + practical,
+    };
+
+    return updated;
+  });
+};
 
   const calculateTotal = () => {
     return marks.reduce((sum, m) => sum + m.total, 0);
   };
 
   const calculatePercentage = () => {
+  const total = calculateTotal();
 
-    const total = calculateTotal();
+  const maxMarks = marks.length * 200;
 
-    // 🔥 FIX MAX MARKS
-    const maxMarks =
-      student?.courseType === "single" || student?.courseType === "beauty"
-        ? 100
-        : subjects.length * 100;
+  if (maxMarks === 0) return 0;
 
-    if (maxMarks === 0) return 0;
-
-    return Math.round((total / maxMarks) * 100);
-  };
-
+  return Number(((total / maxMarks) * 100).toFixed(2));
+};
   const calculateGrade = () => {
     const percentage = calculatePercentage();
 
@@ -1030,7 +1003,7 @@ return subjectList;
                     <input
                       type="number"
                       value={marks[index]?.theory ?? ""}
-                      max={50}
+                      max={100}
                       min={0}
                       className="border p-2 w-24 bg-black text-white"
                       onChange={(e) =>
@@ -1044,7 +1017,7 @@ return subjectList;
                   <input
   type="number"
   value={marks[index]?.practical ?? ""}
-  max={50}
+  max={100}
   min={0}
   className="border p-2 w-24 bg-black text-white"
   onChange={(e) =>
