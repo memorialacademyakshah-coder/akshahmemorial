@@ -347,7 +347,7 @@ export default function PrintMarksheetMultiple() {
 
       try {
         const url =
-          `https://www.bnmiindia.org/beauty-verification/${student.studentId}`;
+          `https://akshahmemorialacademy.in/beauty-verification/${student.studentId}`;
 
         const image = await QRCode.toDataURL(url, {
           width: 300,
